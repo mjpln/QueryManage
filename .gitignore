@@ -64,3 +64,5 @@ gen
 
 *.log
 target
+.mymetadata
+.mystrutsdata
