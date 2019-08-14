@@ -1,0 +1,15 @@
+{
+    "type": "jsresource",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "js1",
+        "id": "Wordpat",
+        "url": "./Wordpat.js",
+        "x-compile": true
+    },
+    "designerId": "ec0db2bc-74c1-4e01-b3a9-af3437f4770f"
+}

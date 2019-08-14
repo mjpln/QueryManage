@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+		<link type="text/css" rel="stylesheet" href="../easyui/jquery-easyui-1.4.1/themes/default/easyui.css" />
+		<link type="text/css" rel="stylesheet" href="../easyui/jquery-easyui-1.4.1/themes/icon.css" />
+		<link type="text/css" rel="stylesheet" href="../css/scrollbar.css" />
+		
+		
+		<link href="../umeditor1_2_2-utf8-jsp/themes/default/css/umeditor.css" type="text/css" rel="stylesheet">
+		<script type="text/javascript" src="../umeditor1_2_2-utf8-jsp/third-party/jquery.min.js"></script>
+		<script type="text/javascript" charset="utf-8" src="../umeditor1_2_2-utf8-jsp/umeditor.config.js"></script>
+		<script type="text/javascript" charset="utf-8" src="../umeditor1_2_2-utf8-jsp/umeditor.min.js"></script>
+		<script type="text/javascript" src="../umeditor1_2_2-utf8-jsp/lang/zh-cn/zh-cn.js"></script>
+		
+		
+		<script type="text/javascript" src="../easyui/jquery-easyui-1.4.1/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="../easyui/jquery-easyui-1.4.1/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="../script/json2.js"></script>
+		<script type="text/javascript" src="../script/common.js"></script>
+		<script type="text/javascript" src="../script/loading.js"></script>
+		<script type="text/javascript" src="../script/publicSetup.js"></script>
+		<script type="text/javascript" src="./js/faq.js"></script>
+		<style type="text/css">
+			.textbox .textbox-text {font-family: '微软雅黑';!important}
+		</style>
+	</head>
+	<body onkeydown="myKeyDown()" >
+		<div>
+		<table id="faqdatagrid"></table>
+	</div>
+	<!-- 新增标准问题页面 window start -->
+	<div id="faqsddwin" class="easyui-panel" title="新增" style="width:1020px;height:440px;padding:10px;" data-options="iconCls:'icon-save',collapsible:true,minimizable:false,maximizable:false,closable:true">
+		<table style="width:100%;">
+			<tr>
+				<td width="90">
+					客户类型：
+				</td>
+				<td>
+					<span><select id="customertype" class="easyui-combotree"style="width: 300px;"></select></span>
+					<span style="font-size: 12px; margin-left: 20px" >答案渠道：</span>
+					<span  style="margin-left: 40px" ><select id="channel" class="easyui-combotree"style="width:300px;"></select></span>
+					<span> <input id="selectAllChannel" type="checkbox" style="display:none"/>全选</span>
+				</td>
+				
+			</tr>
+			
+			<tr>
+				<td>起始时间：</td>
+				<td>
+					<span><select id="starttime"  class="easyui-datebox" style="width:300px;"></select></span>
+					<span style="font-size: 12px; margin-left: 20px" >截止时间：</span>
+					<span style=" margin-left: 40px" ><select id="endtime" class="easyui-datebox" style="width:300px; "></select></span>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					答案类型：
+				</td>
+				<td>
+					<span><input id="answertype"  class="easyui-combobox" style="width:300px;"/></span>
+					<span style="font-size: 12px; margin-left: 20px;display:none"  >适用地市：</span>
+					<span style=" margin-left: 40px;display:none;"  ><input id="city"  class="easyui-combobox" style="width:300px;"/></span>
+					<span style="font-size: 12px; margin-left: 20px;"  id="robotIDText">实体机器人ID：</span>
+					<span style=" margin-left: 15px;" id="robotIDBox" ><input id="robotID"  class="easyui-combobox" style="width:300px;"/></span>
+				</td>
+			</tr>
+			
+			<tr >
+				<td class ="reply_caliber">
+					回复口径类型：
+				</td>
+				<td class ="reply_caliber">
+					<span><select id="replyCaliberType" class="easyui-combotree" style="width: 300px;"></select></span>
+					<span style="font-size: 12px; margin-left: 20px" >口径文本：</span>
+					<span style=" margin-left: 40px"  ><input id="caliberText"  class="easyui-combobox" style="width:300px;"/></span>
+				</td>
+			</tr>
+			
+			<tr >
+				<td class ="service_tr">
+					业务路径：
+				</td>
+				<td class ="service_tr">
+					<span><select id="service" class="easyui-combotree" style="width: 300px;"></select></span>
+					<span style="font-size: 12px; margin-left: 20px" >对应FAQ：</span>
+					<span style=" margin-left: 40px"  ><input id="faq"  class="easyui-combobox" style="width:300px;"/></span>
+					<span style=" margin-left: 20px"><a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" id="addextratext_btn" onclick="openAddExtraText()">插入话术</a></span>
+				</td>
+			</tr>
+			<tr >
+				<td class ="service_tr">
+					FAQ模板：
+				</td>
+				<td class ="service_tr">
+					<span><input id="faqtemplate"  class="easyui-textbox" style="width:730px;" editable="false" /></span>
+				</td>
+			</tr>
+			
+			<tr >
+				<td class ="serviceinfo_tr">
+					信息表名称：
+				</td>
+				<td class ="serviceinfo_tr">
+					<span><input id="serviceinfo"  class="easyui-combobox" style="width:300px;"/></span>
+					<!--
+					<span style="font-size: 12px; margin-left: 20px" >知识名称：</span>
+					<span style=" margin-left: 40px"  ><input id="knoname"  class="easyui-combobox" style="width:300px;"/></span>
+					<span style=" margin-left: 20px"><a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" id="hitquestion_btn" onclick="openTemplateColumnWin()">插入模板列</a></span>
+					-->
+				</td>
+			</tr>
+			<tr >
+				<td class ="serviceinfo_tr">
+					模板路径：
+				</td>
+				<td class ="serviceinfo_tr">
+					<span><input id="attrname"  class="easyui-combobox" style="width:300px;"/></span>
+					<!--
+					<span style="font-size: 12px; margin-left: 20px" >知识名称：</span>
+					<span style=" margin-left: 40px"  ><input id="knoname"  class="easyui-combobox" style="width:300px;"/></span>
+					<span style=" margin-left: 20px"><a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" id="hitquestion_btn" onclick="openTemplateColumnWin()">插入模板列</a></span>
+					-->
+					<span style="font-size: 12px; margin-left: 20px" id="attrlabel">模板内容：</span>
+					<span style=" margin-left: 40px"><input id="attrvalue"  class="easyui-combobox" style="width:300px;" /></span>
+					<!-- <span style=" margin-left: 10px"><a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" id="hitquestion_btn" onclick="openPrimitiveFunctionWin()">原子函数</a></span> -->
+					
+				</td>
+			</tr>
+			<tr >
+				<td class ="serviceinfo_tr">
+					信息表模板：
+				</td>
+				<td class ="serviceinfo_tr">
+					<span><input id="serviceinfotemplate"  class="easyui-textbox" data-options="multiline:true" style="width:730px;height:60px" editable="false" /></span>
+				</td>
+			</tr>
+			
+			<tr>
+				<td valign="top">答案内容:</td>
+				<!-- <td colspan="5"><textarea id="addrule0response" style="width:100%;min-width:800px;height:100px;font-size:12px;"></textarea></td> -->
+				<td>
+					<table>
+						<tr>
+						<td>
+							<div id="myEditor" style="width:730px;height:130px;" ></div>
+						</td>					
+						<td>
+							<span id="hitquestion_span" style=" margin-left: 10px;display:none"><a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" id="hitquestion_btn" onclick="openTemplateColumnWin()">插入模板列</a></span>
+						</td>
+						</tr>
+					</table>
+				</td>
+			</td>
+			
+		</tr>
+	</table>
+	<div style="text-align:center;padding:5px;margin-bottom:20px">
+		<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" id="addOtherResponse_btn" onclick="addOtherResponse()">插入其他形式答案</a>
+		<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-save'" plain="false" onclick="save()">保存</a>
+		<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-clear'" plain="false" onclick="clearForm()">重置</a>
+	</div>	
+	
+	<!-- 原子函数区 window start-->
+	<div id="primitive_function" class="easyui-window" title="原子函数" data-options="modal:true,closed:true,iconCls:'icon-add',top:180" style="width:500px;height:285px;padding:10px;">
+		<div style="padding:10px;margin:0 80px" > <span style="font-size:12px;margin-left:10px">原子函数：</span>
+			<input id="primitivefunction" class="easyui-combobox" style="width:200px;" />  
+		</div>
+		
+		<form id="hxszbj" class="primitive_function_form" style="display:none">
+			<table>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">A类参数：</span></td>
+					<td><input id="hxszbj_alcs" class="easyui-combobox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">运算符：</span></td>
+					<td><input id="hxszbj_ysf" class="easyui-combobox" style="width:300px;" data-options="required:true,editable:false"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">B类参数：</span></td>
+					<td><input id="hxszbj_blcs" class="easyui-combobox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">满足条件输出：</span></td>
+					<td><input id="hxszbj_mztjsc" class="easyui-textbox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">不满足条件输出：</span></td>
+					<td><input id="hxszbj_bmztjsc" class="easyui-textbox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+			</table>
+			<div style='text-align:center' >
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="build()">生成</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="btnCancel('primitive_function')">取消</a>
+			</div>
+		</form>
+		
+		<form id="zxszbj" class="primitive_function_form" style="display:none">
+			<table>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">运算符：</span></td>
+					<td><input id="zxszbj_ysf" class="easyui-combobox" style="width:300px;" data-options="required:true,editable:false"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">比较参数：</span></td>
+					<td><input id="zxszbj_bjcs" class="easyui-combobox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">满足条件输出：</span></td>
+					<td>
+						<input id="zxszbj_mztjsc" class="easyui-combobox" style="width:300px;" data-options="required:true"/>
+						<span><input id="zxszbj_bg" type="checkbox" />表格</span>
+					</td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">不满足条件输出：</span></td>
+					<td><input id="zxszbj_bmztjsc" class="easyui-textbox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+			</table>
+			<div style='text-align:center' >
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="build()">生成</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="btnCancel('primitive_function')">取消</a>
+			</div>
+		</form>
+
+		<form id="lbpx" class="primitive_function_form" style="display:none">
+			<table>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">排序方式：</span></td>
+					<td><input id="lbpx_pxfs" class="easyui-combobox" style="width:300px;" data-options="required:true,editable:false"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">比较参数：</span></td>
+					<td><input id="lbpx_bjcs" class="easyui-combobox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">输出个数：</span></td>
+					<td><input id="lbpx_scgs" class="easyui-combobox" style="width:300px;" /></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">输出模板：</span></td>
+					<td>
+						<input id="lbpx_scmb" class="easyui-combobox" style="width:300px;" data-options="required:true"/>
+						<span><input id="lbpx_bg" type="checkbox" />表格</span>
+					</td>
+				</tr>
+			</table>
+			<div style='text-align:center' >
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="build()">生成</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="btnCancel('primitive_function')">取消</a>
+			</div>
+		</form>
+
+		<form id="szys" class="primitive_function_form" style="display:none">
+			<table>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">参数A：</span></td>
+					<td><input id="szys_csa" class="easyui-combobox" style="width:300px;" onblur="javascript:alert(1);" data-options="required:true,editable:false"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">运算符：</span></td>
+					<td><input id="szys_ysf" class="easyui-combobox" style="width:300px;" data-options="required:true,editable:false"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">参数B：</span></td>
+					<td><input id="szys_csb" class="easyui-textbox" style="width:300px;" data-options="required:true,editable:false"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">比较参数：</span></td>
+					<td><input id="szys_bjcs" class="easyui-combobox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">输出模板：</span></td>
+					<td><input id="szys_scmb" class="easyui-combobox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+			</table>
+			<div style='text-align:center' >
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="build()">生成</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="btnCancel('primitive_function')">取消</a>
+			</div>
+		</form>
+		
+		<form id="hz" class="primitive_function_form" style="display:none">
+			<table>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">汇总参数：</span></td>
+					<td><input id="hz_hzcs" class="easyui-combobox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+			</table>
+			<div style='text-align:center' >
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="build()">生成</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="btnCancel('primitive_function')">取消</a>
+			</div>
+		</form>
+		
+		<form id="zhcx" class="primitive_function_form" style="display:none">
+			<table>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">自定义<br/>查询条件：</span></td>
+					<td><input id="zhcx_cxgz" class="easyui-textbox" style="width:300px;height:60px;" data-options="multiline:true,required:true"/></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td style="color:blue">
+						<div>注：多条件以"&"分割，具体条件参数比较以"|"分割，例：</div>
+						<div>具体值格式：单位净值|&gt;1&基金类型|股票型</div>
+						<div>带参数格式：单位净值|&gt;&lt;@单位净值&gt;&基金类型|&lt;@基金类型></div>
+					</td>
+				</tr>
+			</table>
+			<div style='text-align:center' >
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="build()">生成</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="btnCancel('primitive_function')">取消</a>
+			</div>
+		</form>
+		
+		<form id="tjl" class="primitive_function_form" style="display:none">
+			<table>
+				<tr style="padding:10px;" >
+					<td><span style="font-size:12px;margin-left:10px">统计量参数：</span></td>
+					<td><input id="tjl_tjlcs" class="easyui-combobox" style="width:300px;" data-options="required:true"/></td>
+				</tr>
+			</table>
+			<div style='text-align:center' >
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="build()">生成</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="btnCancel('primitive_function')">取消</a>
+			</div>
+		</form>
+				
+	</div>
+	<!-- 原子函数区  window end-->
+	
+	<!-- 插入模板列区 window start-->
+	<div id="add_templatecolumn" class="easyui-window" title="插入模板列" data-options="modal:true,closed:true,iconCls:'icon-add',top:180" style="width:500px;height:285px;padding:10px;">
+		<div style="padding:10px;" > <span style="font-size:12px;margin-left:10px">模板列名称：</span><input id="templatecolumn" class="easyui-combobox" style="width:300px;" type="text" ></input></div>
+		
+		<div style='text-align:center' >
+			<a href="javascript:void(0)" class="easyui-linkbutton"    data-options="iconCls:'icon-add'" plain="false" onclick="addTemplateColumn()">插入</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton"   data-options="iconCls:'icon-cancel'" plain="false" onclick="btnCancel('add_templatecolumn')">取消</a>
+		</div>
+	</div>
+	<!-- 插入模板列区  window end-->
+	
+	<!-- 插入FAQ话术window start-->
+	<div id="addextratextwin" class="easyui-window" title="插入话术" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width:500px;height:185px;padding:10px;">
+		<div style="padding:10px;" >
+			<span style="font-size:12px;margin-left:10px">开始话术：</span>
+			<input id="beforetext" class="easyui-textbox" style="width:300px;" ></input>
+		</div>
+		<div style="padding:10px;" >
+			<span style="font-size:12px;margin-left:10px">结束话术：</span>
+			<input id="aftertext" class="easyui-textbox" style="width:300px;" ></input>
+		</div>
+		
+		<div style='text-align:center' >
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="addExtraText4FAQ()">插入</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="cancelAddExtraText4FAQ()">取消</a>
+		</div>
+	</div>
+	<!-- 插入FAQ话术window end-->
+</div>
+<!-- 新增标准问题页面 window end -->
+
+					<!-- 插入其他形式答案 window start-->
+		 			<div id="otherResponse_add" class="easyui-window" title="插入其他形式答案" data-options="modal:true,closed:true,iconCls:'icon-edit'" style="width:300px;height:450px;padding:10px;top:200px;">
+         			
+         				<form id="otherResponse0form" class="easyui-form" method="post" data-options="novalidate:true" style="margin:0px 20px 20px 20px;">
+					    	<table style="width:100%;">
+					    		<tr class="btd-display1">
+									<td>
+										<span id="otherResponse0name1"></span>
+										<span id="otherResponse01"><input id="otherResponse0value1"/></span>
+								</tr>
+								<tr class="btd-display2">
+										<span id="otherResponse0name2"></span>
+										<span id="otherResponse02"><input id="otherResponse0value2"/></span>
+									</td>
+								</tr>
+								<tr class="btd-display3">
+									<td>
+										<span id="otherResponse0name3"></span>
+										<span id="otherResponse03"><input id="otherResponse0value3"/></span>
+								</tr>
+								<tr class="btd-display4">
+										<span id="otherResponse0name4"></span>
+										<span id="otherResponse04"><input id="otherResponse0value4"/></span>
+									</td>
+								</tr>
+								<tr class="btd-display5">
+									<td>
+										<span id="otherResponse0name5"></span>
+										<span id="otherResponse05"><input id="otherResponse0value5"/></span>
+								</tr>
+								<tr class="btd-display6">
+										<span id="otherResponse0name6"></span>
+										<span id="otherResponse06"><input id="otherResponse0value6"/></span>
+									</td>
+								</tr>
+								<tr class="btd-display7">
+									<td>									
+										<span id="otherResponse0name7"></span>
+										<span id="otherResponse07"><input id="otherResponse0value7"/></span>
+								</tr>
+								<tr class="btd-display8">
+										<span id="otherResponse0name8"></span>
+										<span id="otherResponse08"><input id="otherResponse0value8"/></span>
+									</td>
+								</tr>
+								<tr class="btd-display9">
+									<td>
+										<span id="otherResponse0name9"></span>
+										<span id="otherResponse09"><input id="addrule0value9"/></span>
+								</tr>
+								<tr class="btd-display10">
+										<span id="otherResponse0name10"></span>
+										<span id="otherResponse010"><input id="otherResponse0value10"/></span>
+									</td>
+								</tr>
+					    	</table>
+					    </form>
+         				
+         				<div style="text-align: center; padding: 5px">
+							<a href="javascript:void(0)" class="easyui-linkbutton" 
+								data-options="iconCls:'icon-add'" plain="false"
+								onclick="addToResponse()">添加</a>
+         				</div>
+         			</div>
+         			<!-- 插入其他形式答案 window end--> 
+
+<script type="text/javascript">
+//实例化编辑器
+var um = UM.getEditor('myEditor');
+
+</script>
+
+</body>
+</html>

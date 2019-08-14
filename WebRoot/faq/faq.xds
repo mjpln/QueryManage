@@ -1,0 +1,46 @@
+{
+    "name": "faq",
+    "settings": {
+        "cmd": {
+            "license": "commercial"
+        },
+        "canvasControls": {
+            "viewportSize": {
+                "name": "Large",
+                "builtIn": true,
+                "height": 1024,
+                "width": 1280
+            }
+        },
+        "urlPrefix": "",
+        "exportPath": ""
+    },
+    "xdsVersion": "3.0.4",
+    "xdsBuild": 1386,
+    "schemaVersion": 1,
+    "upgradeVersion": 300000000004,
+    "framework": "ext42",
+    "viewOrderMap": {
+        "view": [
+            "f53ef3a8-c139-490e-b116-2f6f6c056ab1",
+            "363fd446-fa71-4910-9580-a3c58cfc6e80"
+        ],
+        "store": [
+            "9d39b11f-83b9-4637-a835-96ab36eb46d8",
+            "63f664f9-8c3d-4533-a307-87853821442b"
+        ],
+        "controller": [],
+        "model": [
+            "35046c06-9a9d-4491-87ef-aad9f0b486eb",
+            "0e466884-8b46-4ded-9121-c282d3010f1b"
+        ],
+        "resource": [
+            "7e82c3aa-99f5-41f6-8bef-40c056a37886",
+            "b5ac1781-749e-44cc-8430-95fe18c47349",
+            "0d426278-18fe-42c2-956a-9cad602dbecf"
+        ],
+        "app": [
+            "application"
+        ]
+    }
+}

@@ -1,0 +1,62 @@
+{
+    "name": "wordpat",
+    "settings": {
+        "cmd": {},
+        "urlPrefix": "",
+        "spacesToIndent": 4,
+        "exportPath": "D:/myprogram/ExtWAManageKnowledgeV2/",
+        "sdkPath": "",
+        "lineEnding": "CRLF",
+        "genTimestamps": false,
+        "cacheBust": false,
+        "codeGenFormat": "Class",
+        "senchaIoKey": "",
+        "senchaIoPath": "http://extjs.cachefly.net/designer/IO/",
+        "instantiateStore": true,
+        "saveOnDeploy": false,
+        "appName": "MyApp",
+        "canvasControls": {
+            "viewportSize": {
+                "name": "Large",
+                "builtIn": true,
+                "height": 1024,
+                "width": 1280
+            }
+        }
+    },
+    "xdsVersion": "3.1.0",
+    "xdsBuild": 1943,
+    "schemaVersion": 1,
+    "upgradeVersion": 300000000007,
+    "framework": "ext40",
+    "viewOrderMap": {
+        "view": [
+            "a8f4bae9-f12d-4ecc-804a-cb421faae3ac",
+            "edcb621d-5b45-4026-b0a4-bc768638b954",
+            "a302024b-222b-4598-8c10-9ea19a7e06dd",
+            "f6c1b688-d705-4246-b1a0-5f28000d3861"
+        ],
+        "store": [
+            "b8706192-2fc2-440e-8b1d-c294eb2ea37b",
+            "05c00e44-87fe-45f1-aaa4-9da3ce832e2d",
+            "f807a99b-99d0-4fce-917a-7fbb2117a292",
+            "bdc11e4f-245a-49b7-9fdd-aaa2b190afe5",
+            "af107b93-07f9-4ab0-9edd-11d46a429db0",
+            "5f016bbc-7f0d-45bc-9afb-39bbd37e636c",
+            "5c0f2472-db5c-4644-8172-77a7c018ec1a",
+            "0d632f4c-5275-427d-8d63-ceb3469de6f9"
+        ],
+        "controller": [],
+        "model": [
+            "9385d745-8fee-4af0-b545-ba27c14cb101",
+            "992ac4af-0221-4b56-a7d2-45217b58f6f3"
+        ],
+        "resource": [
+            "f917558e-901f-413d-b064-5e51fedb7038",
+            "ec0db2bc-74c1-4e01-b3a9-af3437f4770f"
+        ],
+        "app": [
+            "application"
+        ]
+    }
+}

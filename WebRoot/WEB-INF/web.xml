@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+	http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+	<filter>
+		<filter-name>struts2</filter-name>
+		<filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>struts2</filter-name>
+		<url-pattern>*.action</url-pattern>
+	</filter-mapping>
+  
+  	<!-- 加入jfinal 拦截器 ,jfinal默认不拦截.html/.jsp等页面请求-->
+	<filter>
+		<filter-name>jfinal</filter-name>
+		<filter-class>com.jfinal.core.JFinalFilter</filter-class>
+		<init-param>
+			<param-name>configClass</param-name>
+			<!-- 手动创建 demo包和DemoConfig类 -->
+			<param-value>demo.DemoConfig</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>jfinal</filter-name>
+		<!-- 门户网站模块使用jfinal，达到restful风格 -->
+		<url-pattern>/*</url-pattern>
+	</filter-mapping> 
+	<!-- jfinal 配置结束 -->
+
+
+	<session-config>
+      <session-timeout>600</session-timeout>
+    </session-config>
+    
+	
+</web-app>

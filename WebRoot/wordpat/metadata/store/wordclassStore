@@ -1,0 +1,45 @@
+{
+    "type": "jsonstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "wordclassStore",
+        "groupField": null,
+        "model": "ModelAutoSendSwitch",
+        "storeId": "wordclassStore"
+    },
+    "designerId": "0d632f4c-5275-427d-8d63-ceb3469de6f9",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "../wordpat.action"
+            },
+            "name": "MyAjaxProxy2",
+            "designerId": "21d15abd-0f63-4a0e-a5b7-b9dc79bc8385",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Json",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "root": "root"
+                    },
+                    "name": "MyJsonReader2",
+                    "designerId": "714006de-67e4-4035-a84d-5cbd05d49977"
+                }
+            ]
+        }
+    ]
+}

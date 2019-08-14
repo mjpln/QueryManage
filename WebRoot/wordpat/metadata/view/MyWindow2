@@ -1,0 +1,399 @@
+{
+    "type": "Ext.window.Window",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "MyWindow2",
+        "height": 400,
+        "id": null,
+        "modal": true,
+        "resizable": [
+            "false"
+        ],
+        "title": "补充交互返回值",
+        "width": 460,
+        "x": null,
+        "y": 50
+    },
+    "designerId": "f6c1b688-d705-4246-b1a0-5f28000d3861",
+    "cn": [
+        {
+            "type": "Ext.panel.Panel",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "height": 368,
+                "id": null,
+                "layout": null,
+                "style": null,
+                "title": ""
+            },
+            "name": "MyPanel4",
+            "designerId": "26e6c27d-b66e-47d5-b5c6-94859c0422b3",
+            "cn": [
+                {
+                    "type": "Ext.form.field.ComboBox",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "designer|displayName": null,
+                        "fieldLabel": "key",
+                        "id": "keys",
+                        "labelWidth": 45,
+                        "margin": "20px 0 0 20px",
+                        "name": null,
+                        "queryMode": "local",
+                        "store": "keyStore",
+                        "valueField": "id",
+                        "width": 400
+                    },
+                    "name": "MyComboBox2",
+                    "designerId": "1cbbe63e-eef0-4d33-915e-098c1a02ac58",
+                    "cn": [
+                        {
+                            "type": "basiceventbinding",
+                            "reference": {
+                                "name": "listeners",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "fn": "onKeysChange",
+                                "implHandler": [
+                                    "var wordclasses = Ext.getCmp(\"wordclasses\");\r",
+                                    "var values = Ext.getCmp(\"values\");\r",
+                                    "\r",
+                                    "var wordclassStore = wordclasses.getStore();\r",
+                                    "wordclassStore.getProxy().extraParams = {action:'addreturnvalue_loadWordclasses',elementname:newValue};\r",
+                                    "wordclasses.reset();\r",
+                                    "wordclassStore.load();\r",
+                                    "\r",
+                                    "var valueStore = values.getStore();\r",
+                                    "valueStore.getProxy().extraParams = {action:'addreturnvalue_loadValues',elementname:newValue};\r",
+                                    "values.reset();\r",
+                                    "valueStore.load();"
+                                ],
+                                "name": "change",
+                                "scope": "me"
+                            },
+                            "name": "onKeysChange",
+                            "designerId": "035b34cc-b284-4e70-a0c5-60eeb5aa5bb7"
+                        }
+                    ]
+                },
+                {
+                    "type": "Ext.form.field.ComboBox",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "editable": false,
+                        "fieldLabel": "词类",
+                        "id": "wordclasses",
+                        "labelWidth": 45,
+                        "margin": "20px 0 0 20px",
+                        "name": null,
+                        "queryMode": "local",
+                        "store": "wordclassStore",
+                        "valueField": "id",
+                        "width": 400
+                    },
+                    "name": "MyComboBox3",
+                    "designerId": "8d1c75bc-d7fc-4ed8-9236-780f2f05bbfe",
+                    "cn": [
+                        {
+                            "type": "basiceventbinding",
+                            "reference": {
+                                "name": "listeners",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "fn": "onWordclassesSelect",
+                                "implHandler": [
+                                    "var values = Ext.getCmp(\"values\");\r",
+                                    "var valueStore = values.getStore();\r",
+                                    "valueStore.getProxy().extraParams = {action:'addreturnvalue_loadValues',wordclassid:records[0].data.id};\r",
+                                    "values.reset();\r",
+                                    "valueStore.load();"
+                                ],
+                                "name": "select",
+                                "scope": "me"
+                            },
+                            "name": "onWordclassesSelect",
+                            "designerId": "6ff42011-078b-48f0-80f2-ba0cf7c30a77"
+                        }
+                    ]
+                },
+                {
+                    "type": "Ext.form.field.ComboBox",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fieldLabel": "value",
+                        "id": "values",
+                        "labelWidth": 45,
+                        "margin": "20px 0 0 20px",
+                        "name": null,
+                        "queryMode": "local",
+                        "store": "valueStore",
+                        "valueField": "id",
+                        "width": 400
+                    },
+                    "name": "MyComboBox4",
+                    "designerId": "a14b3489-4042-4b72-89b4-a0857bd18e7f"
+                },
+                {
+                    "type": "Ext.button.Button",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "margin": "20px 0 0 200px",
+                        "text": "添加",
+                        "width": 50
+                    },
+                    "name": "MyButton12",
+                    "designerId": "30045158-2418-454d-84aa-bc6ee7712216",
+                    "cn": [
+                        {
+                            "type": "basiceventbinding",
+                            "reference": {
+                                "name": "listeners",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "fn": "onButtonClick",
+                                "implHandler": [
+                                    "var key = Ext.getCmp(\"keys\").getValue();\r",
+                                    "var wordclass = Ext.getCmp(\"wordclasses\").getRawValue();\r",
+                                    "var value = Ext.getCmp(\"values\").getValue();\r",
+                                    "\r",
+                                    "var preview = Ext.getCmp(\"preview\");\r",
+                                    "var c = preview.getValue();\r",
+                                    "var a_c = c.split('\\n');\r",
+                                    "\r",
+                                    "var keys = [];\r",
+                                    "for(var index in a_c) {\r",
+                                    "    keys.push(a_c[index].split(\"=\")[0]);\r",
+                                    "}\r",
+                                    "\r",
+                                    "if(key&&key!=='') {\r",
+                                    "    if(value&&value!=='') {\r",
+                                    "        var temp2 = key + '=' + value;\r",
+                                    "        if(!exists(temp2)) {\r",
+                                    "            //是否第一次添加\r",
+                                    "            if(c===\"\") {\r",
+                                    "                preview.setValue(c + temp2);\r",
+                                    "            } else {\r",
+                                    "                preview.setValue(c + \"\\n\" + temp2);\r",
+                                    "            }\r",
+                                    "        }\r",
+                                    "    } else {\r",
+                                    "        if(wordclass&&wordclass!=='') {\r",
+                                    "            var temp1 = key + '=' + '<!'+ wordclass +'>';\r",
+                                    "            //是否已存在\r",
+                                    "            if(!exists(temp1)) {\r",
+                                    "                //是否第一次添加\r",
+                                    "                if(c===\"\") {\r",
+                                    "                    preview.setValue(c + temp1);\r",
+                                    "                } else {\r",
+                                    "                    preview.setValue(c + \"\\n\" + temp1);\r",
+                                    "                }\r",
+                                    "            }\r",
+                                    "        }\r",
+                                    "    }\r",
+                                    "}\r",
+                                    "\r",
+                                    "function exists(temp) {\r",
+                                    "    var flag = false;\r",
+                                    "\r",
+                                    "    for(var index1 in a_c) {\r",
+                                    "        if(a_c[index1]==temp) {\r",
+                                    "            flag = true;\r",
+                                    "        }\r",
+                                    "    }\r",
+                                    "\r",
+                                    "    var temp_key = temp.split(\"=\")[0];\r",
+                                    "    var temp_value = temp.split(\"=\")[1];\r",
+                                    "    var i = keys.indexOf(key);\r",
+                                    "    if(i!=-1) {\r",
+                                    "        //if(temp_value.indexOf(\"<!\")==0&&temp_value.indexOf(\">\")==temp_value.length-1) {\r",
+                                    "            c = \"\";\r",
+                                    "            a_c[i] = temp;\r",
+                                    "            for(var index2 in a_c) {\r",
+                                    "                if(index2==0){\r",
+                                    "                    c += a_c[index2];\r",
+                                    "                } else {\r",
+                                    "                    c += '\\n' + a_c[index2];\r",
+                                    "                }\r",
+                                    "            }\r",
+                                    "\r",
+                                    "            preview.setValue(c);\r",
+                                    "        //}\r",
+                                    "        flag = true;\r",
+                                    "    }\r",
+                                    "\r",
+                                    "    return flag;\r",
+                                    "}"
+                                ],
+                                "name": "click",
+                                "scope": "me"
+                            },
+                            "name": "onButtonClick",
+                            "designerId": "6bd9f875-b435-40aa-ade5-ab77cb2d0a2c"
+                        }
+                    ]
+                },
+                {
+                    "type": "Ext.form.field.TextArea",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fieldLabel": "预览",
+                        "height": 120,
+                        "id": "preview",
+                        "labelWidth": 45,
+                        "margin": "20px 0 0 20px",
+                        "readOnly": true,
+                        "width": 400
+                    },
+                    "name": "MyTextArea2",
+                    "designerId": "9636bfd6-7706-4274-8435-1c2dc4729ca5"
+                },
+                {
+                    "type": "Ext.button.Button",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "margin": "20px 0 0 200px",
+                        "text": "补充",
+                        "width": 50
+                    },
+                    "name": "MyButton13",
+                    "designerId": "2727333f-cff7-4dc2-8b46-84eafc56ab8c",
+                    "cn": [
+                        {
+                            "type": "basiceventbinding",
+                            "reference": {
+                                "name": "listeners",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "fn": "onButtonClick1",
+                                "implHandler": [
+                                    "var c = Ext.getCmp(\"preview\").getValue();\r",
+                                    "if(c===\"\") return;\r",
+                                    "\r",
+                                    "var a_c = c.split(\"\\n\");\r",
+                                    "var ct = '';\r",
+                                    "for(var index in a_c) {\r",
+                                    "    if(index==0){\r",
+                                    "        ct += a_c[index];\r",
+                                    "    } else {\r",
+                                    "        ct += '&' + a_c[index];\r",
+                                    "    }\r",
+                                    "}\r",
+                                    "\r",
+                                    "var o ;\r",
+                                    "if(editstatus== \"insert\"){\r",
+                                    "    o=Ext.getCmp('textareaWordpat');\r",
+                                    "}else{\r",
+                                    "    o= Ext.getCmp('textfieldWordpatEdit');\r",
+                                    "}\r",
+                                    "var content = o.getValue().replace(new RegExp(' ','g'),'');\r",
+                                    "\r",
+                                    "o.setValue(combine(content,ct));\r",
+                                    "var win = Ext.getCmp(\"win\");\r",
+                                    "win.close();\r",
+                                    "\r",
+                                    "function combine(a,b){\r",
+                                    "    var returnStr = \"\";\r",
+                                    "    try {\r",
+                                    "    var aa = a.split(\"序#\")[1].split(\"&\");\r",
+                                    "    var wc = a.split(\"#\");\r",
+                                    "    var bc = wc[0];\r",
+                                    "    var key1 =[];\r",
+                                    "    for(var j = 0; j < aa.length; j++) {\r",
+                                    "        key1.push(aa[j]);\r",
+                                    "    }\r",
+                                    "    var key2 =[];\r",
+                                    "    var bb = b.split(\"&\");\r",
+                                    "     for(var k = 0; k < bb.length; k++) {\r",
+                                    "        key2.push(bb[k]);\r",
+                                    "    }\r",
+                                    "\r",
+                                    "    for(var i=0;i<key2.length;i++){\r",
+                                    "        var flag = false;\r",
+                                    "        var keystr2 = key2[i].split(\"=\")[0];\r",
+                                    "        var v2 = key2[i].split(\"=\")[1];\r",
+                                    "        var value2 = \"\";\r",
+                                    "        if(v2.indexOf(\"<!\")==0&&v2.indexOf(\">\")==v2.length-1) {\r",
+                                    "            value2 = v2.split(\"<!\")[1].split(\">\")[0];\r",
+                                    "        } else {\r",
+                                    "            value2 = v2;\r",
+                                    "        }\r",
+                                    "        for(var n =0;n<key1.length;n++){\r",
+                                    "            var keystr1 = key1[n].split(\"=\")[0];\r",
+                                    "            if(keystr2==keystr1){\r",
+                                    "                flag=true;\r",
+                                    "                continue;\r",
+                                    "            }\r",
+                                    "        }\r",
+                                    "        if(!flag){\r",
+                                    "            if(v2.indexOf(\"<!\")==0&&v2.indexOf(\">\")==v2.length-1) {\r",
+                                    "                if(bc.indexOf(value2)==-1){\r",
+                                    "                    bc = bc+\"*[\"+value2+\"]\";\r",
+                                    "                }\r",
+                                    "            }\r",
+                                    "            returnStr = returnStr +\"&\"+key2[i];\r",
+                                    "\r",
+                                    "        }\r",
+                                    "    }\r",
+                                    "\r",
+                                    "    returnStr = bc+\"#\"+wc[1]+\"#\"+wc[2]+returnStr;\r",
+                                    "    \r",
+                                    "    } catch(e) {\r",
+                                    "        Ext.MessageBox.alert('提示', '词模格式不正确!');\r",
+                                    "        return \"\";\r",
+                                    "    }\r",
+                                    "    \r",
+                                    "    return returnStr;\r",
+                                    "}"
+                                ],
+                                "name": "click",
+                                "scope": "me"
+                            },
+                            "name": "onButtonClick1",
+                            "designerId": "e457fdbc-7680-4037-acc1-a2f1d5966379"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,110 @@
+{
+    "type": "Ext.window.Window",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|snapToGrid": 10,
+        "designer|userClassName": "MyWindow",
+        "height": 250,
+        "layout": "absolute",
+        "title": "模板列",
+        "width": 592
+    },
+    "designerId": "363fd446-fa71-4910-9580-a3c58cfc6e80",
+    "cn": [
+        {
+            "type": "Ext.form.field.ComboBox",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fieldLabel": "模板列选择",
+                "height": null,
+                "id": "comboboxTemplateColumn2",
+                "layout|x": 20,
+                "layout|y": 60,
+                "maxHeight": 50,
+                "store": "templateColumnStore",
+                "width": 470
+            },
+            "designerId": "3f61957e-c2c8-4d41-bcd7-b4606f0a5433",
+            "cn": [
+                {
+                    "type": "basiceventbinding",
+                    "reference": {
+                        "name": "listeners",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fn": "onComboboxTemplateColumn2BeforeQuery",
+                        "implHandler": [
+                            "\r",
+                            "var comboboxservice = Ext.getCmp(\"comboboxTemplateColumn\");\r",
+                            "\r",
+                            "//var name =encodeURIComponent(encodeURIComponent(comboboxservice.getValue()));\r",
+                            "var name =comboboxservice.getValue();\r",
+                            "\r",
+                            "//alert(name);\r",
+                            "if (serviceid === \"\"||!serviceid) {\r",
+                            "    return;\r",
+                            "}\r",
+                            "\r",
+                            "comboboxservice.store.loadPage(1);\r",
+                            "comboboxservice.expand();"
+                        ],
+                        "name": "beforequery",
+                        "scope": "me"
+                    },
+                    "designerId": "49e85747-588f-47b6-930f-c153bece5f3c"
+                }
+            ]
+        },
+        {
+            "type": "Ext.button.Button",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "layout|x": 520,
+                "layout|y": 60,
+                "text": "选择"
+            },
+            "designerId": "9de27164-8662-49ec-8056-ca799d919eb2",
+            "cn": [
+                {
+                    "type": "basiceventbinding",
+                    "reference": {
+                        "name": "listeners",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fn": "onButtonClick",
+                        "implHandler": [
+                            "var answer =Ext.getCmp('taanswer').getValue();\r",
+                            "alert(answer);\r",
+                            "\r",
+                            "var columnName = Ext.getCmp(\"comboboxTemplateColumn\").getRawValue();\r",
+                            "alert(columnName);\r",
+                            "answer = answer+\"<@\"+columnName+\">\";\r",
+                            "Ext.getCmp('taanswer').setValue(answer);\r",
+                            "win.close();\r",
+                            ""
+                        ],
+                        "name": "click",
+                        "scope": "me"
+                    },
+                    "designerId": "175d028b-a535-49ed-b157-f160dfbbeac4"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,38 @@
+{
+    "type": "Ext.data.Store",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "StoreWordpatType",
+        "model": "ModelAutoSendSwitch",
+        "storeId": "StoreWordpatType"
+    },
+    "designerId": "05c00e44-87fe-45f1-aaa4-9da3ce832e2d",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Memory",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "data": [
+                    "[{",
+                    "                        id: 0,",
+                    "                        text: '普通词模'",
+                    "                    },",
+                    "                    {",
+                    "                        id: 1,",
+                    "                        text: '等于词模'",
+                    "                    }]"
+                ]
+            },
+            "name": "MyMemoryProxy1",
+            "designerId": "aeba49dd-ef58-40bf-8e8a-a6ec45c7f436"
+        }
+    ]
+}

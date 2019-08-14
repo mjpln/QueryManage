@@ -1,0 +1,92 @@
+{
+    "type": "jsonstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "templateColumnStore",
+        "model": "templateColumnModel",
+        "storeId": "templateColumnStore"
+    },
+    "designerId": "63f664f9-8c3d-4533-a307-87853821442b",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "../templateColumnForDDL.action"
+            },
+            "designerId": "bf3b9dbd-578c-4f74-97c5-71953bbac62f",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Json",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "root": "users"
+                    },
+                    "designerId": "1c01949d-d0d1-49a2-b8eb-0e98e5993935"
+                }
+            ]
+        },
+        {
+            "type": "basiceventbinding",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onJsonstoreLoad",
+                "implHandler": [
+                    "// var ddl=Ext.getCmp('comboboxTemplateColumn');//不能删\r",
+                    "// //alert(\"节点\"+ ddl);\r",
+                    "// if(records.length==0){\r",
+                    "//     ddl.setValue(ddl.getValue());\r",
+                    "// }"
+                ],
+                "name": "load",
+                "scope": "me"
+            },
+            "designerId": "4957ffdb-5fa7-432b-af5f-bd42926a9f3f"
+        },
+        {
+            "type": "basiceventbinding",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onJsonstoreBeforeLoad",
+                "implHandler": [
+                    "\r",
+                    "var comboboxTemplateColumn = Ext.getCmp('comboboxTemplateColumn');\r",
+                    "var templateColumnName = comboboxTemplateColumn.getValue();\r",
+                    "\r",
+                    "//templateColumnName =encodeURIComponent(templateColumnName);\r",
+                    "//servicepart=servicepart.replace(/\\+/g,\"%2B\");\r",
+                    "// if(templateColumnName===\"\"||!templateColumnName){\r",
+                    "//     return;\r",
+                    "// }\r",
+                    "\r",
+                    "//templateColumnName =encodeURIComponent(templateColumnName);\r",
+                    "//alert(templateColumnName);\r",
+                    "this.proxy.extraParams = { name: templateColumnName,serviceid:serviceid,type:'selectTemplateColumn' };"
+                ],
+                "name": "beforeload",
+                "scope": "me"
+            },
+            "designerId": "61b8238a-08f2-49a2-a321-116b2b9e04ad"
+        }
+    ]
+}

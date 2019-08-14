@@ -1,0 +1,33 @@
+{
+    "type": "Ext.app.Application",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "models": [
+            "ModelGridPanel",
+            "ModelAutoSendSwitch"
+        ],
+        "name": "MyApp",
+        "stores": [
+            "StoreGridPanel",
+            "StoreAutoSendSwitch",
+            "StoreWordpatType",
+            "StoreChannel",
+            "MyJsonStore",
+            "keyStore",
+            "valueStore",
+            "wordclassStore"
+        ],
+        "views": [
+            "MyViewport",
+            "MyWindow",
+            "MyWindow1",
+            "MyWindow2"
+        ]
+    },
+    "name": "Application",
+    "designerId": "application"
+}

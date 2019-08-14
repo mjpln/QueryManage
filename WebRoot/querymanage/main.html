@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+		<link type="text/css" rel="stylesheet" href="../easyui/jquery-easyui-1.4.1/themes/default/easyui.css" />
+		<link type="text/css" rel="stylesheet" href="../easyui/jquery-easyui-1.4.1/themes/icon.css" />
+		<link type="text/css" rel="stylesheet" href="./css/main.css" />
+		<link type="text/css" rel="stylesheet" href="../css/scrollbar.css" />
+		<script type="text/javascript" src="../easyui/jquery-1.8.0.min.js"></script>
+		<script type="text/javascript" src="../easyui/jquery-easyui-1.4.1/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="../easyui/jquery-easyui-1.4.1/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="../script/json2.js"></script>
+		<script type="text/javascript" src="../script/common.js"></script>
+		<script type="text/javascript" src="../script/publicSetup.js"></script>
+		<script type="text/javascript" src="./js/main.js?v=20160608"></script> 
+		<script type="text/javascript" src="../script/loading.js"></script>
+</head>
+<body onkeydown="myKeyDown()">
+
+<div id="aa" class="easyui-tabs" style="width:100%;height:auto;">
+	
+<div title="问题库详情"  >
+
+	<div id="qm_layout" class="easyui-layout" style="width:100%;height:560px;">
+	    <!--场景名称区域 start  -->
+		<div id="menuarea" data-options="region:'west',split:true"  title="模型名称"  style="width:15%;padding:10px" >
+			<ul id="bb" class="easyui-combotree" style="width:130px;"></ul>
+			<ul id="tt" class="easyui-tree" ></ul>
+			<!-- 隐藏form用于下载文件使用 -->
+	    	<form id="down_form" method="post" visiabled=false></form>
+		</div>
+		
+		<!-- 右键菜单定义如下：-->
+		<div id="mm" class="easyui-menu" style="width:120px;">
+			<div onclick="nodeAppendClick()" data-options="iconCls:'icon-add'">新增业务</div>
+			<div onclick="nodeUpdateClick()" data-options="iconCls:'icon-edit'">修改业务名称</div>
+			<div onclick="nodeFAQUploadClick()" data-options="iconCls:'icon-upload'">导入FAQ</div>
+			<div  id="mm-export" style="display:none;" onclick="exportWordpatAndQuery('0')" data-options="iconCls:'icon-download'">语义导出</div>
+			<div id="mm-remove" onclick="nodeRemoveClick()" data-options="iconCls:'icon-remove'">删除业务</div>
+			<div id="mm-openinfo" onclick="openInfoClick()" data-options="iconCls:'icon-answer'">打开信息表</div>
+			
+		</div>
+		<!-- 根业务右键菜单定义如下：-->
+		<div id="mm2" class="easyui-menu" style="width:120px;">
+			<div onclick="nodeAppendClick()" data-options="iconCls:'icon-add'">新增业务</div>
+			<!-- <div onclick="exportWordpatAndQuery('0')" data-options="iconCls:'icon-download'">语义导出</div> -->
+			<!-- <div onclick="$('#kb_upload').window('open');" data-options="iconCls:'icon-upload'">语义导入</div> -->
+		</div>
+		<!-- 新增节点对话框 -->
+		<div id="win_nodeadd" class="easyui-window" title="添加" style="padding:10px 40px;"   
+		        data-options="iconCls:'icon-add',modal:true, closed:true">
+		  	<table>
+		  		<tr><td>上级目录：</td><td><input id="nodeadd_preservicename" class="easyui-textbox" style="width:200px;" data-options="readonly:true"/></td></tr>
+		  		<tr><td>输入名称：</td><td><input id="nodeadd_servicename" class="easyui-textbox" style="width:200px;"/></td></tr>
+		  	</table>
+		  	 <input type="hidden" id="nodeadd_prarentid"/>
+		  	 <input type="hidden" id="nodeadd_preserviceid"/>
+		  	 <div style="text-align:center;padding:5px">
+		    	<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-save'"  onclick="nodeSave()">保存</a>
+		    	<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-clear'" onclick="winAddClear()">清空</a>
+		    </div>
+		</div>
+		<!-- 修改节点对话框 -->
+		<div id="win_nodeupd" class="easyui-window" title="添加" style="padding:10px 40px;"   
+		        data-options="iconCls:'icon-edit',modal:true, closed:true">   
+		  	<table>
+		  		<tr><td>业务名称：</td><td><input id="nodeupd_servicename" class="easyui-textbox" style="width:200px;" data-options="readonly:true"/></td></tr>
+		  		<tr><td>新名称：</td><td><input id="nodeupd_newservicename" class="easyui-textbox" style="width:200px;"/></td></tr>
+		  	</table>
+		  	 <input type="hidden" id="nodeupd_serviceid"/>
+		  	 <div style="text-align:center;padding:5px">
+		    	<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-save'"  onclick="nodeEdit()">保存</a>
+		    	<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-clear'" onclick="winUpdClear()">清空</a>
+		    </div>
+		</div>
+		
+		
+		 <!--场景名称区域 end  -->
+		 
+		 <!--场景名称右击菜单 start  -->
+        <!-- <div id="mm" class="easyui-menu" style="width:120px;">
+        <div  id ="s" onclick="search()" data-options="iconCls:'icon-search'">查找场景</div>
+		<div  id ="sm" class="menu-sep"></div> 
+		<div id ="r" onclick="reload()" data-options="iconCls:'icon-reload'">刷新场景</div>
+		<div  id ="rm" class="menu-sep"></div> 
+		<div id = "a" onclick="append()" data-options="iconCls:'icon-add'">添加场景</div>
+		<div id ="am" class="menu-sep"></div> 
+		<div id="d" onclick="removeit()" data-options="iconCls:'icon-remove'">删除场景</div>
+		<div id ="dm" class="menu-sep"></div> 
+		<div id="u" onclick="uploadhtml()" data-options="iconCls:'icon-upload'">上传文档</div>
+		<div id ="um" class="menu-sep"></div> 
+		<div id ="sw" onclick="seehtml()" data-options="iconCls:'icon-search'">查看文档</div>
+	    </div> -->
+	    <!--场景名称右击菜单 end -->
+	    
+	     <!-- 菜单添加区 window start-->
+		 <div id="menu_add" class="easyui-window" title="添加" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width:500px;height:200px;padding:10px;">
+            <div style="padding:10px;" > <span style="font-size:12px;margin-left:10px">上级目录：</span><input id="menu_super" type="text" class="easyui-textbox" style="width:320px;" readOnly="true"/></div>
+            <div style="padding:10px;" > <span style="font-size:12px;margin-left:10px">输入名称：</span><input id="menu_name" type="text" class="easyui-textbox" style="width:320px;"/></div>
+            <div style='text-align:center' >
+            <a href="javascript:void(0)" class="easyui-linkbutton"    data-options="iconCls:'icon-save'" plain="false" onclick="addmenu()">保存</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton"   data-options="iconCls:'icon-clear'" plain="false" onclick="clearmenu()">清空</a>
+		    </div>
+         </div>
+         <!-- 菜单添加区 window end--> 
+         
+          <!-- 上传文档区 window start-->
+		 <div id="html_upload" class="easyui-window" title="上传场景说明" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width:500px;height:200px;padding:10px;">
+            
+            <div style="padding:10px;" > <span style="font-size:12px;margin-left:10px">场景名称：</span><input id="menuname" type="text" class="easyui-textbox" style="width:320px;" readOnly="true"/></div>
+            
+            <div style="padding:10px;" > <span style="margin-left:10px;">文件名称:</span>
+						<form id="formUpload" style="display:inline;" method="post" enctype="multipart/form-data">
+							<input name="upload" id="fileuploadtxt" class="easyui-filebox" data-options="buttonText:'选择文件'" style="width:320px;"/>
+						</form></div>
+            <div style='text-align:center' >
+            <a href="javascript:void(0)" class="easyui-linkbutton"    data-options="iconCls:'icon-upload'" plain="false" onclick="upload()">上传</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton"   data-options="iconCls:'icon-clear'" plain="false" onclick="clearmenu()">清空</a>
+		    </div>
+         </div>
+         <!-- 上传文档区 window end--> 
+         
+         <!-- 上传词类词条区 window start-->
+		 <div id="word_upload" class="easyui-window" title="上传业务词&同义词" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width:500px;height:200px;padding:10px;">
+            
+            <div style="padding:10px;" > <span style="margin-left:10px;">文件名称:</span>
+						<form id="formUploadWordFile" style="display:inline;" method="post" enctype="multipart/form-data">
+							<input name="upload" id="wordfileuploadtxt" class="easyui-filebox" data-options="buttonText:'选择文件'" style="width:320px;"/>
+						</form></div>
+						
+						
+						
+            <div style='text-align:center' >
+            <a href="javascript:void(0)" class="easyui-linkbutton"    data-options="iconCls:'icon-upload'" plain="false" onclick="uploadWordFile()">上传</a>
+		    </div>
+         </div>
+         <!-- 上传词类词条区  window end--> 
+         
+         <!-- 上传FAQ区  window start-->
+		<div id="faq_upload" class="easyui-window" title="上传FAQ" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width:500px;height:200px;padding:10px;">
+			 <div style="padding:10px;" > <span style="margin-left:10px;">文件名称:</span>
+						<form id="formUploadFAQFile" style="display:inline;" method="post" enctype="multipart/form-data">
+							<input name="upload" id="faqfileuploadtxt" class="easyui-filebox" data-options="buttonText:'选择文件'" style="width:320px;"/>
+						</form>
+			</div>
+			<div style="display:none;">
+				<div id="faqnode" class="easyui-textbox" style="display:none;"></div>
+            </div>
+            <div style='text-align:center' >
+            <a href="javascript:void(0)" class="easyui-linkbutton"    data-options="iconCls:'icon-upload'" plain="false" onclick="uploadFAQFile()">上传</a>
+		    </div>	
+		</div>         
+         <!-- 上传FAQ区  window end -->
+         <!-- 上传语义知识区  window start-->
+		<div id="kb_upload" class="easyui-window" title="语义导入" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width:500px;height:200px;padding:10px;">
+			 <div style="padding:10px;" > <span style="margin-left:10px;">文件名称:</span>
+						<form id="formUploadKBFile" style="display:inline;" method="post" enctype="multipart/form-data">
+							<input name="upload" id="kbfileuploadtxt" class="easyui-filebox" data-options="buttonText:'选择文件'" style="width:320px;"/>
+						</form>
+			</div>
+            <div style='text-align:center' >
+            <a href="javascript:void(0)" class="easyui-linkbutton"    data-options="iconCls:'icon-upload'" plain="false" onclick="uploadKBFile()">上传</a>
+		    </div>	
+		</div>         
+         <!-- 上传语义知识区  window end -->
+           <!-- 场景查找区 window start-->
+		 <div id="menu_select" class="easyui-window" title="查找场景" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width:500px;height:200px;padding:10px;">
+            <div style="padding:10px;" > <span style="font-size:12px;margin-left:10px">场景名称：</span><input id="select_menu_name" type="text" class="easyui-combobox" style="width:320px;"/></div>
+            <div style='text-align:center' >
+		    </div>
+         </div>
+         <!-- 场景查找区 window end--> 
+         
+         <!-- 全局查找区 window start modal:true,closed:true,-->
+         <div id="searchall" class="easyui-window" title="全局查找" data-options="modal:true,iconCls:'icon-searchall',closed:true,collapsible:false,minimizable:false,maximizable:false" style="width:800px;height:400px;padding:10px;">
+         	<table id="searchall_gr"></table>
+         	<div id="searchall_tb" style="padding:10px 5px">
+         		内容: <input id="searchall_content" class="easyui-textbox" style="width:400px">
+				对象: 
+				<select id="searchtype" class="easyui-combobox" data-options="editable:false" panelHeight="auto" style="width:100px">
+					<option value="业务">模型名称</option>
+					<option value="标准问">标准问题</option>
+					<option value="扩展问">客户问题</option>
+					<option value="答案">答案</option>
+					<option value="咨询">咨询</option>
+				</select>
+				<a onclick="searchAll()" class="easyui-linkbutton">查找</a>
+         	</div>
+         </div>
+         <!-- 全局查找区 window end -->
+         
+
+		<div data-options="region:'center'" style="border:none;">
+			    <div id="tb"  class="easyui-tabs" style="width:100%;height:100%;" data-options="tabHeight:23">
+			    </div>
+			 </div>			
+		</div>
+		
+	</div>
+
+
+</div>
+
+<!-- 
+<div id="tb_calssifyquery" title="问题库分类" style="width:100%;height:560px;" >
+</div>
+  -->
+
+</div>
+
+</body>
+</html>

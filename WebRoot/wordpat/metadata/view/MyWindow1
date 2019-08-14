@@ -1,0 +1,149 @@
+{
+    "type": "Ext.window.Window",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|snapToGrid": 10,
+        "designer|userClassName": "MyWindow1",
+        "height": 449,
+        "layout": "absolute",
+        "title": "请选择合适词模",
+        "width": 685
+    },
+    "designerId": "a302024b-222b-4598-8c10-9ea19a7e06dd",
+    "cn": [
+        {
+            "type": "Ext.form.RadioGroup",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "container|align": "stretch",
+                "fieldLabel": "词模条目",
+                "height": 350,
+                "layout": "vbox",
+                "layout|x": 30,
+                "layout|y": 50,
+                "width": 620
+            },
+            "name": "MyRadioGroup2",
+            "designerId": "eb426333-56b8-4403-8a4c-908524721a98",
+            "cn": [
+                {
+                    "type": "Ext.form.field.Radio",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "boxLabel": "Box Label",
+                        "fieldLabel": null
+                    },
+                    "name": "MyRadio6",
+                    "designerId": "59747fbe-7ea6-4549-8342-1b041a20f204"
+                },
+                {
+                    "type": "Ext.form.field.Radio",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "boxLabel": "Box Label",
+                        "fieldLabel": null
+                    },
+                    "name": "MyRadio7",
+                    "designerId": "67773e31-02e7-428f-8334-4c963085b021"
+                },
+                {
+                    "type": "basiceventbinding",
+                    "reference": {
+                        "name": "listeners",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fn": "onRadiogroupBeforeRender",
+                        "name": "beforerender",
+                        "scope": "me"
+                    },
+                    "name": "onRadiogroupBeforeRender",
+                    "designerId": "de3189c6-a7a6-49c2-9bd6-15c1456ac632"
+                }
+            ]
+        },
+        {
+            "type": "Ext.button.Button",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "layout|x": 520,
+                "layout|y": 10,
+                "text": "确认",
+                "width": 60
+            },
+            "name": "MyButton10",
+            "designerId": "3c9f20ad-857a-4bd8-af33-dcb61aa336f9",
+            "cn": [
+                {
+                    "type": "basiceventbinding",
+                    "reference": {
+                        "name": "listeners",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fn": "onButtonClick",
+                        "name": "click",
+                        "scope": "me"
+                    },
+                    "name": "onButtonClick",
+                    "designerId": "38ed2859-cf68-4d9e-acc6-f50f021ade22"
+                }
+            ]
+        },
+        {
+            "type": "Ext.button.Button",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "layout|x": 600,
+                "layout|y": 10,
+                "text": "取消",
+                "width": 60
+            },
+            "name": "MyButton11",
+            "designerId": "fe348b7f-5530-4142-9b9b-824176c3e555",
+            "cn": [
+                {
+                    "type": "basiceventbinding",
+                    "reference": {
+                        "name": "listeners",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fn": "onButtonClick1",
+                        "name": "click",
+                        "scope": "me"
+                    },
+                    "name": "onButtonClick1",
+                    "designerId": "ea76237f-ff25-48ac-aa8b-2b3197aac339"
+                }
+            ]
+        }
+    ]
+}

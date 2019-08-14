@@ -1,0 +1,24 @@
+{
+    "type": "Ext.app.Application",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "models": [
+            "faqModel",
+            "templateColumnModel"
+        ],
+        "name": "MyApp",
+        "stores": [
+            "faqStore",
+            "templateColumnStore"
+        ],
+        "views": [
+            "MyViewport",
+            "MyWindow"
+        ]
+    },
+    "designerId": "application"
+}

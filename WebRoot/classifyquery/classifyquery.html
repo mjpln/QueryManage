@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<link type="text/css" rel="stylesheet" href="../easyui/jquery-easyui-1.4.1/themes/default/easyui.css" />
+	<link type="text/css" rel="stylesheet" href="../easyui/jquery-easyui-1.4.1/themes/icon.css" />
+
+	<link href="../umeditor1_2_2-utf8-jsp/themes/default/css/umeditor.css" type="text/css" rel="stylesheet">	
+	<script type="text/javascript" src="../umeditor1_2_2-utf8-jsp/third-party/jquery.min.js"></script>
+	<script type="text/javascript" charset="utf-8" src="../umeditor1_2_2-utf8-jsp/umeditor.config.js"></script>
+	<script type="text/javascript" charset="utf-8" src="../umeditor1_2_2-utf8-jsp/umeditor.min.js"></script>
+	<script type="text/javascript" src="../umeditor1_2_2-utf8-jsp/lang/zh-cn/zh-cn.js"></script>
+
+	<script type="text/javascript" src="../easyui/jquery-easyui-1.4.1/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../easyui/jquery-easyui-1.4.1/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../script/json2.js"></script>
+	<script type="text/javascript" src="../script/common.js"></script>
+	<script type="text/javascript" src="./js/underscore-min.js"></script>
+	<script type="text/javascript" src="./js/classifyquery.js"></script>
+
+	<script>
+	//获取浏览器页面可见高度和宽度
+	var _PageHeight = document.documentElement.clientHeight,
+		_PageWidth = document.documentElement.clientWidth;
+	//计算loading框距离顶部和左部的距离（loading框的宽度为215px，高度为61px）
+	var _LoadingTop = _PageHeight > 61 ? (_PageHeight - 61) / 2 : 0,
+		_LoadingLeft = _PageWidth > 215 ? (_PageWidth - 215) / 2 : 0;
+	//在页面未加载完毕之前显示的loading Html自定义内容
+	var _LoadingHtml = '<div id="loadingDiv" style="position:absolute;left:0;width:100%;height:' + _PageHeight + 'px;top:0;background:#f3f8ff;opacity:1;filter:alpha(opacity=80);z-index:10000;"><div style="position: absolute; cursor1: wait; left: ' + _LoadingLeft + 'px; top:' + _LoadingTop + 'px; width: auto; height: 57px; line-height: 57px; padding-left: 50px; padding-right: 5px; background: #fff url(/Content/loading.gif) no-repeat scroll 5px 10px; border: 2px solid #95B8E7; color: #696969; font-family:\'Microsoft YaHei\';">页面加载中，请稍等。。。</div></div>';
+	//呈现loading效果
+	document.write(_LoadingHtml);
+
+	//监听加载状态改变
+	document.onreadystatechange = completeLoading;
+
+	//加载状态为complete时移除loading效果
+	function completeLoading() {
+		if (document.readyState == "complete") {
+			var loadingMask = document.getElementById('loadingDiv');
+			loadingMask.parentNode.removeChild(loadingMask);
+		}
+	}
+	
+	</script>
+
+</head>
+<body>
+	<div>
+		<table cellspacing="0" cellpadding="0" style="margin:5px;">
+			<tr>
+			<td>
+				<form id="ssformUpload" style="display:inline;" method="post" enctype="multipart/form-data">
+				<input id="classifyquery_file"  name="upload" class="easyui-filebox" style="width:350px;" data-options="buttonText:'选择文件'"/>
+				</form>
+				<a style="margin-left:0;" class="easyui-linkbutton" data-options="iconCls:'icon-upload'" onclick="upload()">导入文件</a>
+				<a style="margin-left:15px;" class="easyui-linkbutton" data-options="iconCls:'icon-download'"onclick="exportExcel(true)">导出已审核问题</a>
+				<a style="margin-left:0;" class="easyui-linkbutton" data-options="iconCls:'icon-download'"onclick="exportExcel(false)">导出未审核问题</a>
+			</td>
+			</tr>
+		</table>
+		<div class="datagrid-toolbar" ></div>
+		<form id="classify_form" method="post">
+		<table cellspacing="0" cellpadding="0" style="margin:5px; margin-top:10px;">
+			<tr style="">
+			<td>
+				<span style="font-size: 12px; margin-left: 10px" >问题:</span>
+				<input id="classifyquery_query" class="easyui-textbox"/>
+			</td>
+			<td>
+				<span style="font-size: 12px; margin-left: 10px" >地市:</span>
+				<input id="classifyquery_city" class="easyui-combobox"/>
+			</td>
+			<td>
+				<span style="font-size: 12px; margin-left: 10px" >模型级别:</span>
+				<input id="classifyquery_service" class="easyui-combobox"/>
+			</td>
+			<td>
+				<span style="font-size: 12px; margin-left: 10px" >标准问题:</span>
+				<input id="classifyquery_abstract" class="easyui-combobox"/>
+			</td>
+			<td>
+				<span style="font-size: 12px; margin-left: 10px" >分类状态:</span>
+				<select id="classifyquery_classified" class="easyui-combobox" style="width:80px;"  editable=false>
+				</select>
+			</td>
+			<td>
+				<span style="font-size: 12px; margin-left: 10px" >审核状态:</span>
+				<select id="classifyquery_checked" class="easyui-combobox"  style="width:80px;" editable=false>
+				</select>
+			</td>
+			</tr>
+		</table>
+		<div class="datagrid-toolbar" ></div>
+		<table cellspacing="0" cellpadding="0" style="margin:5px;">
+			<tr>
+			<td>
+				<span style="font-size: 12px; margin-left: 10px" >审核开始时间:</span>
+				<input id="classifyquery_checktime_from" class="easyui-datetimebox" style="width:150px;" disabled=true/>
+			</td>
+			<td>
+				<span style="font-size: 12px;" >～审核结束时间:</span>
+				<input id="classifyquery_checktime_to" class="easyui-datetimebox" style="width:150px;" disabled=true/>
+			</td>
+			<td>
+				<span style="font-size: 12px; margin-left: 10px" >导入开始时间:</span>
+				<input id="classifyquery_inserttime_from" class="easyui-datetimebox" style="width:150px;"/>
+			</td>
+			<td>
+				<span style="font-size: 12px;">～导入结束时间:</span>
+				<input id="classifyquery_inserttime_to" class="easyui-datetimebox" style="width:150px;"/>
+			</td>
+			<td>
+				<a style="margin-left:10px;" class="easyui-linkbutton" data-options="iconCls:'icon-search'" plain="false" onclick="searchQuery()">查询</a>
+				<a style="margin-left:10px;" class="easyui-linkbutton" data-options="iconCls:''" plain="false" onclick="clearQuery()">清除</a>
+			</td>
+			</tr>
+		</table>
+		</form>
+		</div>
+
+		<table id="classifyquery_dg"></table>
+		<div id="btnDiv">
+			<table>
+				<tr>
+				<td><a id="check_btn" class="easyui-linkbutton" data-options="iconCls:'icon-confirmall',plain:true" onclick="checkClassifyquery()">批量审核</a></td>
+				<td><div class="pagination-btn-separator"></div></td>
+				<td><a id="delete_btn" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="deleteClassfifyquery()">批量删除</a></td>
+				<td><div class="pagination-btn-separator"></div></td>
+				<td><a id="autoclassify_btn" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="autoClassify()">问题批量自动分类</a></td>
+				<td><div class="pagination-btn-separator"></div></td>
+				<td><a id="manualclassify_btn" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="openNewWin()">问题批量手动分类</a></td>
+				<td><div class="pagination-btn-separator"></div></td>
+				<td><a id="allautoclassify_btn" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="autoClassfiyAll()">全量自动分类</a></td>
+				</tr>
+			</table>
+		</div>
+
+		<!-- 新增问题手动分配页面 window start -->
+		<div id="classifyquery_win" class="easyui-window" title="问题手动分配" data-options="modal:true,closed:true,iconCls:'icon-add'"
+			style="width: 500px; height: 240px; padding: 10px;">
+			
+			<div style="padding: 10px;" id="service_div">
+				<span style="font-size: 12px; margin-left: 10px">业务模型：</span>
+				<span><select id="service" class="easyui-combotree"
+						style="width: 320px;"></select>
+				</span>
+			</div>
+
+			<div style="padding: 10px;" id="kbdata_div">
+				<span style="font-size: 12px; margin-left: 10px">标准问题：</span>
+				<span><input id="kbdata" class="easyui-combobox"
+						style="width: 320px;" />
+				</span>
+			</div>
+
+			<div style='text-align: center'>
+				<a href="javascript:void(0)" class="easyui-linkbutton"
+					data-options="iconCls:'icon-add'" plain="false"
+					onclick="addClassifyquery()">保存</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton"
+					data-options="iconCls:'icon-cancel'" plain="false"
+					onclick="closeWin()">取消</a>
+			</div>
+
+		</div>
+		<!-- 新增问题手动分配页面 window end -->
+	</body>
+</html>

@@ -1,0 +1,39 @@
+{
+    "type": "Ext.data.Store",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "autoLoad": true,
+        "designer|userClassName": "StoreAutoSendSwitch",
+        "model": "ModelAutoSendSwitch",
+        "storeId": "StoreAutoSendSwitch"
+    },
+    "designerId": "f807a99b-99d0-4fce-917a-7fbb2117a292",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Memory",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "data": [
+                    "[{",
+                    "                        id: 0,",
+                    "                        text: '关'",
+                    "                    },",
+                    "                    {",
+                    "                        id: 1,",
+                    "                        text: '开'",
+                    "                    }]"
+                ]
+            },
+            "name": "MyMemoryProxy",
+            "designerId": "52f2ba12-981b-43fc-8272-630baa6274f3"
+        }
+    ]
+}

@@ -1,0 +1,144 @@
+{
+    "type": "Ext.data.Model",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "faqModel"
+    },
+    "designerId": "35046c06-9a9d-4491-87ef-aad9f0b486eb",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "answer",
+                "type": "string"
+            },
+            "designerId": "5ba4f8f2-b06c-4577-8e5e-9cdbdb642b78"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "channel",
+                "type": "string"
+            },
+            "designerId": "1b095b77-e8f6-4f45-b039-0455f5f3d26d"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "answertype",
+                "type": "string"
+            },
+            "designerId": "2ec6a654-0077-4210-b124-dc4161ed6dd7"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "starttime",
+                "type": "string"
+            },
+            "designerId": "9fbc2794-78b3-44ac-bd44-25dd2aadf4ad"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "endtime",
+                "type": "string"
+            },
+            "designerId": "b832130e-ccca-42df-aed6-6e021b3ce558"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "kbanswerid",
+                "type": "string"
+            },
+            "designerId": "7b40512d-2df4-4df5-be32-263d1e9ac2c6"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "kbcontentid",
+                "type": "string"
+            },
+            "designerId": "51447065-bc9f-47dc-ae25-ee01304ae55f"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "kbansvaliddateid",
+                "type": "string"
+            },
+            "designerId": "ed2bb727-8a48-4889-a11e-93dc32783ae4"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "customertype",
+                "type": "string"
+            },
+            "designerId": "22bb7bf7-23b9-4917-a3e4-580ee2865f09"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "servicetype",
+                "type": "string"
+            },
+            "designerId": "f7a335fd-03c1-4768-816e-23639e865b07"
+        }
+    ]
+}

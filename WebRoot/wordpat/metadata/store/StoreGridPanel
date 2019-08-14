@@ -1,0 +1,130 @@
+{
+    "type": "Ext.data.Store",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "autoLoad": true,
+        "designer|userClassName": "StoreGridPanel",
+        "model": "ModelGridPanel",
+        "pageSize": 10,
+        "storeId": "MyStore"
+    },
+    "designerId": "b8706192-2fc2-440e-8b1d-c294eb2ea37b",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "../wordpat.action"
+            },
+            "name": "MyAjaxProxy",
+            "designerId": "c366be33-e6d8-4c20-9ed8-4c1f4dbdd1e7",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Json",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "root": "root"
+                    },
+                    "name": "MyJsonReader",
+                    "designerId": "facaecca-aca9-4a47-b812-d3157e774ca4"
+                }
+            ]
+        },
+        {
+            "type": "basiceventbinding",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onStoreBeforeLoad",
+                "implHandler": [
+                    "var param={};\r",
+                    "\r",
+                    "param[\"cityids\"]=cityids;\r",
+                    "param[\"brand\"]=brand;\r",
+                    "param[\"service\"]=service;\r",
+                    "param[\"topic\"]=topic;\r",
+                    "param[\"_abstract\"]=_abstract;\r",
+                    "param[\"wordpattype\"]=wordpattype;\r",
+                    "param[\"kbdataids\"]=kbdataids;\r",
+                    "\r",
+                    "if(Ext.getCmp(\"textfieldWordpat\")!=null){\r",
+                    "\r",
+                    "    //查询条件赋值\r",
+                    "    var wordpat = Ext.getCmp(\"textfieldWordpat\").getValue().replace(new RegExp(' ','g'),'');\r",
+                    "    if(wordpat!=\"\"&&wordpat!=null){\r",
+                    "        wordpat  = toSimp(wordpat);\r",
+                    "        wordpat = wordpat.replace(new RegExp('@[1|2]#','g'),'%');\r",
+                    "       // wordpat = wordpat.replace(new RegExp('#[有序|无序]#','g'),'%');\r",
+                    "         wordpat = wordpat.replace('#有序#','%');\r",
+                    "         wordpat = wordpat.replace('#无序#','%');\r",
+                    "\r",
+                    "    }\r",
+                    "    //alert(wordpat);\r",
+                    "    var correctratiofrom = Ext.getCmp(\"textfieldCorrectRatioFrom\").getValue();\r",
+                    "    var correctratioto = Ext.getCmp(\"textfieldCorrectRatioTo\").getValue();\r",
+                    "    var callnumberfrom = Ext.getCmp(\"textfieldCallNumberFrom\").getValue();\r",
+                    "    var callnumberto = Ext.getCmp(\"textfieldCallNumberTo\").getValue();\r",
+                    "    var autosendswitch = Ext.getCmp('comboboxAutoSendSwitch').getValue();\r",
+                    "\r",
+                    "    param[\"_wordpat\"]=wordpat;\r",
+                    "    param[\"correctratiofrom\"]=correctratiofrom;\r",
+                    "    param[\"correctratioto\"]=correctratioto;\r",
+                    "    param[\"callnumberfrom\"]=callnumberfrom;\r",
+                    "    param[\"callnumberto\"]=callnumberto;\r",
+                    "    param[\"autosendswitch\"]=autosendswitch;\r",
+                    "\r",
+                    "}\r",
+                    "this.proxy.actionMethods = \"POST\";\r",
+                    "this.proxy.extraParams = {\r",
+                    "    action: 'select',\r",
+                    "    param:Ext.JSON.encode(param)\r",
+                    "};\r",
+                    "\r",
+                    "\r",
+                    "\r",
+                    "String.prototype.startsWith=function(str){\r",
+                    "\t  var reg=new RegExp(\"^\"+str);\r",
+                    "\t  return reg.test(this);\r",
+                    "\t\t}  ;\r",
+                    "\tString.prototype.endWith=function(str){\r",
+                    "\t  var reg=new RegExp(str+\"$\");\r",
+                    "\t  return reg.test(this);\r",
+                    "\t};\r",
+                    "\r",
+                    "\r",
+                    "\t/*正则表达式 替换括号,尖括号等*/\r",
+                    "\tfunction toSimp(str) {\r",
+                    "        var RexStr = /\\!|\\<|\\>|\\[|\\]/g;\r",
+                    "\t\tstr=str.replace(/\\>\\<|\\>\\[|\\]\\<|\\]\\[|\\-|\\|/g,\"*\");\r",
+                    "\t\tstr = str.replace(RexStr, \"\");\r",
+                    "        RexStr = /\\*/g;\r",
+                    "        str = str.replace(RexStr, \"%\");\r",
+                    "        //str=str.replace(/\\@\\[1|2\\]\\#|\\#\\[有序|无序\\]\\#/g,\"%\");\r",
+                    "\t\treturn str;\r",
+                    "\t}\r",
+                    "\r",
+                    ""
+                ],
+                "name": "beforeload",
+                "scope": "me"
+            },
+            "name": "onStoreBeforeLoad",
+            "designerId": "ccee45ad-e582-4390-abbb-5985e172d37a"
+        }
+    ]
+}

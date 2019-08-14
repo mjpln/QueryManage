@@ -1,0 +1,96 @@
+{
+    "type": "Ext.window.Window",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|snapToGrid": 10,
+        "designer|userClassName": "MyWindow",
+        "height": 283,
+        "layout": "absolute",
+        "title": "请您选择后续节点",
+        "width": 526
+    },
+    "designerId": "edcb621d-5b45-4026-b0a4-bc768638b954",
+    "cn": [
+        {
+            "type": "Ext.form.RadioGroup",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "autoScroll": true,
+                "container|align": "stretch",
+                "fieldLabel": "节点名称",
+                "height": 150,
+                "id": "nextabs",
+                "layout": "vbox",
+                "layout|x": 10,
+                "layout|y": 50,
+                "style": [
+                    "margin-left:10px"
+                ],
+                "width": 490
+            },
+            "name": "MyRadioGroup1",
+            "designerId": "c32621b7-8adf-4b7b-8f82-4443a6803783",
+            "cn": [
+                {
+                    "type": "basiceventbinding",
+                    "reference": {
+                        "name": "listeners",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fn": "onRadiogroupBeforeRender",
+                        "implHandler": [
+                            ""
+                        ],
+                        "name": "beforerender",
+                        "scope": "me"
+                    },
+                    "name": "onRadiogroupBeforeRender",
+                    "designerId": "ebdd1773-9a33-4740-9802-7f6563b078d1"
+                }
+            ]
+        },
+        {
+            "type": "Ext.button.Button",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "id": "ok",
+                "layout|x": 430,
+                "layout|y": 220,
+                "text": "确定",
+                "width": 60
+            },
+            "name": "MyButton8",
+            "designerId": "151120cd-4fdf-4df5-8431-076622118d48"
+        },
+        {
+            "type": "Ext.button.Button",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "layout|x": 350,
+                "layout|y": 220,
+                "text": "取消",
+                "width": 60
+            },
+            "name": "MyButton9",
+            "designerId": "b1f041c9-0362-4e40-872b-8aaecbfa7f61"
+        }
+    ]
+}

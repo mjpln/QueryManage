@@ -1,0 +1,13 @@
+{
+    "type": "jsresource",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "js1",
+        "url": "./scripts/addTab.js"
+    },
+    "designerId": "0d426278-18fe-42c2-956a-9cad602dbecf"
+}

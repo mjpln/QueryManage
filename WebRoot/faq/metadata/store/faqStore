@@ -1,0 +1,63 @@
+{
+    "type": "jsonstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "faqStore",
+        "model": "faqModel",
+        "pageSize": 10,
+        "storeId": "faqStore"
+    },
+    "designerId": "9d39b11f-83b9-4637-a835-96ab36eb46d8",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Ajax",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "../faq.action"
+            },
+            "designerId": "87149111-0995-43a9-9bf2-a7948d05d7ce",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Json",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "root": "root"
+                    },
+                    "designerId": "fc1d89e1-7f51-4f48-915b-cdb313c0e9fb"
+                }
+            ]
+        },
+        {
+            "type": "basiceventbinding",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onJsonstoreBeforeLoad",
+                "implHandler": [
+                    "var param = {};\r",
+                    "param[\"kbdataid\"] = kbdataid;\r",
+                    "this.proxy.actionMethods = 'post';\r",
+                    "this.proxy.extraParams = { type:'select', param:Ext.JSON.encode(param) };"
+                ],
+                "name": "beforeload",
+                "scope": "me"
+            },
+            "designerId": "b0eeb7c8-0c02-43cd-9869-bdbd4b207f8f"
+        }
+    ]
+}

@@ -1,0 +1,8 @@
+.qm-panel-header{
+	height:20px;
+}
+
+/*修改默认样式*/
+.panel-tool {
+	overflow:visible;
+}
