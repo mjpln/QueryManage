@@ -2185,6 +2185,13 @@ function addQuery(savebtn) {
 					$.messager.alert('警告','以下行因超出50字限制未导入：第 '+errorLine.join(',')+' 行');
 				}else{
 					$.messager.alert('系统提示', data.msg, "info");
+					// 展示oov分词
+					if (selectOption == "标准问题") {
+						var oovWord = data.oovWord;
+						if (oovWord != null && oovWord != '') {
+							getOOVWord(oovWord, normalQuery);
+						}
+					}
 				}
 			} else {
 				$.messager.alert('系统提示', data.msg, "warning");
@@ -2653,4 +2660,72 @@ function reportError() {
 		}
 	});
 
+}
+
+//获取新词
+function getOOVWord(oovWord, normalQuery) {
+	$('#addwordwindow').window('open');
+	var wordArray = oovWord.split("$_$");
+	var wordHtml = '<input type="hidden" id="addwordwindow-query" value=" ' + normalQuery + '">';
+	wordHtml += '<table cellspacing="0" cellpadding="0">';
+	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>分词</span></td><td style="padding:5px;"><span>是否重要</span></td></tr>';
+	for (var i = 0; i < wordArray.length; i++) {
+		wordHtml += '<tr><td style="padding:5px;"><input type="checkbox" name="wordcheckbox" id="wordcheckbox_' + i + '" value="' + wordArray[i] + '" /></td><td style="padding:5px;"><span>' + wordArray[i] + '</span></td><td style="padding:5px;"><select id="levelcombobox_' + i + '" style="width:100px;"><option value="0">重要</option><option value="1" selected>不重要</option></select></td></tr>';
+	}
+	wordHtml += '</table>';
+	$("#addwordtable").html(wordHtml);
+}
+
+function addWordAct() {
+	var word = [];
+	var wordlevel = [];
+	var wordlen = $("#addwordtable input[name='wordcheckbox']").length;
+	for (var i = 0; i < wordlen; i++) {
+		if ($('#wordcheckbox_' + i).is(':checked')) {
+			word.push($('#wordcheckbox_' + i).val());
+			wordlevel.push($('#levelcombobox_' + i).val());
+		}
+	}
+	
+	if (word.length == 0) {
+		$.messager.alert('系统提示', '请至少选择一个新词', "info");
+		return;
+	}
+	// 要判断每一个词是否在问题中出现，如果不出现，需要给出提示，让用户重新添加，
+	var query = $("#addwordwindow-query").val();
+	$("#addwordtable input[name='wordcheckbox']:checked").each(function () {
+		var w = $(this).val();
+		if (query.indexOf(w) == -1) {
+			$.messager.alert('系统提示', '当前分词【' + w + '】在标准问题中不存在，请选择其他分词', "info");
+			return;
+		}
+  });
+	// 将用户添加的新词从问题中去掉，替换成空格，这样形成新的问题2
+	var newquery = query;
+	$("#addwordtable input[name='wordcheckbox']:checked").each(function () {
+		var w = $(this).val();
+		newquery = newquery.replace(w, " ");
+  });
+	$.ajax( { 
+		url : '../querymanage.action',
+		type : "post",
+		data : {
+			type : 'addWord',
+			serviceid : serviceid ,
+			combition : word.join('#'),
+			normalquery : newquery,
+			flag : wordlevel.join('#')
+		},
+		async : false,
+		dataType : "json",
+		success : function(data, textStatus, jqXHR) {
+			if (data.success) {
+				$('#addwordwindow').window('close');
+			} else {
+				$.messager.alert('系统提示', data.msg, "info");
+			}
+		},
+		error : function(jqXHR, textStatus, errorThrown) {
+		}
+	});
 }

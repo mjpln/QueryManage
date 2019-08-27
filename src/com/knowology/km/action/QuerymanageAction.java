@@ -123,7 +123,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if("findcustomerquery".equals(type)){// 查找客户问
 			m_result = QuerymanageDAO.findCustomerquery(customerquery.trim(), citySelect);
 		}else if("addquery".equals(type)){//新增问题
-			m_result = QuerymanageDAO.addQuery(serviceid,querytype.trim(), normalquery.trim(), multinormalquery, customerquery.trim(), citycode);
+			m_result = QuerymanageDAO.addQuery(serviceid,querytype.trim(), normalquery.trim(), multinormalquery, customerquery.trim(), citycode, request);
 		}else if("producewordpat".equals(type)){//生成词模
 			m_result = AnalyzeDAO.produceWordpat(combition,flag,request);
 		}else if("produceallwordpat".equals(type)){//全量生成词模
@@ -212,6 +212,8 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 			m_result = QuerymanageDAO.getKMUrl();
 		}else if ("importkb".equals(type)) {// 导入语义
 			m_result = ImportExportDAO.importKBData(filename, serviceid);
+		} else if ("addWord".equals(type)) {// 新增词条
+			m_result = QuerymanageDAO.addWord(combition, flag, normalquery, serviceid, request);
 		}
 		return "success";
 	}

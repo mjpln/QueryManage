@@ -128,7 +128,9 @@ public class AnalyzeDAO {
 		}
 		//生成客户问和对应的自学习词模  <客户问，词模>
 		Map<String,String> wordpatMap = getAutoWordpatMap(kbIdList,wordpattype);
-
+		List<String> oovWordList = new ArrayList<String>();
+		List<String> wordpatResultList = new ArrayList<String>();
+		
 		for (int i = 0; i < combitionArray.length; i++) { 
 			String queryArray[] = combitionArray[i].split("@#@");
 			String queryCityCode = queryArray[0];
@@ -147,6 +149,7 @@ public class AnalyzeDAO {
 					wordpatList.add(wordpat);
 					wordpat = SimpleString.SimpleWordPatToWordPat(jsonObject.getString("lockWordpat"));
 					wordpatList.add(wordpat);
+					oovWordList.add(StringUtils.join(jsonObject.getJSONArray("OOVWord"), "$_$"));// 放入OOV分词
 				}
 			}else{
 				// 调用自学习生成词模的接口生成词模,可能是多个，以@_@分隔
@@ -194,6 +197,7 @@ public class AnalyzeDAO {
 								tempList.add(kbdataid);
 								tempList.add(queryid);
 								list.add(tempList);
+								wordpatResultList.add(wordpat);
 							}else{//新旧词模相同，不进行插入操作
 								filterCount ++;//记录过滤的词模数量
 							}
@@ -205,6 +209,7 @@ public class AnalyzeDAO {
 							tempList.add(kbdataid);
 							tempList.add(queryid);
 							list.add(tempList);
+							wordpatResultList.add(wordpat);
 						}
 					}else{
 						rows.add(query);
@@ -229,6 +234,8 @@ public class AnalyzeDAO {
 			if (count > 0) {
 				jsonObj.put("success", true);
 				jsonObj.put("msg", "生成成功!");
+				jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
+				jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
 			} else {
 				jsonObj.put("success", false);
 				jsonObj.put("msg", "生成失败!");
@@ -237,6 +244,8 @@ public class AnalyzeDAO {
 				&& list.size() + filterCount > 0) {//有成功处理的词模就算生成成功
 			jsonObj.put("success", true);
 			jsonObj.put("msg", "生成成功!");
+			jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
+			jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
 		}else {
 			jsonObj.put("success", false);
 			jsonObj.put("msg", "生成失败!!");
@@ -352,6 +361,7 @@ public class AnalyzeDAO {
 			result.put("success", true);
 			result.put("wordpat", object.getString("wordpat"));
 			result.put("lockWordpat", object.getString("lockWordpat"));
+			result.put("OOVWord", object.getJSONArray("OOVWord"));
 			return result;
 		}
 		return result;

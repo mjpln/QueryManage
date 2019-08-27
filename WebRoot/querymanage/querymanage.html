@@ -197,6 +197,32 @@
 							</div>
 						</div>
          <!-- 新增客户问题  window end--> 
+         
+         <!-- 新词 window start -->
+  		<div id="addwordwindow" class="easyui-window" title="新词录入" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width: 500px; padding: 10px;">	
+  			<div style="text-align: center;" id="addworddiv">
+  				<table cellspacing="0" cellpadding="0">
+  					<tr align="center">
+  						<td>
+  							<span>系统发现新词，是否录入系统？</span>
+  						</td>
+  					</tr>
+  					<tr>
+  						<td>
+  							<div id="addwordtable"></div>
+  						</td>
+  					</tr>
+  				</table>
+  			</div>
+  			<div style="text-align: center;">
+  				<a href="javascript:void(0)" class="easyui-linkbutton"
+					data-options="iconCls:'icon-add'" plain="false" onclick="addWordAct(this)">保存</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton"
+					data-options="iconCls:'icon-cancel'" plain="false" onclick="btnCancel('addwordwindow')">取消</a>
+			</div>
+    	</div>
+    	<!-- 新词 window end -->
+    	
 		<!--客户问题编辑   window start -->
 		<div id="editnormalquerywin" class="easyui-window" title="修改"  data-options="modal:true,closed:true,iconCls:'icon-edit'" style="width: 500px; height: 460px; padding: 10px;" >
 	    	

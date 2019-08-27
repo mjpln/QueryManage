@@ -852,7 +852,7 @@ public class QuerymanageDAO {
 	 *@returnType void
 	 */
 	public static Object addQuery(String serviceid, String queryType,
-			String normalQuery, String multinormalquery, String customerQuery, String cityCode) {
+			String normalQuery, String multinormalquery, String customerQuery, String cityCode, HttpServletRequest request) {
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
 		List<String> cityList = new ArrayList<String>();
@@ -884,6 +884,7 @@ public class QuerymanageDAO {
 		} else {// 新增标准问及客户问题
 			if ("true".equals(multinormalquery)){
 				String msgs = "";
+				List<String> oovWordList = new ArrayList<String>();
 				for(String normalquery : normalQuery.split("\n")){
 					rs = CommonLibQueryManageDAO.addNormalQueryAndCustomerQuery(
 							serviceid, normalquery, customerQuery, cityCode,
@@ -896,6 +897,9 @@ public class QuerymanageDAO {
 						}
 					}else{
 						msgs = "保存成功!";
+						JSONObject oovWordObj = (JSONObject) getOOVWord(serviceid, normalquery, request);
+						oovWordList.add(Objects.toString(oovWordObj.get("oovWord"), ""));
+						jsonObj.put("oovWord", StringUtils.join(oovWordList, "$_$"));
 					}
 				}
 				jsonObj.put("success", true);
@@ -906,6 +910,10 @@ public class QuerymanageDAO {
 				rs = CommonLibQueryManageDAO.addNormalQueryAndCustomerQuery(
 						serviceid, normalQuery, customerQuery, cityCode,
 						user, userCityCode,serviceCityCode);
+				if (rs > 0) {
+					JSONObject oovWordObj = (JSONObject) getOOVWord(serviceid, normalQuery, request);
+					jsonObj.put("oovWord", oovWordObj.get("oovWord"));
+				}
 			}
 			
 		}
@@ -924,6 +932,68 @@ public class QuerymanageDAO {
 		}
 		return jsonObj;
 
+	}
+	
+	/**
+	 * 获取OOV分词
+	 * 
+	 * @param serviceid
+	 * @param normalQuery
+	 * @return
+	 */
+	public static Object getOOVWord(String serviceid, String normalQuery, HttpServletRequest request) {
+		JSONObject jsonObj = new JSONObject();
+		List<String> oovWordList = new ArrayList<String>();
+		List<String> wordpatList = new ArrayList<String>();
+		List<String> combitionList = new ArrayList<String>();
+		// 查询当前kbdataid
+		String kbdataid = "";
+		String city = "";
+		String queryid = "";
+		Map<String, Map<String, String>> map = CommonLibQueryManageDAO.getNormalQueryDic(serviceid);
+		if (normalQuery.contains("\n")) {
+			String[] normalQueryArray = normalQuery.split("\n");
+			for (int i = 0; i < normalQueryArray.length; i++) {
+				if (map.containsKey(normalQuery)) {
+					Map<String, String> tempMap = map.get(normalQuery);
+					kbdataid = tempMap.get("kbdataid");
+					city = tempMap.get("city");
+					Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalQuery, kbdataid);
+					queryid = queryRs.getRows()[0].get("id").toString();
+					String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid;
+					JSONObject obj = (JSONObject)AnalyzeDAO.produceWordpat(combition, request);
+					if (obj.containsKey("OOVWord")) {
+						oovWordList.add(obj.getString("OOVWord"));
+					}
+					if (obj.containsKey("wordpatList")) {
+						wordpatList.add(obj.getString("wordpatList"));
+					}
+					combitionList.add(combition);
+				}
+			}
+		} else {
+			if (map.containsKey(normalQuery)) {
+				Map<String, String> tempMap = map.get(normalQuery);
+				kbdataid = tempMap.get("kbdataid");
+				city = tempMap.get("city");
+				Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalQuery, kbdataid);
+				queryid = queryRs.getRows()[0].get("id").toString();
+				String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid;
+				JSONObject obj = (JSONObject)AnalyzeDAO.produceWordpat(combition, request);
+				if (obj.containsKey("OOVWord")) {
+					oovWordList.add(obj.getString("OOVWord"));
+				}
+				if (obj.containsKey("wordpatList")) {
+					wordpatList.add(obj.getString("wordpatList"));
+				}
+				combitionList.add(combition);
+			}
+		}
+		
+		jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+		jsonObj.put("wordpatList", StringUtils.join(wordpatList, "@_@"));
+		jsonObj.put("combition", StringUtils.join(combitionList, "&_&"));
+		return jsonObj;
 	}
 
 	/**
@@ -4156,5 +4226,110 @@ public class QuerymanageDAO {
 			jsonObject.put("success", false);
 		}
 		return jsonObject;
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param combition
+	 * @param flag
+	 * @param normalquery
+	 * @param serviceid
+	 * @return
+	 */
+	public static Object addWord(String combition, String flag, String normalquery, String serviceid, HttpServletRequest request) {
+		JSONObject jsonObj = new JSONObject();
+		// 将问题生成词模，得到词模1
+		JSONObject obj = (JSONObject)getOOVWord(serviceid, normalquery, request);
+		String wordpat = "";
+		String lockwordpat = "";
+		String comb = "";
+		if (obj.containsKey("wordpatList")) {
+			String[] wordArray = obj.getString("wordpatList").split("@_@");
+			wordpat = wordArray[0];
+			lockwordpat = wordArray[1];
+			String[] combArray = obj.getString("combition").split("&_&");
+			comb = combArray[0];
+		}
+		// 添加的新词转换成近类进行添加	
+		Object sre = GetSession.getSessionByKey("accessUser");
+		User user = (User) sre;
+		String userid = user.getUserID();
+		// 获取行业
+		String servicetype = user.getIndustryOrganizationApplication();
+		List<List<Object>> info = new ArrayList<List<Object>>();
+		List<Object> list = new ArrayList<Object>();
+		if (StringUtils.isNotBlank(combition)) {
+			if (combition.contains("#")) {
+				String[] wordArray = combition.split("#");
+				for (String string : wordArray) {
+					list = new ArrayList<Object>();
+					list.add(string);
+					info.add(list);
+				}
+			} else {
+				list = new ArrayList<Object>();
+				list.add(combition);
+				info.add(list);
+			}
+			String count = CommonLibQueryManageDAO.getWordInsert(user, info);
+		}
+		// 同时根据用户选择的重要和不重要作为可选和必选的判断标准， 然后将新增加的词类用*号和词模1合并
+		String simpleWordpat = SimpleString.worpattosimworpat(wordpat);
+		
+		String[] wordArray = combition.split("#");
+		String[] levelArray = flag.split("#");
+		String wordClassStr = "";
+		for (int i = 0; i < wordArray.length; i++) {
+			if ("0".equals(levelArray[i])) {
+				wordClassStr += wordArray[i] + "近类" + "*";
+			}
+			if ("1".equals(levelArray[i])) {
+				wordClassStr += "[" + wordArray[i] + "近类" + "]*";
+			}
+			
+		}
+		simpleWordpat = wordClassStr + simpleWordpat;
+		simpleWordpat = SimpleString.SimpleWordPatToWordPat(simpleWordpat);
+		
+		String simpleLockWordpat = SimpleString.worpattosimworpat(lockwordpat);
+		wordClassStr = "";
+		for (int i = 0; i < wordArray.length; i++) {
+			wordClassStr += wordArray[i] + "近类" + "*";
+		}
+		simpleLockWordpat = wordClassStr + simpleLockWordpat;
+		simpleLockWordpat = SimpleString.SimpleWordPatToWordPat(simpleLockWordpat);
+		// 
+		// 插入问题库自动学习词模
+		List<List<String>> combListList = new ArrayList<List<String>>();
+		List<String> combList = new ArrayList<String>();
+		combList.add(simpleWordpat);
+		combList.add(comb.split("@#@")[0]);
+		combList.add(comb.split("@#@")[1]);
+		combList.add(comb.split("@#@")[2]);
+		combList.add(comb.split("@#@")[3]);
+		combListList.add(combList);
+		
+		combList = new ArrayList<String>();
+		combList.add(simpleLockWordpat);
+		combList.add(comb.split("@#@")[0]);
+		combList.add(comb.split("@#@")[1]);
+		combList.add(comb.split("@#@")[2]);
+		combList.add(comb.split("@#@")[3]);
+		combListList.add(combList);
+		
+		
+		int count = -1;
+		if (list.size() > 0) {
+			count = CommonLibQueryManageDAO.insertWordpat(combListList, servicetype, userid, "5");
+			if (count > 0) {
+				jsonObj.put("success", true);
+				jsonObj.put("msg", "生成成功!");
+			} else {
+				jsonObj.put("success", false);
+				jsonObj.put("msg", "生成失败!");
+			}
+		}
+		return jsonObj;
 	}
 }
