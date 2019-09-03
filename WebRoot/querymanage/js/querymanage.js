@@ -226,7 +226,6 @@ function initFilterPanel(options) {
 			});
 		}
 	}).panel('expand');
-
 	
 	// 设置条件
 	var normalquery,
@@ -2693,13 +2692,17 @@ function addWordAct() {
 	}
 	// 要判断每一个词是否在问题中出现，如果不出现，需要给出提示，让用户重新添加，
 	var query = $("#addwordwindow-query").val();
+	var result = true;
 	$("#addwordtable input[name='wordcheckbox']:checked").each(function () {
 		var w = $(this).val();
 		if (query.indexOf(w) == -1) {
 			$.messager.alert('系统提示', '当前分词【' + w + '】在标准问题中不存在，请选择其他分词', "info");
-			return;
+			result = false;
 		}
   });
+	if(!result){
+		return;
+	}
 	// 将用户添加的新词从问题中去掉，替换成空格，这样形成新的问题2
 	var newquery = query;
 	$("#addwordtable input[name='wordcheckbox']:checked").each(function () {
@@ -2713,7 +2716,8 @@ function addWordAct() {
 			type : 'addWord',
 			serviceid : serviceid ,
 			combition : word.join('#'),
-			normalquery : newquery,
+			normalquery : trim(query),
+			newnormalquery: newquery,
 			flag : wordlevel.join('#')
 		},
 		async : false,

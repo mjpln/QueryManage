@@ -68,6 +68,10 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	private int page;
 	private int rows;
 	private String q;
+	/*
+	 * 去除新词后的标准问
+	 */
+	private String newnormalquery;
 	
 	public String execute() {
 		 if(!"".equals(m_request)&&m_request!=null){// 解析参数 m_request
@@ -213,7 +217,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if ("importkb".equals(type)) {// 导入语义
 			m_result = ImportExportDAO.importKBData(filename, serviceid);
 		} else if ("addWord".equals(type)) {// 新增词条
-			m_result = QuerymanageDAO.addWord(combition, flag, normalquery, serviceid, request);
+			m_result = QuerymanageDAO.addWord(combition, flag, normalquery,newnormalquery, serviceid, request);
 		}
 		return "success";
 	}
@@ -620,5 +624,14 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	public void setUnderstandstatus(String understandstatus) {
 		this.understandstatus = understandstatus;
 	}
+
+	public String getNewnormalquery() {
+		return newnormalquery;
+	}
+
+	public void setNewnormalquery(String newnormalquery) {
+		this.newnormalquery = newnormalquery;
+	}
+	
 
 }

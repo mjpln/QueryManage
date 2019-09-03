@@ -961,7 +961,7 @@ public class QuerymanageDAO {
 					Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalQuery, kbdataid);
 					queryid = queryRs.getRows()[0].get("id").toString();
 					String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid;
-					JSONObject obj = (JSONObject)AnalyzeDAO.produceWordpat(combition, request);
+					JSONObject obj = (JSONObject)AnalyzeDAO.produceWordpat(combition,"0", request);
 					if (obj.containsKey("OOVWord")) {
 						oovWordList.add(obj.getString("OOVWord"));
 					}
@@ -979,7 +979,7 @@ public class QuerymanageDAO {
 				Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalQuery, kbdataid);
 				queryid = queryRs.getRows()[0].get("id").toString();
 				String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid;
-				JSONObject obj = (JSONObject)AnalyzeDAO.produceWordpat(combition, request);
+				JSONObject obj = (JSONObject)AnalyzeDAO.produceWordpat(combition,"0", request);
 				if (obj.containsKey("OOVWord")) {
 					oovWordList.add(obj.getString("OOVWord"));
 				}
@@ -990,7 +990,7 @@ public class QuerymanageDAO {
 			}
 		}
 		
-		jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+		jsonObj.put("oovWord", StringUtils.join(oovWordList, "$_$"));
 		jsonObj.put("wordpatList", StringUtils.join(wordpatList, "@_@"));
 		jsonObj.put("combition", StringUtils.join(combitionList, "&_&"));
 		return jsonObj;
@@ -4237,26 +4237,30 @@ public class QuerymanageDAO {
 	 * @param serviceid
 	 * @return
 	 */
-	public static Object addWord(String combition, String flag, String normalquery, String serviceid, HttpServletRequest request) {
+	public static Object addWord(String combition, String flag, String normalquery,String newnormalquery, String serviceid, HttpServletRequest request) {
 		JSONObject jsonObj = new JSONObject();
-		// 将问题生成词模，得到词模1
-		JSONObject obj = (JSONObject)getOOVWord(serviceid, normalquery, request);
-		String wordpat = "";
-		String lockwordpat = "";
-		String comb = "";
-		if (obj.containsKey("wordpatList")) {
-			String[] wordArray = obj.getString("wordpatList").split("@_@");
-			wordpat = wordArray[0];
-			lockwordpat = wordArray[1];
-			String[] combArray = obj.getString("combition").split("&_&");
-			comb = combArray[0];
-		}
-		// 添加的新词转换成近类进行添加	
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
 		String userid = user.getUserID();
 		// 获取行业
 		String servicetype = user.getIndustryOrganizationApplication();
+
+		String wordpat = "";
+		String lockwordpat = "";
+		Map<String, Map<String, String>> map = CommonLibQueryManageDAO.getNormalQueryDic(serviceid);
+		Map<String,String> maps = map.get(normalquery.trim());
+		String  kbdataid = maps.get("kbdataid");
+		String  city = maps.get("city");
+		
+		if(StringUtils.isNotBlank(newnormalquery)){
+			JSONObject jsonObject = AnalyzeDAO.getWordpat2(servicetype,newnormalquery,city);
+			System.out.println(JSONObject.toJSONString(jsonObject));
+			 wordpat = jsonObject.getString("wordpat");
+			 wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\""+ normalquery.replace("&", "\\and") + "\"");
+			 lockwordpat = jsonObject.getString("lockWordpat");
+			 lockwordpat = lockwordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\""+ normalquery.replace("&", "\\and") + "\"");			
+		}
+
 		List<List<Object>> info = new ArrayList<List<Object>>();
 		List<Object> list = new ArrayList<Object>();
 		if (StringUtils.isNotBlank(combition)) {
@@ -4273,9 +4277,10 @@ public class QuerymanageDAO {
 				info.add(list);
 			}
 			String count = CommonLibQueryManageDAO.getWordInsert(user, info);
+			logger.info("标准问-新增新词【"+JSONObject.toJSONString(info)+"】结果:"+count);
 		}
 		// 同时根据用户选择的重要和不重要作为可选和必选的判断标准， 然后将新增加的词类用*号和词模1合并
-		String simpleWordpat = SimpleString.worpattosimworpat(wordpat);
+	//	String simpleWordpat = SimpleString.worpattosimworpat(wordpat);
 		
 		String[] wordArray = combition.split("#");
 		String[] levelArray = flag.split("#");
@@ -4289,39 +4294,53 @@ public class QuerymanageDAO {
 			}
 			
 		}
-		simpleWordpat = wordClassStr + simpleWordpat;
+		if(StringUtils.isBlank(wordpat)){
+			wordClassStr = wordClassStr.substring(0,wordClassStr.lastIndexOf("*"));
+			wordpat =  "#无序#编者=\"问题库\"&来源=\""+ normalquery.replace("&", "\\and") + "\"";
+		}
+		String simpleWordpat = wordClassStr + wordpat;
 		simpleWordpat = SimpleString.SimpleWordPatToWordPat(simpleWordpat);
 		
-		String simpleLockWordpat = SimpleString.worpattosimworpat(lockwordpat);
+	//	String simpleLockWordpat = SimpleString.worpattosimworpat(lockwordpat);
 		wordClassStr = "";
 		for (int i = 0; i < wordArray.length; i++) {
 			wordClassStr += wordArray[i] + "近类" + "*";
 		}
-		simpleLockWordpat = wordClassStr + simpleLockWordpat;
+		
+		if(StringUtils.isBlank(lockwordpat)){
+			wordClassStr = wordClassStr.substring(0,wordClassStr.lastIndexOf("*"));
+			lockwordpat =  "#无序#编者=\"问题库\"&来源=\""+ normalquery.replace("&", "\\and") + "\"&最大未匹配字数=\"0\"&置信度=\"1.1\"";		
+		}
+		String simpleLockWordpat = wordClassStr + lockwordpat;
 		simpleLockWordpat = SimpleString.SimpleWordPatToWordPat(simpleLockWordpat);
 		// 
+		Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalquery, kbdataid);
+		String queryid = queryRs.getRows()[0].get("id").toString();
 		// 插入问题库自动学习词模
 		List<List<String>> combListList = new ArrayList<List<String>>();
-		List<String> combList = new ArrayList<String>();
-		combList.add(simpleWordpat);
-		combList.add(comb.split("@#@")[0]);
-		combList.add(comb.split("@#@")[1]);
-		combList.add(comb.split("@#@")[2]);
-		combList.add(comb.split("@#@")[3]);
-		combListList.add(combList);
-		
-		combList = new ArrayList<String>();
-		combList.add(simpleLockWordpat);
-		combList.add(comb.split("@#@")[0]);
-		combList.add(comb.split("@#@")[1]);
-		combList.add(comb.split("@#@")[2]);
-		combList.add(comb.split("@#@")[3]);
-		combListList.add(combList);
-		
+		List<String> combList = null;
+		if(Check.CheckWordpat(simpleWordpat, request)){
+			combList = new ArrayList<String>();
+			combList.add(simpleWordpat);
+			combList.add(city);
+			combList.add(normalquery);
+			combList.add(kbdataid);
+			combList.add(queryid);
+			combListList.add(combList);
+		}
+		if(Check.CheckWordpat(simpleLockWordpat, request)){
+			combList = new ArrayList<String>();
+			combList.add(simpleLockWordpat);
+			combList.add(city);
+			combList.add(normalquery);
+			combList.add(kbdataid);
+			combList.add(queryid);
+			combListList.add(combList);
+		}		
 		
 		int count = -1;
 		if (list.size() > 0) {
-			count = CommonLibQueryManageDAO.insertWordpat(combListList, servicetype, userid, "5");
+			count = CommonLibQueryManageDAO.insertWordpat(combListList, servicetype, userid, "0");
 			if (count > 0) {
 				jsonObj.put("success", true);
 				jsonObj.put("msg", "生成成功!");
