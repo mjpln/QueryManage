@@ -72,6 +72,10 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	 * 去除新词后的标准问
 	 */
 	private String newnormalquery;
+	/**
+	 * 业务词，多个逗号分隔
+	 */
+	private String businesswords; 
 	
 	public String execute() {
 		 if(!"".equals(m_request)&&m_request!=null){// 解析参数 m_request
@@ -217,7 +221,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if ("importkb".equals(type)) {// 导入语义
 			m_result = ImportExportDAO.importKBData(filename, serviceid);
 		} else if ("addWord".equals(type)) {// 新增词条
-			m_result = QuerymanageDAO.addWord(combition, flag, normalquery,newnormalquery, serviceid, request);
+			m_result = QuerymanageDAO.addWord(combition, flag, normalquery,newnormalquery, serviceid,businesswords, request);
 		}
 		return "success";
 	}
@@ -631,6 +635,14 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 
 	public void setNewnormalquery(String newnormalquery) {
 		this.newnormalquery = newnormalquery;
+	}
+
+	public String getBusinesswords() {
+		return businesswords;
+	}
+
+	public void setBusinesswords(String businesswords) {
+		this.businesswords = businesswords;
 	}
 	
 

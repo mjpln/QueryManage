@@ -2667,9 +2667,11 @@ function getOOVWord(oovWord, normalQuery) {
 	var wordArray = oovWord.split("$_$");
 	var wordHtml = '<input type="hidden" id="addwordwindow-query" value=" ' + normalQuery + '">';
 	wordHtml += '<table cellspacing="0" cellpadding="0">';
-	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>分词</span></td><td style="padding:5px;"><span>是否重要</span></td></tr>';
+	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>分词</span></td><td style="padding:5px;"><span>是否重要</span></td><td style="padding:5px;"><span>是否业务词</span></td></tr>';
 	for (var i = 0; i < wordArray.length; i++) {
-		wordHtml += '<tr><td style="padding:5px;"><input type="checkbox" name="wordcheckbox" id="wordcheckbox_' + i + '" value="' + wordArray[i] + '" /></td><td style="padding:5px;"><span>' + wordArray[i] + '</span></td><td style="padding:5px;"><select id="levelcombobox_' + i + '" style="width:100px;"><option value="0">重要</option><option value="1" selected>不重要</option></select></td></tr>';
+		wordHtml += '<tr><td style="padding:5px;"><input type="checkbox" name="wordcheckbox" id="wordcheckbox_' + i + '" value="' + wordArray[i] + '" /></td><td style="padding:5px;"><span>' + wordArray[i] + '</span></td><td style="padding:5px;"><select id="levelcombobox_' + i + '" style="width:100px;"><option value="0">重要</option><option value="1" selected>不重要</option></select></td>';
+		wordHtml += '<td style="padding:5px;"><select id="businesscombobox_' + i + '" style="width:100px;"><option value="0">是</option><option value="1" selected>否</option></select></td>';
+		wordHtml += '</tr>';
 	}
 	wordHtml += '</table>';
 	$("#addwordtable").html(wordHtml);
@@ -2678,11 +2680,18 @@ function getOOVWord(oovWord, normalQuery) {
 function addWordAct() {
 	var word = [];
 	var wordlevel = [];
+	var wordbusiness = [];
+	//业务词
+	var businesswords = "";
 	var wordlen = $("#addwordtable input[name='wordcheckbox']").length;
 	for (var i = 0; i < wordlen; i++) {
 		if ($('#wordcheckbox_' + i).is(':checked')) {
 			word.push($('#wordcheckbox_' + i).val());
 			wordlevel.push($('#levelcombobox_' + i).val());
+			if("0" == $('#businesscombobox_' + i).val()){//判断是否是业务词
+				wordbusiness.push($('#wordcheckbox_' + i).val());
+			}
+			
 		}
 	}
 	
@@ -2699,10 +2708,16 @@ function addWordAct() {
 			$.messager.alert('系统提示', '当前分词【' + w + '】在标准问题中不存在，请选择其他分词', "info");
 			result = false;
 		}
-  });
+   });
 	if(!result){
 		return;
 	}
+	//判断业务词是否连续
+	if(query.indexOf(wordbusiness.join('')) == -1 ){//业务词不连续
+		$.messager.alert('系统提示', '选择的业务词【' + wordbusiness.join('，') + '】在标准问题中不连续，只能选择一个作为业务词', "info");
+		return;
+	}
+	
 	// 将用户添加的新词从问题中去掉，替换成空格，这样形成新的问题2
 	var newquery = query;
 	$("#addwordtable input[name='wordcheckbox']:checked").each(function () {
@@ -2718,7 +2733,8 @@ function addWordAct() {
 			combition : word.join('#'),
 			normalquery : trim(query),
 			newnormalquery: newquery,
-			flag : wordlevel.join('#')
+			flag : wordlevel.join('#'),
+			businesswords: wordbusiness.join('-')
 		},
 		async : false,
 		dataType : "json",
