@@ -23,6 +23,7 @@ import javax.servlet.jsp.jstl.sql.Result;
 import oracle.sql.CLOB;
 import oracle.sql.TIMESTAMP;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -40,10 +41,12 @@ import com.knowology.bll.CommonLibInteractiveSceneDAO;
 import com.knowology.bll.CommonLibKbDataDAO;
 import com.knowology.bll.CommonLibKbdataAttrDAO;
 import com.knowology.bll.CommonLibMetafieldmappingDAO;
+import com.knowology.bll.CommonLibNewWordInfoDAO;
 import com.knowology.bll.CommonLibPermissionDAO;
 import com.knowology.bll.CommonLibQueryManageDAO;
 import com.knowology.bll.CommonLibQuestionUploadDao;
 import com.knowology.bll.CommonLibServiceDAO;
+import com.knowology.bll.CommonLibWordclassDAO;
 import com.knowology.bll.CommonLibWordpatDAO;
 import com.knowology.bll.ConstructSerialNum;
 import com.knowology.bll.UserManagerDAO;
@@ -967,7 +970,7 @@ public class QuerymanageDAO {
 					Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalQuery, kbdataid);
 					queryid = queryRs.getRows()[0].get("id").toString();
 					String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid;
-					JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0", request);
+					JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0",false, request);
 					if (obj.containsKey("OOVWord")) {
 						oovWordList.add(obj.getString("OOVWord"));
 					}
@@ -985,7 +988,7 @@ public class QuerymanageDAO {
 				Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalQuery, kbdataid);
 				queryid = queryRs.getRows()[0].get("id").toString();
 				String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid;
-				JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0", request);
+				JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0",false, request);
 				if (obj.containsKey("OOVWord")) {
 					oovWordList.add(obj.getString("OOVWord"));
 				}
@@ -1048,7 +1051,7 @@ public class QuerymanageDAO {
 	 *            客户问
 	 * @return
 	 */
-	public static Object findCustomerquery(String customerqueries, String selectCity) {
+	public static Object findCustomerquery(String customerqueries, String selectCity, int queryType) {
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
 		String serviceType = user.getIndustryOrganizationApplication();
@@ -1059,7 +1062,7 @@ public class QuerymanageDAO {
 		JSONArray result = new JSONArray();
 		String customerQueryArray[] = customerqueries.split("\n");
 		Result rs = CommonLibQueryManageDAO.findCustomerquery(Arrays.asList(customerQueryArray), serviceType,
-				roleidList, citylist);
+				roleidList, citylist, queryType);
 		if (rs != null && rs.getRowCount() > 0) {
 
 			for (int j = 0; j < rs.getRowCount(); j++) {
@@ -1488,7 +1491,7 @@ public class QuerymanageDAO {
 		String userid = user.getUserID();
 		// 获取行业
 		String servicetype = user.getIndustryOrganizationApplication();
-		List<String> combitionArray = getAllQuery(serviceid);
+		List<String> combitionArray = getAllQuery(serviceid,0);
 		String url = "";
 		String provinceCode = "全国";
 		int filterCount = 0;// 过滤的自学习词模数量
@@ -1608,9 +1611,9 @@ public class QuerymanageDAO {
 	 * @return
 	 * @returnType List<String>
 	 */
-	public static List<String> getAllQuery(String serviceid) {
+	public static List<String> getAllQuery(String serviceid,int querytype) {
 		List<String> list = new ArrayList<String>();
-		Result rs = CommonLibQueryManageDAO.getQuery(serviceid);
+		Result rs = CommonLibQueryManageDAO.getQuery(serviceid,querytype);
 		if (rs != null && rs.getRowCount() > 0) {
 			// 循环遍历数据源
 			for (int i = 0; i < rs.getRowCount(); i++) {
@@ -2111,8 +2114,8 @@ public class QuerymanageDAO {
 					jsonObj.put("msg", e.getMessage());
 					return jsonObj;
 				}
-				int count = CommonLibQueryManageDAO.importQuery(map, getQueryDic(serviceid), serviceCityList, serviceid,
-						bussinessFlag, workerid);
+				int count = CommonLibQueryManageDAO.importQuery(map, getQueryDic(serviceid,0), serviceCityList, serviceid,
+						bussinessFlag, workerid,0);
 				if (count > 0) {
 					// 将false放入jsonObj的success对象中
 					jsonObj.put("success", true);
@@ -2135,7 +2138,7 @@ public class QuerymanageDAO {
 	}
 
 	/**
-	 * 导出问题
+	 * 导出客户问题
 	 * 
 	 * @param serviceid
 	 * @param normalQuery
@@ -2148,7 +2151,7 @@ public class QuerymanageDAO {
 	@SuppressWarnings("unchecked")
 	public static File exportFile(String serviceid, String normalQuery, String responseType, String interactType) {
 		File file = null;
-		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType);
+		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType,0);
 		if (result != null && result.getRowCount() > 0) {
 			List colTitle = Arrays.asList("标准问题", "客户问题", "回复类型", "交互类型", "来源地市");
 			List text = new ArrayList();
@@ -2167,6 +2170,48 @@ public class QuerymanageDAO {
 				text.add(line);
 			}
 			String filename = "customerquery_";
+			filename += DateFormatUtils.format(new Date(), "yyyyMMddHHmmss");
+			boolean isWritten = ReadExcel.writeExcel(FILE_PATH_EXPORT, filename, null, null, colTitle, text);
+			if (isWritten) {
+				file = new File(FILE_PATH_EXPORT + filename + ".xls");
+			}
+		}
+		return file;
+
+	}
+	/**
+	 * 导出排除问题
+	 * 
+	 * @param serviceid
+	 * @param normalQuery
+	 * @param customerQuery
+	 * @param cityCode
+	 * @param responseType
+	 * @param interactType
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static File exportFileRemove(String serviceid, String normalQuery, String responseType, String interactType) {
+		File file = null;
+		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType,1);
+		if (result != null && result.getRowCount() > 0) {
+			List colTitle = Arrays.asList("标准问题", "排除问题", "回复类型", "交互类型", "来源地市");
+			List text = new ArrayList();
+			String normalquery = "";
+			for (int i = 0; i < result.getRowCount(); i++) {
+				List line = new ArrayList();
+				normalquery = (result.getRows()[i].get("abstract") == null ? ""
+						: result.getRows()[i].get("abstract").toString());
+				line.add(StringUtils.substringAfterLast(normalquery, ">"));
+				line.add(result.getRows()[i].get("query") == null ? "" : result.getRows()[i].get("query").toString());
+				line.add(result.getRows()[i].get("responsetype") == null ? ""
+						: result.getRows()[i].get("responsetype").toString());
+				line.add(getInteractType(ObjectUtils.toString(result.getRows()[i].get("interacttype")), false));
+				line.add(getCityName(
+						result.getRows()[i].get("city") == null ? "" : result.getRows()[i].get("city").toString()));
+				text.add(line);
+			}
+			String filename = "removequery_";
 			filename += DateFormatUtils.format(new Date(), "yyyyMMddHHmmss");
 			boolean isWritten = ReadExcel.writeExcel(FILE_PATH_EXPORT, filename, null, null, colTitle, text);
 			if (isWritten) {
@@ -2675,9 +2720,9 @@ public class QuerymanageDAO {
 	 * @return
 	 * @returnType Map<String,Map<String,String>>
 	 */
-	public static Map<String, Map<String, String>> getQueryDic(String serviceid) {
+	public static Map<String, Map<String, String>> getQueryDic(String serviceid,int querytype) {
 		Map<String, Map<String, String>> map = new HashMap<String, Map<String, String>>();
-		Result rs = CommonLibQueryManageDAO.getQuery(serviceid);
+		Result rs = CommonLibQueryManageDAO.getQuery(serviceid,querytype);
 		if (rs != null && rs.getRowCount() > 0) {
 			// 循环遍历数据源
 			for (int i = 0; i < rs.getRowCount(); i++) {
@@ -4273,7 +4318,7 @@ public class QuerymanageDAO {
 	}
 
 	/**
-	 * 
+	 * 增加新词，并生成词模
 	 * 
 	 * @param combition
 	 * @param flag
@@ -4289,6 +4334,8 @@ public class QuerymanageDAO {
 		String userid = user.getUserID();
 		// 获取行业
 		String servicetype = user.getIndustryOrganizationApplication();
+		//添加新词
+		List<String> newWords = new ArrayList<String>();
 
 		String wordpat = "";
 		String lockwordpat = "";
@@ -4299,7 +4346,6 @@ public class QuerymanageDAO {
 
 		if (StringUtils.isNotBlank(newnormalquery)) {
 			JSONObject jsonObject = AnalyzeDAO.getWordpat2(servicetype, newnormalquery, city);
-			System.out.println(JSONObject.toJSONString(jsonObject));
 			wordpat = jsonObject.getString("wordpat");
 			wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\"" + normalquery.replace("&", "\\and") + "\"");
 			lockwordpat = jsonObject.getString("lockWordpat");
@@ -4315,18 +4361,34 @@ public class QuerymanageDAO {
 				for (String string : wordArray) {
 					list = new ArrayList<Object>();
 					list.add(string);
+					list.add("");
 					info.add(list);
+					//判断是否是业务词
+					String newword = string;
+					if(businesswords.contains(string)){
+						newword = newword +",是";
+					}else{
+						newword = newword +",否";
+					}
+					newWords.add(newword);
 				}
 			} else {
 				list = new ArrayList<Object>();
 				list.add(combition);
+				list.add("");
 				info.add(list);
+				String newword = combition;
+				if(businesswords.contains(combition)){
+					newword = newword +",是";
+				}else{
+					newword = newword +",否";
+				}
+				newWords.add(newword);
 			}
-			String count = CommonLibQueryManageDAO.getWordInsert(user, info);
+			String count = CommonLibQueryManageDAO.insertWordClassAndItem(user, info);
 			logger.info("标准问-新增新词【" + JSONObject.toJSONString(info) + "】结果:" + count);
 		}
 		// 同时根据用户选择的重要和不重要作为可选和必选的判断标准， 然后将新增加的词类用*号和词模1合并
-		// String simpleWordpat = SimpleString.worpattosimworpat(wordpat);
 
 		String[] wordArray = combition.split("#");
 		String[] levelArray = flag.split("#");
@@ -4347,8 +4409,7 @@ public class QuerymanageDAO {
 		String simpleWordpat = wordClassStr + wordpat;
 		simpleWordpat = SimpleString.SimpleWordPatToWordPat(simpleWordpat);
 
-		// String simpleLockWordpat =
-		// SimpleString.worpattosimworpat(lockwordpat);
+
 		wordClassStr = "";
 		for (int i = 0; i < wordArray.length; i++) {
 			wordClassStr += wordArray[i] + "近类" + "*";
@@ -4397,14 +4458,122 @@ public class QuerymanageDAO {
 			}
 		}
 		// 根节点下识别业务规则-业务名称获取-标准问：业务词获取增加业务词词模
+		String ktdataid = "";//业务词标准ID
 		if(StringUtils.isNotBlank(businesswords)){
 			JSONObject objResult = (JSONObject)addBusinessWordpat(businesswords,serviceid,request);
+			ktdataid = objResult.getString("ktdataid");
 			logger.info("新增业务词词模结果:"+objResult.getString("msg"));
 		}
-
+		//新词表添加记录
+		if(!CollectionUtils.isEmpty(newWords)){
+			String countNewWord = addNewWordInfo(StringUtils.join(newWords,"@@"),ktdataid);
+			logger.info("新增新词结果:"+countNewWord);
+		}
+		
 		return jsonObj;
 	}
 
+	/**
+	 * 增加新词
+	 * @param newWords 格式：新词，是否业务词##新词,是否业务词
+	 *  @param ktdataid 业务词标准问ID 
+	 * @return
+	 */
+	public static String addNewWordInfo(String combition,String ktdataid){
+		String str = "新增成功";
+		List<List<String>> list = new ArrayList<List<String>>();
+		Object sre = GetSession.getSessionByKey("accessUser");
+		User user = (User) sre;
+		String userid = user.getUserID();
+		// 获取行业
+		String servicetype = user.getIndustryOrganizationApplication();
+		//业务词词模集合
+		Map<String,String> businessWordpatMap = new HashMap<String,String>();
+		if(StringUtils.isNotBlank(ktdataid)){//获取标准问下所有的词模
+			List<String> kbIdList = new ArrayList<String>();
+			kbIdList.add(ktdataid);	
+			businessWordpatMap = getBusinessWordpat(kbIdList,"0");
+		}
+		String[] newWords = combition.split("@@");
+		List<String> wordList = null;
+		for(int i=0;i<newWords.length;i++){
+			wordList = new ArrayList<String>();
+			
+			String[] newWordInfo = newWords[i].split(",");
+			String newWord = newWordInfo[0].toUpperCase();
+			String isBusinessWord = newWordInfo[1];
+			
+			//词类ID
+			String wordclassid = getWordClassId(newWord+"近类");
+			//词模ID
+			String wordpatId = "";
+			if("是".equals(isBusinessWord)){
+				wordpatId = businessWordpatMap.get(newWord);
+			}
+			wordList.add(servicetype);
+			wordList.add(newWord);
+			wordList.add(wordclassid);
+			wordList.add(wordpatId);
+			wordList.add(isBusinessWord);
+			list.add(wordList);			  
+		}
+		int count = -1;
+		if(!CollectionUtils.isEmpty(list)){
+			count = CommonLibNewWordInfoDAO.insertNewWordInfo(list, userid);
+		}
+		if(count < 1){
+			str = "新增失败";
+		}
+				
+		return str;
+	}
+	/**
+	 * 获取词类ID
+	 * @param wordClass
+	 * @return
+	 */
+	private static String getWordClassId(String wordClass){
+		String wordclassid="";
+		//查询新词对应的词类ID
+		Result rs= CommonLibWordclassDAO.getWordclassID(wordClass);
+		if(rs != null && rs.getRowCount() > 0){
+			for(int i =0;i<rs.getRowCount();i++){
+				wordclassid = rs.getRows()[i].get("wordclassid").toString();
+				break;
+			}
+		}
+		return wordclassid;
+	}
+	/**
+	 * 获取业务词对应词模ID
+	 * @param kdIdList
+	 * @param wordpattype
+	 * @return (业务词,词模ID)
+	 */
+	public static Map<String,String> getBusinessWordpat(List<String> kdIdList,String wordpattype){
+		Map<String,String> wordpatMap = new HashMap<String,String>();
+		Result rs = CommonLibQueryManageDAO.selectWordpatByKbdataid(kdIdList,wordpattype);
+		if(rs != null && rs.getRowCount()> 0){
+			for(int i =0;i<rs.getRowCount();i++){
+				if(rs.getRows()[i].get("wordpat") != null){
+					String wordpat = rs.getRows()[i].get("wordpat").toString();
+					String[] split = wordpat.split("业务X=");
+					if(split.length > 1){
+						  String bussinessword = split[1];
+						  wordpatMap.put(bussinessword, rs.getRows()[i].get("wordpatid").toString());
+					}
+				}
+			}
+		}
+		return wordpatMap;
+	}
+	/**
+	 * 添加业务词词模
+	 * @param businesswords
+	 * @param serviceid
+	 * @param request
+	 * @return
+	 */
 	public static Object addBusinessWordpat(String businesswords, String serviceid,HttpServletRequest request) {
 		JSONObject obj = new JSONObject();
 		Object sre = GetSession.getSessionByKey("accessUser");
@@ -4468,7 +4637,7 @@ public class QuerymanageDAO {
 		}
 		String normalquery = "业务词获取";
 		if(StringUtils.isBlank(kbdataid)){			
-			//新增问题，并新增业务词词模
+			//新增业务词标准问
 			if(!(Boolean)addQueryByBussinessWord(user,businessserviceid,normalquery)){
 				obj.put("success", false);
 				obj.put("msg", "业务根节点下【识别规则业务-业务名称获取】标准问【"+normalquery+"】不存在");
@@ -4488,9 +4657,9 @@ public class QuerymanageDAO {
 		String[] words= businesswords.split("-");
 		String wordpat = "";
 		for(int i =0;i<words.length;i++){
-			 wordpat += words[i]+"近类*";						
+			 wordpat += words[i].toUpperCase()+"近类*";						
 		}
-		wordpat = wordpat.substring(0,wordpat.lastIndexOf("*"))+"#有序#业务X="+businesswords.replace("-", "");
+		wordpat = wordpat.substring(0,wordpat.lastIndexOf("*"))+"#有序#业务X="+businesswords.replace("-", "").toUpperCase();
 		wordpat =  SimpleString.SimpleWordPatToWordPat(wordpat);
 		if (Check.CheckWordpat(wordpat, request)) {
 		List<String> combList = new ArrayList<String>();
@@ -4507,7 +4676,7 @@ public class QuerymanageDAO {
 
 		int count = -1;
 		if (combListList.size() > 0) {
-			count = CommonLibQueryManageDAO.insertWordpat(combListList, servicetype, userid, "0");
+			count = CommonLibQueryManageDAO.insertWordpatByBusiness(combListList, servicetype, userid, "0");
 			if (count > 0) {
 				obj.put("success", true);
 				obj.put("msg", "新增业务词词模成功!");
@@ -4516,6 +4685,7 @@ public class QuerymanageDAO {
 				obj.put("msg", "新增业务词词模失败!");
 			}
 		}
+		obj.put("ktdataid", kbdataid);
 
 		return obj;
 
@@ -4579,5 +4749,168 @@ public class QuerymanageDAO {
 		}
 		return serviceid;
 	}
+	
+	/**
+	 *@description 获取排除问题列表信息
+	 *@param serviceid
+	 *@param kbdataid
+	 *@param normalQuery
+	 *@param customerQuery
+	 *@param cityCode
+	 *@param page
+	 *@param rows
+	 *@return
+	 *@returnType Object
+	 */
+	public static Object selectRemoveQuery(String serviceid, String kbdataid,String normalQuery,
+			String customerQuery, String cityCode, String isTrain, String removequerystatus, int page, int rows) {
+		// 定义返回的json串
+		JSONObject jsonObj = new JSONObject();
+		JSONArray jsonArr = new JSONArray();
+		int count = CommonLibQueryManageDAO.getRemoveQueryCount(serviceid,kbdataid, customerQuery, cityCode, isTrain, removequerystatus);
+		if (count > 0) {
+			jsonObj.put("total", count);
+			Result rs = CommonLibQueryManageDAO.selectRemoveQuery(serviceid,kbdataid, customerQuery, cityCode, isTrain, removequerystatus, page, rows);
+			// 判断数据源不为null且含有数据
+			if (rs != null && rs.getRowCount() > 0) {
+				// 循环遍历数据源
+				for (int i = 0; i < rs.getRowCount(); i++) {
+					JSONObject obj = new JSONObject();
+					obj.put("queryid", rs.getRows()[i].get("id"));
+					obj.put("service", rs.getRows()[i].get("service"));
+					obj.put("brand", rs.getRows()[i].get("brand"));
+					obj.put("kbdataid", rs.getRows()[i].get("kbdataid"));
+					String abs = rs.getRows()[i].get("abstract").toString();
+					obj.put("normalquery", abs.split(">")[1]);
+					obj.put("abs", abs);
+					obj.put("topic", rs.getRows()[i].get("topic"));
+					obj.put("abscity", rs.getRows()[i].get("abscity"));
+					obj
+							.put("responsetype", rs.getRows()[i]
+									.get("responsetype"));
+					obj
+							.put("interacttype", rs.getRows()[i]
+									.get("interacttype"));
+					obj.put("customerquery", rs.getRows()[i].get("query"));
+					String city = rs.getRows()[i].get("city") != null ? rs
+							.getRows()[i].get("city").toString() : "";
+					String cityName = "";
+					if (!"".equals(city)) {
+						String cityArray[] = city.split(",");
+						List<String> cityNameList = new ArrayList<String>();
+						for (int k = 0; k < cityArray.length; k++) {
+							String code = cityCodeToCityName.get(cityArray[k]);
+							cityNameList.add(code);
+						}
+						if (cityNameList.size() > 0) {
+							cityName = StringUtils.join(cityNameList.toArray(),
+									",");
+						}
+					}
 
+					obj.put("cityname", cityName);
+					obj.put("citycode", city);
+					obj.put("isstrictexclusion", rs.getRows()[i].get("isstrictexclusion"));
+					obj.put("result", rs.getRows()[i].get("result"));
+					obj.put("istrain", rs.getRows()[i].get("istrain"));
+					// 将生成的对象放入jsonArr数组中
+					jsonArr.add(obj);
+				}
+			}
+			jsonObj.put("rows", jsonArr);
+		} else {
+			jsonArr.clear();
+			jsonObj.put("total", 0);
+			jsonObj.put("rows", jsonArr);
+		}
+		return jsonObj;
+	}
+	/**
+	 * 新增排除问题
+	 * @param serviceid
+	 * @param queryType
+	 * @param normalQuery
+	 * @param customerQuery
+	 * @param cityCode
+	 * @param removequerystatus
+	 * @param request
+	 * @return
+	 */
+	public static Object addRemoveQueryWordpat(String serviceid, String queryType,
+			String normalQuery, String customerQuery, String cityCode, String removequerystatus,  HttpServletRequest request) {
+		JSONObject jsonObj = new JSONObject();
+		// 新增排除问题
+		int rs = addRemoveQuery(serviceid, queryType, normalQuery, customerQuery, cityCode, removequerystatus);
+		if (rs > 0) {
+			// 新增排除词模
+			Object sre = GetSession.getSessionByKey("accessUser");
+			User user = (User) sre;
+			String serviceType = user.getIndustryOrganizationApplication();
+			List<String> roleidList = UserManagerDAO.getRoleIDListByUserId(user.getUserID());
+			
+			List<String> citylist = new ArrayList<String>();
+			citylist.add(cityCode);
+			String customerQueryArray[] = customerQuery.split("\n");
+			Result res = CommonLibQueryManageDAO.findCustomerquery(Arrays.asList(customerQueryArray), serviceType,roleidList,citylist, 1);
+			List<String> combitionList = new ArrayList<String>();
+			if (res != null && res.getRowCount() > 0) {
+				for (int j = 0; j < res.getRowCount(); j++) {					
+					List<String> queryList = new ArrayList<String>();
+					queryList.add(cityCode);
+					queryList.add(res.getRows()[j].get("query").toString());
+					queryList.add(res.getRows()[j].get("kbdataid").toString());
+					queryList.add(res.getRows()[j].get("queryid").toString());
+					combitionList.add(StringUtils.join(queryList, "@#@"));
+				}
+			}
+			if(!CollectionUtils.isEmpty(combitionList)){
+				String combition = StringUtils.join(combitionList, "@@");
+				boolean removeFlag = false;
+				if (removequerystatus != null && "是".equals(removequerystatus)) {
+					removeFlag = true;
+				}
+				JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "2", removeFlag, request);
+				if (obj.getBooleanValue("success")) {
+					jsonObj.put("success", true);
+					jsonObj.put("msg", "保存成功!");
+				} else {
+					jsonObj.put("success", false);
+					jsonObj.put("msg", "保存排除问题成功，生成排除词模失败!");
+				}
+			}else{
+				jsonObj.put("success", false);
+				jsonObj.put("msg", "保存排除问题成功，生成排除词模失败!");
+			}
+
+		} else {
+			if (rs == -2) {
+				jsonObj.put("success", false);
+				jsonObj.put("msg", "排除问题已存在!");
+			} else {
+				jsonObj.put("success", false);
+				jsonObj.put("msg", "保存失败!");
+			}
+		}
+		return jsonObj;
+	}
+	/**
+	 *@description 新增排除问题
+	 *@param serviceid
+	 *@param queryType
+	 *@param normalQuery
+	 *@param customerQuery
+	 *@param cityCode
+	 *@returnType void
+	 */
+	public static int addRemoveQuery(String serviceid, String queryType,
+			String normalQuery, String customerQuery, String cityCode, String removequerystatus) {
+		Object sre = GetSession.getSessionByKey("accessUser");
+		User user = (User) sre;
+		int rs = -1;
+		if ("排除问题".equals(queryType)) {// 新增排除问题
+			rs = CommonLibQueryManageDAO.addRemoveQuery(normalQuery,
+					customerQuery, cityCode, user, removequerystatus);
+		}
+		return rs;
+	}
 }

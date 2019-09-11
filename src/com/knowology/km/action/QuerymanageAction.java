@@ -72,10 +72,14 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	 * 去除新词后的标准问
 	 */
 	private String newnormalquery;
-	/**
+	/*
 	 * 业务词，多个逗号分隔
 	 */
 	private String businesswords; 
+	/*
+	 * 是否严格排除状态
+	 */
+	private String removequerystatus;
 	
 	public String execute() {
 		 if(!"".equals(m_request)&&m_request!=null){// 解析参数 m_request
@@ -88,6 +92,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 			citycode = json.getString("citycode");
 			citycode = citycode.replace("\"", "").replace("[", "").replace("]", "");
 			type = json.getString("type");
+			removequerystatus = json.getString("removequerystatus");
 		 }
 		 if ("createuserinfo".equals(type)) {// 创建用户信息
 			JSONObject jsonObj = new JSONObject();
@@ -129,11 +134,11 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if("findnormalquery".equals(type)){// 查找标准问
 			m_result = QuerymanageDAO.findNormalquery(normalquery.trim(), citySelect);
 		}else if("findcustomerquery".equals(type)){// 查找客户问
-			m_result = QuerymanageDAO.findCustomerquery(customerquery.trim(), citySelect);
+			m_result = QuerymanageDAO.findCustomerquery(customerquery.trim(), citySelect,0);
 		}else if("addquery".equals(type)){//新增问题
 			m_result = QuerymanageDAO.addQuery(serviceid,querytype.trim(), normalquery.trim(), multinormalquery, customerquery.trim(), citycode, request);
 		}else if("producewordpat".equals(type)){//生成词模
-			m_result = AnalyzeDAO.produceWordpat(combition,flag,request);
+			m_result = AnalyzeDAO.produceWordpat(combition,flag,false,request);
 		}else if("produceallwordpat".equals(type)){//全量生成词模
 			m_result = AnalyzeDAO.produceAllWordpat(serviceid,flag,request);
 		}else if("updatecustomerquery".equals(type)){//修改客户问题
@@ -143,7 +148,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if("deletenormalquery".equals(type)){//删除标准问题
 			m_result = QuerymanageDAO.deleteNormalQuery(kbdataid);
 		}else if ("import".equals(type)) {// 导入客户问题
-			m_result = ImportExportDAO.importFile(filename,serviceid);
+			m_result = ImportExportDAO.importFile(filename,serviceid,0);
 		}else if ("importwordxls".equals(type)) {// 导入词类词条
 			m_result = QuerymanageDAO.importwordxls(filename);
 		}else if ("importfaqxls".equals(type)) {// 导入FAQ
@@ -222,6 +227,14 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 			m_result = ImportExportDAO.importKBData(filename, serviceid);
 		} else if ("addWord".equals(type)) {// 新增词条
 			m_result = QuerymanageDAO.addWord(combition, flag, normalquery,newnormalquery, serviceid,businesswords, request);
+		} else if ("selectremovequery".equals(type)) {// 查询排除问题
+			m_result = QuerymanageDAO.selectRemoveQuery(serviceid, kbdataid, normalquery, customerquery, citycode, istrain, removequerystatus, page, rows);
+		} else if ("findremovequery".equals(type)) {// 查找排除问
+			m_result = QuerymanageDAO.findCustomerquery(customerquery.trim(), citySelect, 1);
+		} else if ("addremovequery".equals(type)) {// 新增排除问题
+			m_result = QuerymanageDAO.addRemoveQueryWordpat(serviceid, querytype.trim(), normalquery.trim(), customerquery.trim(), citycode, removequerystatus, request);
+		} else if("importremove".equals(type)){
+			m_result = ImportExportDAO.importFile(filename,serviceid,1);
 		}
 		return "success";
 	}
@@ -643,6 +656,14 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 
 	public void setBusinesswords(String businesswords) {
 		this.businesswords = businesswords;
+	}
+
+	public String getRemovequerystatus() {
+		return removequerystatus;
+	}
+
+	public void setRemovequerystatus(String removequerystatus) {
+		this.removequerystatus = removequerystatus;
 	}
 	
 

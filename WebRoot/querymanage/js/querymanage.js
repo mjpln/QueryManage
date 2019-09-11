@@ -5,6 +5,7 @@ var gCitySelect;
 var gHookOpts;
 var customItem = {};
 var showInTab = false;//是否已标签页形式展示
+var isClickCustomer = false;//判断是点击的行还是互斥问题
 $(function() {
 	var urlparams = new UrlParams(); // 所有url参数
 	serviceid = decodeURI(urlparams.serviceid);
@@ -24,7 +25,7 @@ $(function() {
 	//创建selectcitytree
 	createCityTree('cityselect', 'edit', false);
 	createCityTree('editcustomerquerycity', 'edit', true);
-
+	createCityTree('removequerycityselect', 'edit', false);
 	//创建标准问选中事件
 	normalQueryOnSelect();
 });
@@ -185,6 +186,8 @@ function searchCustomerQuery(kbdataid, customerQuery) {
 
 // 初始化检索条件Panel
 function initFilterPanel(options) {
+	$('#customerquery_panel').panel('open');
+	$('#removequery_panel').panel('close');
 	$('#datagrid_tb').panel({
 		width: 500,
 		title: '检索条件',
@@ -448,6 +451,8 @@ function loadQueryManageList(hookObj) {
 							+ index 
 							+ ')"></a>--><a href="javascript:void(0)" title="修改" class="icon-edit btn_a" onclick="openEditNormalQueryWin2(' 
 							+ index 
+							+ ')"></a><a href="javascript:void(0)" title="互斥问题" class="icon-help btn_a" onclick="openRemoveQuery(' 
+							+ index 							
 							+ ')"></a>';
 						}
 					}
@@ -464,19 +469,39 @@ function loadQueryManageList(hookObj) {
 				]
 			],
 			onClickRow: function(rowIndex, rowData) {
-				$("#customerqueryselect").textbox("setValue", "");
-				$("#cityselect").combotree("clear");
-				$("#understandstatus").combobox("setValue", "");
-				$("#istrain").combobox("setValue", "");
-				$('#customerquerydatagrid').datagrid('load', {
-					type: "selectcustomerquery",
-					serviceid: serviceid,
-					kbdataid: rowData.kbdataid,
-					customerquery: "",
-					citycode: "",
-					istrain: "",
-					understandstatus: ""
-				});
+				if(!isClickCustomer){
+					$('#customerquery_panel').panel('open');
+					$('#removequery_panel').panel('close');
+				    $("#customerqueryselect").textbox("setValue", "");
+				    $("#cityselect").combotree("clear");
+				    $("#understandstatus").combobox("setValue", "");
+				    $("#istrain").combobox("setValue", "");
+				    $('#customerquerydatagrid').datagrid('load', {
+					   type: "selectcustomerquery",
+					   serviceid: serviceid,
+					   kbdataid: rowData.kbdataid,
+					   customerquery: "",
+					   citycode: "",
+					   istrain: "",
+					   understandstatus: ""
+					});
+			   }else{
+				 $("#removequeryselect").textbox("setValue", "");
+				 $("#removequerycityselect").combotree("clear");
+				 $("#removequerystatus").combobox("setValue", "");
+				 $("#removequeryistrain").combobox("setValue", "");
+				 $('#removequerydatagrid').datagrid('load', {
+						type: "selectremovequery",
+						serviceid: serviceid,
+						kbdataid: rowData.kbdataid,
+						normalquery: "",
+						customerquery: "",
+						citycode: "",
+						istrain: "",
+						removequerystatus: ""
+				  });
+				 isClickCustomer = false;
+			   }
 			},
 			onLoadSuccess:function (data){
 				if(hookObj && hookObj.panel1 && hookObj.panel1.subPage){
@@ -1815,8 +1840,12 @@ function createNormalqueryCombobox(defaultVal) {
 	});
 	url = '../querymanage.action?type=createnormalquerycombobox&serviceid=' + serviceid + '&a=' + Math.random();
 	createCombobox('normalquerycombobox', url, false, true);
+	//排除问题
+	createCombobox('removenormalquerycombobox', url, false, true);
+	
 	url = '../querymanage.action?type=createnormalquerycombobox&serviceid=' + serviceid + '&a=' + Math.random();
 	createCombobox('deletenormalquery', url, true, false);
+
 
 }
 
@@ -2313,7 +2342,51 @@ function importExcel(name) {
 		}
 	});
 }
+//将excel文件中的数据导入到数据库中
+function importExcelRemove(name) {
+	$("#querymanagedatagrid").datagrid('loading');
+	$(".datagrid-mask-msg").text('请耐心等待,导入问题中......');
 
+	$("#customerquerydatagrid").datagrid('loading');
+	$(".datagrid-mask-msg").text('请耐心等待,导入问题中......');
+
+	$.ajax({
+		type: "post",
+		url: "../querymanage.action",
+		data: {
+			type: 'importremove',
+			resourcetype: 'querymanage',
+			operationtype: 'A',
+			resourceid: serviceid,
+			filename: name,
+			serviceid: serviceid
+		},
+		async: false,
+		dataType: "json",
+		timeout: 180000,
+		success: function(data, textStatus, jqXHR) {
+			if(data.errorMsg){
+				$.messager.alert('系统提示', '以下行因超出50字限制未导入：第  '+data.errorMsg+' 行', "info");
+			}else{
+				$.messager.alert('系统提示', data.msg, "info");
+			}
+			
+//			$.messager.alert('系统提示', data.msg, "info");
+			if (data.success == true) {
+				createNormalqueryCombobox();
+				_searchNormalQuery();
+				loadCustomerQuerydDatagridList();
+			}
+			$("#customerquerydatagrid").datagrid('loaded');
+			$("#querymanagedatagrid").datagrid("loaded");
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			//			$.messager.alert('系统异常', "请求数据失败!", "error");
+			$("#customerquerydatagrid").datagrid('loaded');
+			$("#querymanagedatagrid").datagrid("loaded");
+		}
+	});
+}
 
 //导出标准问题
 /*
@@ -2703,8 +2776,8 @@ function addWordAct() {
 	var query = $("#addwordwindow-query").val();
 	var result = true;
 	$("#addwordtable input[name='wordcheckbox']:checked").each(function () {
-		var w = $(this).val();
-		if (query.indexOf(w) == -1) {
+		var w = $(this).val().toUpperCase();
+		if (query.toUpperCase().indexOf(w) == -1) {
 			$.messager.alert('系统提示', '当前分词【' + w + '】在标准问题中不存在，请选择其他分词', "info");
 			result = false;
 		}
@@ -2713,7 +2786,7 @@ function addWordAct() {
 		return;
 	}
 	//判断业务词是否连续
-	if(query.indexOf(wordbusiness.join('')) == -1 ){//业务词不连续
+	if(query.toUpperCase().indexOf(wordbusiness.join('').toUpperCase()) == -1 ){//业务词不连续
 		$.messager.alert('系统提示', '选择的业务词【' + wordbusiness.join('，') + '】在标准问题中不连续，只能选择一个作为业务词', "info");
 		return;
 	}
@@ -2746,6 +2819,826 @@ function addWordAct() {
 			}
 		},
 		error : function(jqXHR, textStatus, errorThrown) {
+		}
+	});
+}
+//打开排除问题
+function openRemoveQuery(index) {
+	isClickCustomer = true;
+	$('#customerquery_panel').panel('close');
+	$('#removequery_panel').panel('open');
+	$('#removequery_datagrid_tb2').panel({
+		width: 520,
+		title: '检索条件',
+		iconCls: 'icon-search',
+		headerCls: 'filterHeaderCls',
+		bodyCls: 'filterBodyCls',
+		collapsible: true,
+		onCollapse: function() {
+			// 重新设置datagrid高度
+			$("#removequerydatagrid").datagrid('resize', {
+				height: 455
+			});
+		},
+		onExpand: function() {
+			// 重新设置datagrid高度
+			$("#removequerydatagrid").datagrid('resize', {
+				height: 350
+			});
+		}
+	}).panel('expand');
+	// 加载排除问题管理列表
+	loadRemoveQuerydDatagridList(gHookOpts);
+//	$('#querymanagedatagrid').datagrid('selectRow', index);
+}
+//查询标准问题下排除问题
+function searchRemoveQuery() {
+	var kbdataid;
+	var row = $("#querymanagedatagrid").datagrid('getSelected');
+	if (row) {
+		kbdataid = row.kbdataid;
+	} else {
+		kbdataid = "";
+	}
+	var customerQuery = replaceSpace($("#removequeryselect").textbox("getValue"));
+	var istrain = $("#removequeryistrain").combobox("getValue");
+	var removequerystatus = $("#removequerystatusselect").combobox("getValue");
+	
+	var cityCode = $("#removequerycityselect").combotree("getValue");
+	$('#removequerydatagrid').datagrid('load', {
+		type: "selectremovequery",
+		serviceid: serviceid,
+		customerquery: customerQuery,
+		citycode: cityCode,
+		istrain: istrain,
+		removequerystatus: removequerystatus,
+		kbdataid: kbdataid
+	});
+}
+//加载排除问题管理列表
+function loadRemoveQuerydDatagridList(hookObj) {
+	var params;
+	if (!hookObj) {
+		params = {
+				type: "selectremovequery",
+				serviceid: serviceid,
+				kbdataid: "",
+				normalquery: "",
+				customerquery: "",
+				citycode: "",
+				istrain: "",
+				removequerystatus: ""
+		};
+	} else {
+		params = {
+			type: 'selectremovequery',
+			serviceid: serviceid,
+			kbdataid: hookObj.panel1.kbdataid ? hookObj.panel1.kbdataid : '' ,
+			normalquery:  '',
+			customerquery: hookObj.panel2.customerquery ? hookObj.panel2.customerquery : '',
+			citycode: '',
+			istrain: '',
+			removequerystatus: ''
+		}
+	}
+	
+	$("#removequerydatagrid").datagrid({
+		height: 380,
+		width: 520,
+		url: "../querymanage.action",
+		queryParams:params,
+		pageSize: 50,
+		pagination: true,
+		rownumbers: true,
+		striped: true,
+		nowrap: false,
+		fitColumns: true,
+		singleSelect: false,
+		loadMsg: "数据加载中,请稍后……",
+		columns: [
+			[{
+				field: 'ck',
+				checkbox: true
+			}, {
+				field: 'queryid',
+				title: '客户问题ID',
+				width: 180,
+				hidden: true
+			}, {
+				field: 'customerquery',
+				title: '排除问题',
+				width: 400
+			}, {
+				field: 'cityname',
+				title: '来源地市',
+				align: 'center',
+				width: 200
+			}, {
+				field: 'citycode',
+				title: '来源地市',
+				width: 200,
+				hidden: true
+			}, {
+				field: 'normalquery',
+				title: '标准问题',
+				width: 200,
+				hidden: true
+			}, {
+				field: 'kbdataid',
+				title: '标准问ID',
+				width: 180,
+				hidden: true
+			}, {
+				field: 'abscity',
+				title: '标准问地市',
+				width: 180,
+				hidden: true
+			}, {
+				field: 'abs',
+				title: '摘要',
+				width: 180,
+				hidden: true
+			}, {
+				field: 'topic',
+				title: '主题',
+				width: 180,
+				hidden: true
+			}, {
+				field: 'service',
+				title: '业务',
+				width: 180,
+				hidden: true
+			}, {
+				field: 'brand',
+				title: '品牌',
+				width: 180,
+				hidden: true
+			}, {
+				field: 'cc',
+				title: '是否允许匹配<br/>过长问题',
+				align: 'center',
+				width: 200,
+				hidden: true
+			}, {
+				field: 'isstrictexclusion',
+				title: '严格<br/>排除',
+				align: 'center',
+				width: 100,
+				formatter: function(value, row, index) {
+					if (value == '是') {
+						return '<span >是</span>';
+					} else if (value == '否') {
+						return '<span style="color:red">否</span>';
+					}
+				}
+			}, {
+				field: 'istrain',
+				title: '是否<br/>训练',
+				align: 'center',
+				width: 70,
+				formatter: function(value, row, index) {
+					if (value == '是') {
+						return '<span >是</span>';
+					} else if (value == '否') {
+						return '<span style="color:red">否</span>';
+					}
+				}
+			}]
+		]
+	});
+
+	$("#removequerydatagrid").datagrid('getPager').pagination({
+		showPageList: false,
+		buttons: [{
+			tooltip: "新增",
+			iconCls: "icon-add",
+			handler: function() {
+				$('#add_city_div').show();
+				$('#add_customerquery_div').show();
+				
+				$('#addremovequerywindow').window({
+					title: '新增排除问题',
+					height: 450
+				}).window('center').window('open');
+				
+				$("#removequerytype").combobox('setValue', '排除问题');
+				$("#removenormalqueryinput").val('');
+				$("#choose_remove_normalquerycombobox_div").show();
+				$("#input_remove_normalquerycombobox_div").hide();
+				//创建客户问题citytree
+				createCityTree('removequerycity', 'edit', true);
+				//创建标准问下拉框
+				createNormalqueryCombobox();
+				var kbdataid;
+				var row = $("#querymanagedatagrid").datagrid('getSelected');
+				if (row) {
+					$("#removenormalquerycombobox").combobox('setValue', row.kbdataid);
+				}
+			}
+		}, "-", {
+			iconCls: "icon-delete",
+			handler: function() {
+				deleteRemoveCustomerQuery();
+			}
+		}, "-", {
+			text: "批量训练",
+			iconCls: "icon-wordpat",
+			handler: function() {
+				preRemoveProduceWordpat();
+			}
+		}, "-", {
+			title: "知识库更新",
+			iconCls: "icon-update",
+			handler: function() {
+				$.messager.confirm('更新知识库', '知识库更新可能需要一点时间哦，确认更新吗？', function(r) {
+					if (r) {
+						updateKbdata();
+					}
+				})
+			}
+		}, "-", {
+			text: "批量理解",
+			iconCls: "icon-answer",
+			handler: function() {
+				understand();
+			}
+		}]
+	});
+
+	var pagerOptions = $("#removequerydatagrid").datagrid('getPager').pagination("options");
+	var newButtons =[];
+	$.each(pagerOptions.buttons, function(n, botton){
+		if(customItem["批量训练"] != null && customItem["批量训练"] == "不显示"
+			&& botton.text && botton.text =='批量训练'){
+			return;
+		}
+		if(botton == '-' && newButtons[newButtons.length -1] == '-') {
+			return;
+		}
+		newButtons.push(botton);
+	});
+	$("#removequerydatagrid").datagrid('getPager').pagination({buttons:newButtons});
+}
+function deleteRemoveCustomerQuery(){
+	var combition = [];
+	var rows = $("#removequerydatagrid").datagrid("getSelections");
+	if (rows.length > 0) {
+		for (var i = 0; i < rows.length; i++) {
+			var queryid = rows[i].queryid;
+			if (queryid == null || queryid == "") {
+				continue;
+			}
+			combition.push(queryid + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid);
+		}
+	} else {
+		$.messager.alert('系统提示', "请至少选择一行!", "warning");
+		return;
+	}
+
+	if (combition.length > 0) {
+		$.messager.confirm("操作提示", "您确定要删除吗？", function(data) {
+			if (data) {
+				$.ajax({
+					type: "post",
+					async: false,
+					url: "../querymanage.action",
+					data: {
+						type: "deletecustomerquery",
+						resourcetype: 'querymanage',
+						operationtype: 'D',
+						resourceid: serviceid,
+						combition: combition.join("@@")
+					},
+					dataType: "json",
+					success: function(data, textStatus, jqXHR) {
+						$.messager.alert('系统提示', data["msg"], "info");
+						if (data["success"] == true) {
+							$("#removequerydatagrid").datagrid('reload');
+						}
+					},
+					error: function(jqXHR, textStatus, errorThrown) {
+						//						$.messager.alert('系统异常', "请求数据失败!", "error");
+					}
+				});
+			}
+		});
+	}
+}
+//提交上传文件
+function removequery_upload() {
+	// 得到上传文件的全路径
+	var fileName = $('#removequestion_fileuploadtxt').filebox('getValue');
+	// 进行基本校验
+	if (fileName == "") {
+		$.messager.alert('系统提示', '请选择上传文件!', 'info');
+	} else {
+		// 对文件格式进行校验
+		var d1 = /\.[^\.]+$/.exec(fileName.toLowerCase());
+		if (d1 == ".xls" || d1 == ".xlsx") {
+			$("#removequery_formUpload").form(
+				"submit", {
+					url: "../file/upload?path=qatraining/regresstest",
+					success: function(data) {
+						var info = $.parseJSON(data);
+						var state = info["state"];
+						if (state == "success") {
+							var name = info["names"][0];
+							importExcelRemove(name);
+						} else {
+							$.messager.alert('系统提示', info["message"] + " 请重新上传!", 'warning');
+						}
+						$('#removequestion_fileuploadtxt').filebox('setValue', '');
+					}
+				});
+		} else {
+			$.messager.alert('系统提示', '请选择.xls或.xlsx格式文件!', 'info');
+			$('#removequestion_fileuploadtxt').filebox('setValue', '');
+		}
+	}
+}
+//将excel文件中的数据导入到数据库中
+function importExcelRemove(name) {
+	$("#querymanagedatagrid").datagrid('loading');
+	$(".datagrid-mask-msg").text('请耐心等待,导入问题中......');
+
+	$("#removequerydatagrid").datagrid('loading');
+	$(".datagrid-mask-msg").text('请耐心等待,导入问题中......');
+
+	$.ajax({
+		type: "post",
+		url: "../querymanage.action",
+		data: {
+			type: 'importremove',
+			resourcetype: 'querymanage',
+			operationtype: 'A',
+			resourceid: serviceid,
+			filename: name,
+			serviceid: serviceid
+		},
+		async: false,
+		dataType: "json",
+		timeout: 180000,
+		success: function(data, textStatus, jqXHR) {
+			if (data.errorMsg) {
+				$.messager.alert('系统提示', '以下行因超出50字限制未导入：第  '+data.errorMsg+' 行', "info");
+			} else {
+				$.messager.alert('系统提示', data.msg, "info");
+			}
+			
+			if (data.success == true) {
+				createNormalqueryCombobox();
+				_searchNormalQuery();
+				loadRemoveQuerydDatagridList();
+			}
+			$("#removequerydatagrid").datagrid('loaded');
+			$("#querymanagedatagrid").datagrid("loaded");
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			$("#removequerydatagrid").datagrid('loaded');
+			$("#querymanagedatagrid").datagrid("loaded");
+		}
+	});
+}
+//导出排除问题
+function removequery_exportExcel() {
+	var param = {
+		normalquery: replaceSpace($("#normalqueryselect").combobox("getText")),
+		responsetype: $("#responsetypeselect").combobox('getValue'),
+		interacttype: $("#interacttypeselect").combobox('getValue'),
+		serviceid: serviceid
+	};
+
+	if (param.normalquery == "全部") {
+		param.normalquery = "";
+	}
+	if (param.responsetype == "全部") {
+		param.responsetype = "";
+	}
+	if (param.interacttype == "全部") {
+		param.interacttype = "";
+	}
+
+	param.type = 'removequerymanageexport';
+	$('#qm_form').form('submit', {
+		url: '../querymanageexport.action',
+		queryParams: param,
+		success: function(data) {
+			if (!data && data.trim() !== "") {
+				var data = eval('(' + data + ')');
+				if (!data.success) {
+					$.messager.alert('系统提示', data.msg, "warning");
+				}
+			}
+		},
+		onLoadError: function() {
+			$.messager.alert('系统提示', '系统内部错误', "warning");
+		}
+	});
+}
+//新增排除问题
+function addRemoveQueryAct() {
+	var selectOption = $("#removequerytype").combobox('getValue');
+	var param, title, content;
+	if (selectOption == "排除问题") {
+		var customerQuery = $("#removequerytextarea").val();
+		param = {
+			type: 'findremovequery',
+			customerquery: customerQuery,
+			citySelect: gCitySelect
+		};
+		title = '在其他业务下有此排除问题';
+	} else { //标准问题
+		var normalQuery = $("#normalqueryinput").val();
+		param = {
+			type: 'findnormalquery',
+			normalquery: normalQuery,
+			citySelect: gCitySelect
+		};
+		title = '在其他业务下有此排除问题';
+	}
+
+	if (!addRemoveBeforeCheck()) return;
+
+	$.ajax({
+		url: '../querymanage.action',
+		type: 'POST',
+		data: param,
+		success: function(result){
+			// 问题存在
+			if (result && result.length > 0) {
+				var tabs = [];
+				for (var j = 0; j < result.length; j++) {
+					var lis = [];
+					var query = (selectOption == "排除问题" ? result[j].customerquery : result[j].normalquery);
+					var data = result[j].duplicate;
+	
+					for (var i = 0; i < data.length; i++) {
+						lis.push('<tr><td>' + (i + 1) + '</td><td>' + data[i].servicepath + '</td></tr>');
+					}
+					tabs.push('<div class="datagrid-body" style="color:blue; padding: 5px;"><strong style="color:black">' + query + '</strong><table><tr><th>No.</th><th>业务路径</th></tr>' + lis.join('') + '</table></div>');
+				}
+				content = tabs.join('');
+	
+				$('#remove_add-dd').dialog({
+					width: 450,
+					title: title,
+					modal: true,
+					content: content,
+					buttons: [{
+						text: '确认',
+						handler: function() {
+							$(this).linkbutton('disable').next().linkbutton('disable');
+							addRemoveQuery();
+						}
+					}, {
+						text: '取消',
+						handler: function() {
+							$('#remove_add-dd').dialog('close');
+						}
+					}]
+				});
+	
+			} else { // 问题不存在
+				addRemoveQuery();
+			}
+		},
+		dataType: 'json',
+		async: false
+	});
+}
+function addRemoveBeforeCheck() {
+	var normalQuery;
+	var selectOption = $("#removequerytype").combobox('getValue');
+	var cityCode = $("#removequerycity").combotree("getValues");
+	var customerQuery = $("#removequerytextarea").val();
+	var customerQueryAll = "";
+	if (selectOption == "排除问题") {
+		normalQuery = $("#removenormalquerycombobox").combobox('getValue');
+		if (normalQuery == "" || normalQuery == null) {
+			$.messager.alert('系统提示', '请选择标准问题!', 'info');
+			$('#add-dd').dialog('close');
+			return false;
+		}
+		if (cityCode == "" || cityCode == null) {
+			$.messager.alert('系统提示', '请选择地市!', 'warning');
+			return false;
+		}
+		if (customerQuery != "" && customerQuery != null) {
+			customerQuery = customerQuery.replace(new RegExp("\r\n", 'g'), "\n");
+			customerQuery = customerQuery.replace(/^\n+|\n+$/g, "");
+			if (customerQuery == "多条以回车分隔") {
+				$.messager.alert('系统提示', '请填写排除问题!', 'warning');
+				return false;
+			}
+		} else {
+			$.messager.alert('系统提示', '请填写排除问题!', 'warning');
+			return false;
+		}
+	} else { //标准问题
+		normalQuery = $("#normalqueryinput").val();
+		if (normalQuery) {
+			normalQuery = normalQuery.replace(new RegExp("\r\n", 'g'), "\n");
+			normalQuery = normalQuery.replace(/^\n+|\n+$/g, "");
+			if (normalQuery == "多条以回车分隔") {
+				$.messager.alert('系统提示', '请填写标准问题!', 'warning');
+				return false;
+			}
+		} else {
+			$.messager.alert('系统提示', '请填写标准问题!', 'warning');
+			return false;
+		}
+
+		if (customerQuery == "多条以回车分隔") {
+			customerQuery = "";
+		}
+
+		if (customerQuery != "" && customerQuery != null) {
+			if (cityCode == "" || cityCode == null) {
+				$.messager.alert('系统提示', '请选择地市!', 'warning');
+				return false;
+			}
+		}
+	}
+	return true;
+}
+//新增排除问题
+function addRemoveQuery(savebtn) {
+	var normalQuery;
+	var normalQueryAll = "";
+	var selectOption = $("#removequerytype").combobox('getValue');
+	var cityCode = $("#removequerycity").combotree("getValues");
+	var customerQuery = $("#removequerytextarea").val();
+	var customerQueryAll = "";
+	var multiNormalQuery = false;
+	var errorLine = [];
+	if (selectOption == "排除问题") {
+		normalQuery = $("#removenormalquerycombobox").combobox('getValue');
+		if (normalQuery == "" || normalQuery == null) {
+			$.messager.alert('系统提示', '请选择标准问题!', 'info');
+			$('#add-dd').dialog('close');
+			return;
+		}
+		if (cityCode == "" || cityCode == null) {
+			$.messager.alert('系统提示', '请选择地市!', 'warning');
+			return;
+		}
+		if (customerQuery != "" && customerQuery != null) {
+			customerQuery = customerQuery.replace(new RegExp("\r\n", 'g'), "\n");
+			customerQuery = customerQuery.replace(/^\n+|\n+$/g, "");
+			if (customerQuery == "多条以回车分隔") {
+				$.messager.alert('系统提示', '请填写排除问题!', 'warning');
+				return;
+			}
+		} else {
+			$.messager.alert('系统提示', '请填写排除问题!', 'warning');
+			return;
+		}
+		// 校验50字
+		if (customerQuery != null) {
+			var customerQueryItem = customerQuery.split('\n');
+			var tempList = [];
+			for (var i = 0 ;i < customerQueryItem.length; i++) {
+				if (customerQueryItem[i] != null && customerQueryItem[i].length > 50) {
+					errorLine.push(i + 1 + "");
+				} else {
+					tempList.push(customerQueryItem[i]);
+				}
+			}
+			if (errorLine.length == customerQueryItem.length) {
+				$.messager.alert('警告','添加的排除问长度全部超过50字');
+				return;
+			}
+			customerQuery = tempList.join('\n');
+		}
+	} else { //标准问题
+		multiNormalQuery = true;
+		normalQuery = $("#normalqueryinput").val();
+		if (normalQuery == "" || normalQuery == null) {
+			$.messager.alert('系统提示', '请填写标准问题!', 'warning');
+			return;
+		}
+		if(normalQuery != null){
+			var normalQueryItem = normalQuery.split('\n');
+			var tempList = [];
+			for (var i = 0 ; i < normalQueryItem.length; i++) {
+				if (normalQueryItem[i] != null && normalQueryItem[i].length > 50) {
+					errorLine.push(i + 1 + "");
+				} else {
+					tempList.push(normalQueryItem[i]);
+				}
+			}
+			
+			if (errorLine.length == normalQueryItem.length) {
+				$.messager.alert('警告','添加的标准问长度全部超过50字');
+				return;
+			}
+			normalQuery = tempList.join('\n');
+		}
+	}
+	if (normalQuery != "" && normalQuery != null && multiNormalQuery) {
+		normalQuery = normalQuery.replace(new RegExp("\r\n", 'g'), "\n");
+		normalQuery = normalQuery.replace(/^\n+|\n+$/g, "");
+		var temp = normalQuery.split('\n');
+		temp = quchong(temp);
+		for (var i = 0; i < temp.length; i++) {
+			if (temp[i] !== '' && temp[i] != '\n') {
+				normalQueryAll += temp[i] + '\n';
+			}
+		}
+		normalQueryAll = normalQueryAll.substr(0, normalQueryAll.length - 1);
+		normalQuery = normalQueryAll;
+	}
+
+	if (customerQuery != "" && customerQuery != null) {
+		customerQuery = customerQuery.replace(new RegExp("\r\n", 'g'), "\n");
+		customerQuery = customerQuery.replace(/^\n+|\n+$/g, "");
+		var temp = customerQuery.split('\n');
+		temp = quchong(temp);
+		for (var i = 0; i < temp.length; i++) {
+			if (temp[i] !== '' && temp[i] != '\n') {
+				customerQueryAll += temp[i] + '\n';
+			}
+		}
+		customerQueryAll = customerQueryAll.substr(0, customerQueryAll.length - 1);
+	}
+
+	var removequerystatus = $("#removequerystatus").combobox('getValue');
+	var request = {
+		type: "addremovequery",
+		querytype: selectOption,
+		normalquery: normalQuery,
+		multinormalquery: multiNormalQuery,
+		citycode: cityCode,
+		customerquery: customerQueryAll,
+		serviceid: serviceid,
+		removequerystatus : removequerystatus
+	};
+	var dataStr = {
+		m_request: JSON.stringify(request),
+		resourcetype: 'querymanage',
+		operationtype: 'A',
+		resourceid: serviceid
+	}
+
+	$.ajax({
+		url: '../querymanage.action',
+		type: 'POST',
+		data: dataStr,
+		success: function(data){
+			if (data.success) {
+				if (selectOption == "标准问题") { //重新加载标准问题下拉框
+					createNormalqueryCombobox();
+				}
+				$('#addremovequerywindow').window('close');
+				$("#querymanagedatagrid").datagrid('load');
+				$("#removequerydatagrid").datagrid('load');
+				if(errorLine.length > 0){
+					$.messager.alert('警告','以下行因超出50字限制未导入：第 ' + errorLine.join(',') + ' 行');
+				}else{
+					$.messager.alert('系统提示', data.msg, "info");
+				}
+			} else {
+				$.messager.alert('系统提示', data.msg, "warning");
+			}
+			$('#remove_add-dd').dialog('close');
+			$(savebtn).linkbutton('enable');
+		},
+		dataType: 'json',
+		async: false
+	});
+}
+//批量训练
+function preRemoveProduceWordpat() {
+	var combition = [];
+	var rows = $("#removequerydatagrid").datagrid("getSelections");
+	if (rows.length == 0) {
+		$.messager.alert('系统提示', "请至少选择一行数据供系统语义训练!", "warning");
+		return;
+	}
+	type = type || "";
+	if (customItem["训练模式"] != null && customItem["训练模式"] == "显示") {
+		var url = '../querymanage.action?type=createproduceWordpatcombobox&a=' + Math.random();
+		createCombobox('removeProduceWordpatselect', url, false, true, function() {
+			$('#removeProduceWordpatselect').combobox('setValue', '2');
+			$('#removeProduceWordpatType').val(type);
+			$('#removeProduceWordpatwin').window('open');
+		});
+	} else {
+		if (type == "ALL") {
+			produceAllWordpat("2");
+		} else {
+			removeProduceWordpat("2");
+		}
+	}
+}
+function showOtherWord() {
+	if (ovvWord != null && ovvWord != '') {
+		$("#addotherword").show();
+		var combition = [];
+		var rows = $("#removequerydatagrid").datagrid("getSelections");
+		if (rows.length > 0) {
+			for (var i = 0; i < rows.length; i++) {
+				var queryid = rows[i].queryid;
+
+				if (queryid == null || queryid == "") {
+					continue;
+				}
+				combition.push(rows[i].customerquery);
+			}
+		}
+		// 生成词模，获取oov分词
+		$.ajax( { 
+			url : '../querymanage.action',
+			type : "post",
+			data : {
+				type : 'getoovword',
+				serviceid : serviceid,
+				normalquery : combition.join('\n')
+			},
+			async : false,
+			dataType : "json",
+			success : function(data, textStatus, jqXHR) {
+				var otherWord = data.oovWord;
+				if (otherWord != null && otherWord != '') {
+					// 标准问题中的添加的新词|扩展问中的别名新词1|别名新词2
+					var wordArray = oovWord.split("$_$");
+					var wordHtml = "";
+					for (var i = 0; i < wordArray.length; i++) {
+						var content = wordArray[i] + "|" + otherWord.replace("$_$", "|")
+						wordHtml += '<tr><td><input type=\"checkbox\" name=\"otherwordcheckbox\" value=\"' + content + '\" /></td><td><span>' + content + '</span></tr>';
+					}
+					$("#addotherwordtable").html(wordHtml);
+				}
+			},
+			error : function(jqXHR, textStatus, errorThrown) {
+			}
+		});
+	} else {
+		$("#addotherword").hide();
+	}
+}
+//生成词模操作
+function doRemoveProduceWordpat(){
+	var type = $('#removeProduceWordpatType').val();
+	var wordpattype = $('#removeProduceWordpatselect').combobox('getValue');
+	$('#removeProduceWordpatwin').window('close');
+	if (type == "ALL") {
+		produceAllWordpat(wordpattype);
+	} else {
+		removeProduceWordpat(wordpattype);
+	}
+}
+//批量生成词模
+function removeProduceWordpat(wordpattype) {
+	var combition = [];
+	var rows = $("#removequerydatagrid").datagrid("getSelections");
+	if (rows.length > 0) {
+		for (var i = 0; i < rows.length; i++) {
+			var queryid = rows[i].queryid;
+
+			if (queryid == null || queryid == "") {
+				continue;
+			}
+			combition.push(rows[i].citycode + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid + "@#@" + rows[i].queryid);
+		}
+	} else {
+		$.messager.alert('系统提示', "请至少选择一行数据供系统语义训练!", "warning");
+		return;
+	}
+	$("#removequerydatagrid").datagrid('loading');
+	$(".datagrid-mask-msg").text('请耐心等待,语义训练中......');
+	$.ajax({
+		url: '../querymanage.action',
+		type: "post",
+		data: {
+			type: 'producewordpat',
+			resourcetype: 'querymanage',
+			operationtype: 'A',
+			resourceid: serviceid,
+			combition: combition.join("@@"),
+			flag:wordpattype
+		},
+		async: false,
+		dataType: "json",
+		success: function(data, textStatus, jqXHR) {
+			$("#removequerydatagrid").datagrid('loaded');
+			var downloadUrl = '';
+			if (data.fileName) {
+				downloadUrl = '</br>生成报告：</br>'
+					+'<a href="../querymanageexport.action?type=wordpatexport&fileName='+data.fileName
+					+'" download="'+data.fileName+'" title="下载" >'+data.fileName+'</a>';
+			}
+			if (data.success == true) {
+				$("#querymanagedatagrid").datagrid("reload");
+				$("#removequerydatagrid").datagrid("load");
+				$.messager.alert('系统提示', data.msg+downloadUrl, "info");
+			} else {
+				$.messager.alert('系统提示', data.msg+downloadUrl, "warning");
+			}
+			
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			$("#removequerydatagrid").datagrid('loaded');
 		}
 	});
 }

@@ -56,16 +56,17 @@ public class AnalyzeDAO {
 	 */
 	public static Object produceWordpat(String combition,
 			HttpServletRequest request) {
-		return produceWordpat(combition, "5", request);
+		return produceWordpat(combition, "5",false, request);
 	}
 	/**
 	 *@description 生成词模
 	 *@param combition
+	 *@param removeFlag 排除问题-是否严格排除标识
 	 *@param request
 	 *@return
 	 *@returnType Object
 	 */
-	public static Object produceWordpat(String combition,String wordpattype,
+	public static Object produceWordpat(String combition,String wordpattype, boolean removeFlag,
 			HttpServletRequest request) {
 		JSONObject jsonObj = new JSONObject();
 		
@@ -180,6 +181,9 @@ public class AnalyzeDAO {
 	                //保留自学习词模返回值，并替换 编者=\"自学习\""=>编者="问题库"&来源="(当前问题)" ---> modify 2017-05-24
 					wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\""+ query.replace("&", "\\and") + "\"");
 					
+					if (removeFlag && "2".equals(wordpattype)) {
+						wordpat = wordpat + "&最大未匹配字数=\"0\"";
+					}
 					// 校验自动生成的词模是否符合规范
 					if (Check.CheckWordpat(wordpat, request)) {
 						//获取客户问对应的旧词模
@@ -277,7 +281,7 @@ public class AnalyzeDAO {
 	 */
 	public static Object produceAllWordpat(String serviceid,
 			HttpServletRequest request) {
-		List<String> combitionArray = getAllQuery(serviceid);
+		List<String> combitionArray = getAllQuery(serviceid,0);
 		return produceWordpat(StringUtils.join(combitionArray, "@@"), request);
 	}
 	
@@ -290,8 +294,8 @@ public class AnalyzeDAO {
 	 */
 	public static Object produceAllWordpat(String serviceid,String wordpattype,
 			HttpServletRequest request) {
-		List<String> combitionArray = getAllQuery(serviceid);
-		return produceWordpat(StringUtils.join(combitionArray, "@@"),wordpattype, request);
+		List<String> combitionArray = getAllQuery(serviceid,0);
+		return produceWordpat(StringUtils.join(combitionArray, "@@"),wordpattype,false, request);
 	}
 	
 	
@@ -644,9 +648,9 @@ public class AnalyzeDAO {
 	 *@return
 	 *@returnType List<String>
 	 */
-	public static List<String> getAllQuery(String serviceid) {
+	public static List<String> getAllQuery(String serviceid,int querytype) {
 		List<String> list = new ArrayList<String>();
-		Result rs = CommonLibQueryManageDAO.getQuery(serviceid);
+		Result rs = CommonLibQueryManageDAO.getQuery(serviceid,querytype);
 		if (rs != null && rs.getRowCount() > 0) {
 			// 循环遍历数据源
 			for (int i = 0; i < rs.getRowCount(); i++) {
