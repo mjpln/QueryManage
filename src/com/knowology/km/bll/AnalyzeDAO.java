@@ -56,7 +56,7 @@ public class AnalyzeDAO {
 	 */
 	public static Object produceWordpat(String combition,
 			HttpServletRequest request) {
-		return produceWordpat(combition, "5",false, request);
+		return produceWordpat(combition, "5", request);
 	}
 	/**
 	 *@description 生成词模
@@ -66,7 +66,7 @@ public class AnalyzeDAO {
 	 *@return
 	 *@returnType Object
 	 */
-	public static Object produceWordpat(String combition,String wordpattype, boolean removeFlag,
+	public static Object produceWordpat(String combition,String wordpattype,
 			HttpServletRequest request) {
 		JSONObject jsonObj = new JSONObject();
 		
@@ -138,6 +138,8 @@ public class AnalyzeDAO {
 			String query = queryArray[1];
 			String kbdataid = queryArray[2];
 			String queryid = queryArray[3];
+			//排除问题的严格排除状态
+			String isstrictexclusion = queryArray[4];
 			
 			List<String> wordpatList = new ArrayList<String>();
 			String wordpat = null;
@@ -181,7 +183,7 @@ public class AnalyzeDAO {
 	                //保留自学习词模返回值，并替换 编者=\"自学习\""=>编者="问题库"&来源="(当前问题)" ---> modify 2017-05-24
 					wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\""+ query.replace("&", "\\and") + "\"");
 					
-					if (removeFlag && "2".equals(wordpattype)) {
+					if (isstrictexclusion != null && "是".equals(isstrictexclusion) && "2".equals(wordpattype)) {
 						wordpat = wordpat + "&最大未匹配字数=\"0\"";
 					}
 					// 校验自动生成的词模是否符合规范
@@ -295,7 +297,10 @@ public class AnalyzeDAO {
 	public static Object produceAllWordpat(String serviceid,String wordpattype,
 			HttpServletRequest request) {
 		List<String> combitionArray = getAllQuery(serviceid,0);
-		return produceWordpat(StringUtils.join(combitionArray, "@@"),wordpattype,false, request);
+		List<String> RemoveCombitionArray = getAllQuery(serviceid,1);
+		Object obj = produceWordpat(StringUtils.join(RemoveCombitionArray, "@@"),"2", request);
+		logger.info("标准问全量生成排除词模结果："+JSONObject.toJSONString(obj));
+		return produceWordpat(StringUtils.join(combitionArray, "@@"),wordpattype, request);
 	}
 	
 	
@@ -663,7 +668,8 @@ public class AnalyzeDAO {
 						.getRows()[i].get("city").toString() : "";
 				String kbdataid = rs.getRows()[i].get("kbdataid").toString();
 				String queryid = rs.getRows()[i].get("id").toString();
-				String content = city + "@#@" + query + "@#@" + kbdataid + "@#@" + queryid;
+				String isserviceword = rs.getRows()[i].get("isstrictexclusion") == null ? " ":rs.getRows()[i].get("isstrictexclusion").toString();
+				String content = city + "@#@" + query + "@#@" + kbdataid + "@#@" + queryid + "@#@" + isserviceword ;
 				list.add(content);
 			}
 		}

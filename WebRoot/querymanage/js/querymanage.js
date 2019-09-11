@@ -1559,7 +1559,7 @@ function produceWordpat(wordpattype) {
 			if (queryid == null || queryid == "") {
 				continue;
 			}
-			combition.push(rows[i].citycode + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid + "@#@" + rows[i].queryid);
+			combition.push(rows[i].citycode + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid + "@#@" + rows[i].queryid +"@#@ ");
 		}
 	} else {
 		$.messager.alert('系统提示', "请至少选择一行数据供系统语义训练!", "warning");
@@ -1614,6 +1614,7 @@ function produceAllWordpat(wordpattype) {
 		if (data) {
 			$("#querymanagedatagrid").datagrid('loading');
 			$("#customerquerydatagrid").datagrid('loading');
+			$("#removequerydatagrid").datagrid('loading');
 			$(".datagrid-mask-msg").text('请耐心等待,语义训练中......');
 			$.ajax({
 				url: '../querymanage.action',
@@ -1631,6 +1632,7 @@ function produceAllWordpat(wordpattype) {
 				success: function(data, textStatus, jqXHR) {
 					$("#querymanagedatagrid").datagrid('loaded');
 					$("#customerquerydatagrid").datagrid('loaded');
+					$("#removequerydatagrid").datagrid('loaded');
 					var downloadUrl = '';
 					if(data.fileName){
 						downloadUrl = '</br>生成报告：</br>'
@@ -2347,7 +2349,7 @@ function importExcelRemove(name) {
 	$("#querymanagedatagrid").datagrid('loading');
 	$(".datagrid-mask-msg").text('请耐心等待,导入问题中......');
 
-	$("#customerquerydatagrid").datagrid('loading');
+	$("#removequerydatagrid").datagrid('loading');
 	$(".datagrid-mask-msg").text('请耐心等待,导入问题中......');
 
 	$.ajax({
@@ -3512,24 +3514,10 @@ function preRemoveProduceWordpat() {
 	var combition = [];
 	var rows = $("#removequerydatagrid").datagrid("getSelections");
 	if (rows.length == 0) {
-		$.messager.alert('系统提示', "请至少选择一行数据供系统语义训练!", "warning");
+		$.messager.alert('系统提示', "请至少选择一行数据供系统语义进行排除词模训练!", "warning");
 		return;
 	}
-	type = type || "";
-	if (customItem["训练模式"] != null && customItem["训练模式"] == "显示") {
-		var url = '../querymanage.action?type=createproduceWordpatcombobox&a=' + Math.random();
-		createCombobox('removeProduceWordpatselect', url, false, true, function() {
-			$('#removeProduceWordpatselect').combobox('setValue', '2');
-			$('#removeProduceWordpatType').val(type);
-			$('#removeProduceWordpatwin').window('open');
-		});
-	} else {
-		if (type == "ALL") {
-			produceAllWordpat("2");
-		} else {
-			removeProduceWordpat("2");
-		}
-	}
+	removeProduceWordpat("2");
 }
 function showOtherWord() {
 	if (ovvWord != null && ovvWord != '') {
@@ -3599,7 +3587,7 @@ function removeProduceWordpat(wordpattype) {
 			if (queryid == null || queryid == "") {
 				continue;
 			}
-			combition.push(rows[i].citycode + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid + "@#@" + rows[i].queryid);
+			combition.push(rows[i].citycode + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid + "@#@" + rows[i].queryid + "@#@"+ rows[i].isstrictexclusion);
 		}
 	} else {
 		$.messager.alert('系统提示', "请至少选择一行数据供系统语义训练!", "warning");

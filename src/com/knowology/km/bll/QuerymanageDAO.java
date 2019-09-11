@@ -969,8 +969,8 @@ public class QuerymanageDAO {
 					city = tempMap.get("city");
 					Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalQuery, kbdataid);
 					queryid = queryRs.getRows()[0].get("id").toString();
-					String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid;
-					JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0",false, request);
+					String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid + "@#@";
+					JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0", request);
 					if (obj.containsKey("OOVWord")) {
 						oovWordList.add(obj.getString("OOVWord"));
 					}
@@ -987,8 +987,8 @@ public class QuerymanageDAO {
 				city = tempMap.get("city");
 				Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalQuery, kbdataid);
 				queryid = queryRs.getRows()[0].get("id").toString();
-				String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid;
-				JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0",false, request);
+				String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid + "@#@";
+				JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0", request);
 				if (obj.containsKey("OOVWord")) {
 					oovWordList.add(obj.getString("OOVWord"));
 				}
@@ -4860,16 +4860,13 @@ public class QuerymanageDAO {
 					queryList.add(res.getRows()[j].get("query").toString());
 					queryList.add(res.getRows()[j].get("kbdataid").toString());
 					queryList.add(res.getRows()[j].get("queryid").toString());
+					queryList.add(removequerystatus);
 					combitionList.add(StringUtils.join(queryList, "@#@"));
 				}
 			}
 			if(!CollectionUtils.isEmpty(combitionList)){
 				String combition = StringUtils.join(combitionList, "@@");
-				boolean removeFlag = false;
-				if (removequerystatus != null && "是".equals(removequerystatus)) {
-					removeFlag = true;
-				}
-				JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "2", removeFlag, request);
+				JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "2", request);
 				if (obj.getBooleanValue("success")) {
 					jsonObj.put("success", true);
 					jsonObj.put("msg", "保存成功!");

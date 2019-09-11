@@ -138,7 +138,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if("addquery".equals(type)){//新增问题
 			m_result = QuerymanageDAO.addQuery(serviceid,querytype.trim(), normalquery.trim(), multinormalquery, customerquery.trim(), citycode, request);
 		}else if("producewordpat".equals(type)){//生成词模
-			m_result = AnalyzeDAO.produceWordpat(combition,flag,false,request);
+			m_result = AnalyzeDAO.produceWordpat(combition,flag,request);
 		}else if("produceallwordpat".equals(type)){//全量生成词模
 			m_result = AnalyzeDAO.produceAllWordpat(serviceid,flag,request);
 		}else if("updatecustomerquery".equals(type)){//修改客户问题
