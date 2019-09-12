@@ -46,6 +46,7 @@ import com.knowology.bll.CommonLibPermissionDAO;
 import com.knowology.bll.CommonLibQueryManageDAO;
 import com.knowology.bll.CommonLibQuestionUploadDao;
 import com.knowology.bll.CommonLibServiceDAO;
+import com.knowology.bll.CommonLibWordDAO;
 import com.knowology.bll.CommonLibWordclassDAO;
 import com.knowology.bll.CommonLibWordpatDAO;
 import com.knowology.bll.ConstructSerialNum;
@@ -4909,5 +4910,89 @@ public class QuerymanageDAO {
 					customerQuery, cityCode, user, removequerystatus);
 		}
 		return rs;
+	}
+	
+	/**
+	 * 排除问题生成词模
+	 *@param combition
+	 *@param request
+	 *@return
+	 *@returnType Object
+	 */
+	public static Object removeProduceWordpat(String combition,String wordpattype, HttpServletRequest request) {
+		JSONObject jsonObj = (JSONObject) AnalyzeDAO.produceWordpat(combition, wordpattype, request);
+		Object sre = GetSession.getSessionByKey("accessUser");
+		User user = (User) sre;
+		// 获取行业
+		String servicetype = user.getIndustryOrganizationApplication();
+		Result rs = CommonLibNewWordInfoDAO.selectNewWordInfo(servicetype, null);
+		List<String> newWordList = new ArrayList<String>();
+		// 判断数据源不为null且含有数据
+		if (rs != null && rs.getRowCount() > 0) {
+			// 循环遍历数据源
+			for (int i = 0; i < rs.getRowCount(); i++) {
+				List<String> list = new ArrayList<String>();
+				list.add(rs.getRows()[i].get("newword") != null ? rs.getRows()[i].get("newword").toString() : "");
+				list.add(rs.getRows()[i].get("wordclassid") != null ? rs.getRows()[i].get("newword").toString() : "");
+				list.add(rs.getRows()[i].get("isserviceword") != null ? rs.getRows()[i].get("newword").toString() : "");
+				newWordList.add(StringUtils.join(list, "@@"));
+			}
+		}
+		jsonObj.put("newWord", StringUtils.join(newWordList, "##"));
+		return jsonObj;
+	}
+	
+	/**
+	 * 新增别名
+	 * 
+	 * @param combition
+	 * @param content
+	 * @return
+	 */
+	public static Object addOtherWord(String combition, String content) {
+		JSONObject jsonObj = new JSONObject();
+		Object sre = GetSession.getSessionByKey("accessUser");
+		User user = (User) sre;
+		// 获取词类ID和词条名称
+		String[] newWordArray = combition.split("#");
+		String wordClassId = newWordArray[1];
+		String word = newWordArray[0];
+		// 获取别名
+		List<String> otherWordList = new ArrayList<String>();
+		String[] otherWordArray = content.split("#");
+		for (int i = 0; i < otherWordArray.length; i++) {
+			String[] wArr = otherWordArray[i].split("\\|");
+			for (int j = 0; j < wArr.length; j++) {
+				otherWordList.add(wArr[j]);
+			}
+		}
+		// 判断词条是否存在
+		if (!CommonLibWordDAO.exist(word, wordClassId)) {
+			CommonLibWordDAO.insert(word, wordClassId, user);
+		}
+		// 获取词条ID
+		Result wordRs = CommonLibWordDAO.getWordInfo(wordClassId, word);
+		String wordId = "";
+		// 判断数据源不为null且含有数据
+		if (wordRs != null && wordRs.getRowCount() > 0) {
+			wordId = wordRs.getRows()[0].get("wordid") != null ? wordRs.getRows()[0].get("wordid").toString() : "";
+		}
+		// 新增别名
+		int index = 0;
+		if (StringUtils.isNotBlank(wordId)) {
+			for (int i = 0; i < otherWordList.size(); i++) {
+				if (CommonLibWordDAO.existOtherWord(otherWordList.get(i), wordId)) {
+					index = CommonLibWordDAO.insertOtherWord(otherWordList.get(i), wordId, wordClassId, user);
+				}
+			}
+		}
+		if (index > 0) {
+			jsonObj.put("success", true);
+			jsonObj.put("msg", "保存成功!");
+		} else {
+			jsonObj.put("success", false);
+			jsonObj.put("msg", "保存失败!");
+		}
+		return jsonObj;
 	}
 }

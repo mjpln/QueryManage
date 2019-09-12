@@ -3570,11 +3570,7 @@ function doRemoveProduceWordpat(){
 	var type = $('#removeProduceWordpatType').val();
 	var wordpattype = $('#removeProduceWordpatselect').combobox('getValue');
 	$('#removeProduceWordpatwin').window('close');
-	if (type == "ALL") {
-		produceAllWordpat(wordpattype);
-	} else {
-		removeProduceWordpat(wordpattype);
-	}
+	removeProduceWordpat(wordpattype);
 }
 //批量生成词模
 function removeProduceWordpat(wordpattype) {
@@ -3599,7 +3595,7 @@ function removeProduceWordpat(wordpattype) {
 		url: '../querymanage.action',
 		type: "post",
 		data: {
-			type: 'producewordpat',
+			type: 'removeproducewordpat',
 			resourcetype: 'querymanage',
 			operationtype: 'A',
 			resourceid: serviceid,
@@ -3609,24 +3605,80 @@ function removeProduceWordpat(wordpattype) {
 		async: false,
 		dataType: "json",
 		success: function(data, textStatus, jqXHR) {
-			$("#removequerydatagrid").datagrid('loaded');
-			var downloadUrl = '';
-			if (data.fileName) {
-				downloadUrl = '</br>生成报告：</br>'
-					+'<a href="../querymanageexport.action?type=wordpatexport&fileName='+data.fileName
-					+'" download="'+data.fileName+'" title="下载" >'+data.fileName+'</a>';
-			}
-			if (data.success == true) {
-				$("#querymanagedatagrid").datagrid("reload");
-				$("#removequerydatagrid").datagrid("load");
-				$.messager.alert('系统提示', data.msg+downloadUrl, "info");
-			} else {
-				$.messager.alert('系统提示', data.msg+downloadUrl, "warning");
-			}
-			
+			var newWord = data.newWord;
+			var oovWord = data.oovWord;
+			loadNewWord(newWord, oovWord);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			$("#removequerydatagrid").datagrid('loaded');
+		}
+	});
+}
+
+// 展示
+function loadNewWord(newWord, oovWord) {
+	var wordArray = newWord.split("##");
+	var wordHtml = '<table cellspacing="0" cellpadding="0">';
+	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>新词</span></td><td style="padding:5px;"><span>是否业务词</span></td></tr>';
+	for (var i = 0; i < wordArray.length; i++) {
+		var newWordArray = wordArray[i].split("@@");
+		wordHtml += '<tr><td style="padding:5px;"><input type="checkbox" name="newwordcheckbox" id="newwordcheckbox_' + i + '" value="' + newWordArray[0] + '" /></td>';
+		wordHtml += '<td style="padding:5px;"><span>' + newWordArray[0] + '</span><input type="hidden" id="newwordclassid_' + i + '" value="' + newWordArray[1] + '</span></td>';
+		wordHtml += '<td style="padding:5px;"><span>' + newWordArray[2] + '</span></td>';
+		wordHtml += '</tr>';
+	}
+	wordHtml += '</table>';
+	wordHtml += "<br/>";
+	// 标准问题中的添加的新词|扩展问中的别名新词1|别名新词2
+	wordArray = oovWord.split("$_$");
+	wordHtml += '<table cellspacing="0" cellpadding="0">';
+	for (var i = 0; i < wordArray.length; i++) {
+		var content = otherWord.replace("$_$", "|")
+		wordHtml += '<tr><td><input type="checkbox" name="otherwordcheckbox" id="otherwordcheckbox_' + i + '" value="' + content + '" /></td><td><span>' + content + '</span></tr>';
+	}
+	wordHtml += '</table>';
+	$("#addotherwordtable").html(wordHtml);
+}
+
+//新增别名
+function doRemoveNewWord() {
+	var word = [];
+	//业务词
+	var wordlen = $("#addotherwordtable input[name='newwordcheckbox']").length;
+	for (var i = 0; i < wordlen; i++) {
+		if ($('#newwordcheckbox_' + i).is(':checked')) {
+			var newWord = $('#newwordcheckbox_' + i).val();
+			var wordclassid = $('#newwordclassid_' + i).val();
+			word.push(newWord + "@@" + wordclassid);
+		}
+	}
+	
+	if (word.length == 0) {
+		$.messager.alert('系统提示', '请至少选择一个新词', "info");
+		return;
+	}
+	var otherWord = [];
+	$("#addotherwordtable input[name='otherwordcheckbox']:checked").each(function () {
+		otherWord.push($(this).val());
+  });
+	$.ajax( { 
+		url : '../querymanage.action',
+		type : "post",
+		data : {
+			type : 'addOtherWord',
+			combition : word.join('#'),
+			content : otherWord.join('#')
+		},
+		async : false,
+		dataType : "json",
+		success : function(data, textStatus, jqXHR) {
+			if (data.success) {
+				$('#addotherwordtable').window('close');
+			} else {
+				$.messager.alert('系统提示', data.msg, "info");
+			}
+		},
+		error : function(jqXHR, textStatus, errorThrown) {
 		}
 	});
 }

@@ -235,6 +235,10 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 			m_result = QuerymanageDAO.addRemoveQueryWordpat(serviceid, querytype.trim(), normalquery.trim(), customerquery.trim(), citycode, removequerystatus, request);
 		} else if("importremove".equals(type)){
 			m_result = ImportExportDAO.importFile(filename,serviceid,1);
+		} else if ("removeproducewordpat".equals(type)) {// 显示别名
+			m_result = QuerymanageDAO.removeProduceWordpat(combition, flag, request);
+		} else if ("addOtherWord".equals(type)) {// 新增别名
+			m_result = QuerymanageDAO.addOtherWord(combition, content);
 		}
 		return "success";
 	}
