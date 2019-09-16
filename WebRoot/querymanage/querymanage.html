@@ -568,37 +568,24 @@
 
 				</div>
 				<!-- 客户问题批量训练窗口 window end -->
-	   			<!-- 排除问题批量训练窗口 window start -->
-	   			<div id="removeProduceWordpatwin" class="easyui-window" style="width:500px;height:200px;padding:10px;" title="选择训练模式 " data-options="modal:true,closed:true,iconCls:'icon-wordpat'" >
-           			<div class="easyui-layout" data-options="fit:true">
-						<div data-options="region:'center'" style="padding:10px;">
-							<div style="/*! margin: 0 auto; */position: absolute;left: 25%;top: 37%;">
-								<span style="margin-left:10px;">训练模式 :</span>
-			                    <span><input id="removeProduceWordpatselect"  class="easyui-combobox" style="width:150px;"/></span>
-			                    <input id="removeProduceWordpatType" type="hidden" style="width:100px;"/>
-							</div>
-						</div>
-						<div data-options="region:'center'" style="padding:10px;" id="addotherword">
-							<table cellspacing="0" cellpadding="0">
-	         					<tr align="center">
-	         						<td>
-	         							<span>系统发现新词，是否录入系统？</span>
-	         						</td>
-	         					</tr>
-	         					<tr>
-	         						<td>
-	         							<table cellspacing="0" cellpadding="0" id="addotherwordtable"></table>
-	         						</td>
-	         					</tr>
-	         				</table>
-	         			</div>
+	   			<!-- 排除问题批量训练新增别名窗口 window start -->
+	   			<div id="addotherwordwindow" class="easyui-window" style="width:500px;padding:10px;" title="词类别名录入" data-options="modal:true,closed:true,iconCls:'icon-wordpat'" >
+           			<div style="padding: 10px;" >
+           			<span style="font-size: 12px; margin-left: 10px">系统发现新词，是否作为词条别名录入系统？</span>
+           			</div>
+           			<div style="padding: 10px;" id="addOtherWordDiv">
+           			</div>
+           			<div style="padding: 10px;" id="addotherwordtable">
+           			  
+           			   
+           			</div> 
 						<div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
 							<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="javascript:doRemoveNewWord()" style="width:80px">确定</a>
-							<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#removeProduceWordpatwin').window('close');" style="width:80px">取消</a>
+							<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#addotherwordwindow').window('close');" style="width:80px">取消</a>
 						</div>
-					</div>
+					
 	   			</div>
-	   			<!-- 排除问题批量训练窗口 window end -->				
+	   			<!-- 排除问题批量训练新增别名窗口 window end -->				
 			</div>
 
 		</div>

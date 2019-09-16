@@ -4920,6 +4920,7 @@ public class QuerymanageDAO {
 	 *@returnType Object
 	 */
 	public static Object removeProduceWordpat(String combition,String wordpattype, HttpServletRequest request) {
+		//生成词模
 		JSONObject jsonObj = (JSONObject) AnalyzeDAO.produceWordpat(combition, wordpattype, request);
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
@@ -4933,11 +4934,11 @@ public class QuerymanageDAO {
 			for (int i = 0; i < rs.getRowCount(); i++) {
 				List<String> list = new ArrayList<String>();
 				list.add(rs.getRows()[i].get("newword") != null ? rs.getRows()[i].get("newword").toString() : "");
-				list.add(rs.getRows()[i].get("wordclassid") != null ? rs.getRows()[i].get("newword").toString() : "");
-				list.add(rs.getRows()[i].get("isserviceword") != null ? rs.getRows()[i].get("newword").toString() : "");
+				list.add(rs.getRows()[i].get("wordclassid") != null ? rs.getRows()[i].get("wordclassid").toString() : "");
+				list.add(rs.getRows()[i].get("isserviceword") != null ? rs.getRows()[i].get("isserviceword").toString() : "");
 				newWordList.add(StringUtils.join(list, "@@"));
 			}
-		}
+		}		
 		jsonObj.put("newWord", StringUtils.join(newWordList, "##"));
 		return jsonObj;
 	}
@@ -4961,10 +4962,11 @@ public class QuerymanageDAO {
 		List<String> otherWordList = new ArrayList<String>();
 		String[] otherWordArray = content.split("#");
 		for (int i = 0; i < otherWordArray.length; i++) {
-			String[] wArr = otherWordArray[i].split("\\|");
-			for (int j = 0; j < wArr.length; j++) {
-				otherWordList.add(wArr[j]);
-			}
+			otherWordList.add(otherWordArray[i]);
+//			String[] wArr = otherWordArray[i].split("\\|");
+//			for (int j = 0; j < wArr.length; j++) {
+//				otherWordList.add(wArr[j]);
+//			}
 		}
 		// 判断词条是否存在
 		if (!CommonLibWordDAO.exist(word, wordClassId)) {
@@ -4981,7 +4983,7 @@ public class QuerymanageDAO {
 		int index = 0;
 		if (StringUtils.isNotBlank(wordId)) {
 			for (int i = 0; i < otherWordList.size(); i++) {
-				if (CommonLibWordDAO.existOtherWord(otherWordList.get(i), wordId)) {
+				if (!CommonLibWordDAO.existOtherWord(otherWordList.get(i), wordId)) {
 					index = CommonLibWordDAO.insertOtherWord(otherWordList.get(i), wordId, wordClassId, user);
 				}
 			}

@@ -2698,6 +2698,42 @@ function understand() {
 		}
 	});
 };
+//排除问题-批量理解
+function removeunderstand() {
+	var rows = $('#removequerydatagrid').datagrid("getSelections");
+	var infos = [];
+	if (!rows || rows.length < 1) {
+		$.messager.alert('系统提示', "请选择一行进行理解!", "warning");
+		return;
+	}
+
+	for (var i = 0; i < rows.length; i++) {
+		var info = rows[i].queryid + '@-@' + rows[i].normalquery + '@-@' + rows[i].customerquery + '@-@' + rows[i].citycode + '@-@' + rows[i].cityname;
+		infos.push(info);
+	}
+	var understrandinfo = infos.join('xxxnixxx');
+
+	$("#removequerydatagrid").datagrid('loading');
+	$(".datagrid-mask-msg").text('请耐心等待,批量理解中......');
+	$.ajax({
+		type: "post",
+		url: "../querymanage.action",
+		data: {
+			type: "understand",
+			understrandinfo: understrandinfo
+		},
+		async: true,
+		dataType: "json",
+		success: function(data, textStatus, jqXHR) {
+			$("#removequerydatagrid").datagrid('reload');
+			$.messager.alert('系统提示', data.result, "info");
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			$("#customerquerydatagrid").datagrid('reload');
+			$.messager.alert('系统异常', "请求数据失败!", "error");
+		}
+	});
+};
 
 //报错功能
 function reportError() {
@@ -3062,7 +3098,7 @@ function loadRemoveQuerydDatagridList(hookObj) {
 			text: "批量理解",
 			iconCls: "icon-answer",
 			handler: function() {
-				understand();
+				removeunderstand();
 			}
 		}]
 	});
@@ -3519,52 +3555,52 @@ function preRemoveProduceWordpat() {
 	}
 	removeProduceWordpat("2");
 }
-function showOtherWord() {
-	if (ovvWord != null && ovvWord != '') {
-		$("#addotherword").show();
-		var combition = [];
-		var rows = $("#removequerydatagrid").datagrid("getSelections");
-		if (rows.length > 0) {
-			for (var i = 0; i < rows.length; i++) {
-				var queryid = rows[i].queryid;
-
-				if (queryid == null || queryid == "") {
-					continue;
-				}
-				combition.push(rows[i].customerquery);
-			}
-		}
-		// 生成词模，获取oov分词
-		$.ajax( { 
-			url : '../querymanage.action',
-			type : "post",
-			data : {
-				type : 'getoovword',
-				serviceid : serviceid,
-				normalquery : combition.join('\n')
-			},
-			async : false,
-			dataType : "json",
-			success : function(data, textStatus, jqXHR) {
-				var otherWord = data.oovWord;
-				if (otherWord != null && otherWord != '') {
-					// 标准问题中的添加的新词|扩展问中的别名新词1|别名新词2
-					var wordArray = oovWord.split("$_$");
-					var wordHtml = "";
-					for (var i = 0; i < wordArray.length; i++) {
-						var content = wordArray[i] + "|" + otherWord.replace("$_$", "|")
-						wordHtml += '<tr><td><input type=\"checkbox\" name=\"otherwordcheckbox\" value=\"' + content + '\" /></td><td><span>' + content + '</span></tr>';
-					}
-					$("#addotherwordtable").html(wordHtml);
-				}
-			},
-			error : function(jqXHR, textStatus, errorThrown) {
-			}
-		});
-	} else {
-		$("#addotherword").hide();
-	}
-}
+//function showOtherWord() {
+//	if (ovvWord != null && ovvWord != '') {
+//		$("#addotherword").show();
+//		var combition = [];
+//		var rows = $("#removequerydatagrid").datagrid("getSelections");
+//		if (rows.length > 0) {
+//			for (var i = 0; i < rows.length; i++) {
+//				var queryid = rows[i].queryid;
+//
+//				if (queryid == null || queryid == "") {
+//					continue;
+//				}
+//				combition.push(rows[i].customerquery);
+//			}
+//		}
+//		// 生成词模，获取oov分词
+//		$.ajax( { 
+//			url : '../querymanage.action',
+//			type : "post",
+//			data : {
+//				type : 'getoovword',
+//				serviceid : serviceid,
+//				normalquery : combition.join('\n')
+//			},
+//			async : false,
+//			dataType : "json",
+//			success : function(data, textStatus, jqXHR) {
+//				var otherWord = data.oovWord;
+//				if (otherWord != null && otherWord != '') {
+//					// 标准问题中的添加的新词|扩展问中的别名新词1|别名新词2
+//					var wordArray = oovWord.split("$_$");
+//					var wordHtml = "";
+//					for (var i = 0; i < wordArray.length; i++) {
+//						var content = wordArray[i] + "|" + otherWord.replace("$_$", "|")
+//						wordHtml += '<tr><td><input type=\"checkbox\" name=\"otherwordcheckbox\" value=\"' + content + '\" /></td><td><span>' + content + '</span></tr>';
+//					}
+//					$("#addotherwordtable").html(wordHtml);
+//				}
+//			},
+//			error : function(jqXHR, textStatus, errorThrown) {
+//			}
+//		});
+//	} else {
+//		$("#addotherword").hide();
+//	}
+//}
 //生成词模操作
 function doRemoveProduceWordpat(){
 	var type = $('#removeProduceWordpatType').val();
@@ -3605,9 +3641,26 @@ function removeProduceWordpat(wordpattype) {
 		async: false,
 		dataType: "json",
 		success: function(data, textStatus, jqXHR) {
-			var newWord = data.newWord;
-			var oovWord = data.oovWord;
-			loadNewWord(newWord, oovWord);
+			$("#removequerydatagrid").datagrid("load");
+			var downloadUrl = '';
+			if(data.fileName){
+				downloadUrl = '</br>生成报告：</br>'
+					+'<a href="../querymanageexport.action?type=wordpatexport&fileName='+data.fileName
+					+'" download="'+data.fileName+'" title="下载" >'+data.fileName+'</a>';
+			}
+			if(data.success == true){
+				$("#querymanagedatagrid").datagrid("reload");
+				$("#removequerydatagrid").datagrid("load");
+				$.messager.alert('系统提示', data.msg+downloadUrl, "info");
+				var newWord = data.newWord;
+				var oovWord = data.OOVWord;
+				if(oovWord != null && oovWord != ''){
+				   loadNewWord(newWord, oovWord);
+				}
+			}else{
+				$.messager.alert('系统提示', data.msg+downloadUrl, "warning");				
+			}
+			
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			$("#removequerydatagrid").datagrid('loaded');
@@ -3617,63 +3670,65 @@ function removeProduceWordpat(wordpattype) {
 
 // 展示
 function loadNewWord(newWord, oovWord) {
+	$('#addotherwordwindow').window('open');
 	var wordArray = newWord.split("##");
-	var wordHtml = '<table cellspacing="0" cellpadding="0">';
-	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>新词</span></td><td style="padding:5px;"><span>是否业务词</span></td></tr>';
+	
+	var wordHtml = '';
+//	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>新词</span></td><td style="padding:5px;"><span>是否业务词</span></td></tr>';
+	var newwordHtml = '<span style="font-size: 12px; margin-left: 10px">词条 ：</span>';
+	newwordHtml += '<select  id="newwordselect" class="easyui-combobox" data-options="editable:false" style="width: 100px;" type="text"><option value="">请选择</option>';
 	for (var i = 0; i < wordArray.length; i++) {
 		var newWordArray = wordArray[i].split("@@");
-		wordHtml += '<tr><td style="padding:5px;"><input type="checkbox" name="newwordcheckbox" id="newwordcheckbox_' + i + '" value="' + newWordArray[0] + '" /></td>';
-		wordHtml += '<td style="padding:5px;"><span>' + newWordArray[0] + '</span><input type="hidden" id="newwordclassid_' + i + '" value="' + newWordArray[1] + '</span></td>';
-		wordHtml += '<td style="padding:5px;"><span>' + newWordArray[2] + '</span></td>';
-		wordHtml += '</tr>';
+		newwordHtml +='<option value="'+newWordArray[0]+'#'+newWordArray[1]+'" >'+newWordArray[0]+'</option>'
 	}
-	wordHtml += '</table>';
-	wordHtml += "<br/>";
+	newwordHtml += '</select>';
+	$("#addOtherWordDiv").html(newwordHtml);
 	// 标准问题中的添加的新词|扩展问中的别名新词1|别名新词2
 	wordArray = oovWord.split("$_$");
-	wordHtml += '<table cellspacing="0" cellpadding="0">';
+	wordHtml += '<span style="font-size: 12px; margin-left: 10px">新词:</span> <table cellspacing="0" cellpadding="0" style="margin-left:20px"><tr><td>';
 	for (var i = 0; i < wordArray.length; i++) {
-		var content = otherWord.replace("$_$", "|")
-		wordHtml += '<tr><td><input type="checkbox" name="otherwordcheckbox" id="otherwordcheckbox_' + i + '" value="' + content + '" /></td><td><span>' + content + '</span></tr>';
+		var content = wordArray[i];
+		if(content != null && content !=''){
+			wordHtml += '<input type="checkbox" name="otherwordcheckbox" id="otherwordcheckbox_' + i + '" value="' + content + '" /><span>' + content + '</span>';			
+		}
+		if((i+1) % 6 == 0){
+			wordHtml += '<br/>';
+		}
 	}
-	wordHtml += '</table>';
+	wordHtml += '</td></tr></table>';
 	$("#addotherwordtable").html(wordHtml);
+	
 }
 
 //新增别名
 function doRemoveNewWord() {
-	var word = [];
-	//业务词
-	var wordlen = $("#addotherwordtable input[name='newwordcheckbox']").length;
-	for (var i = 0; i < wordlen; i++) {
-		if ($('#newwordcheckbox_' + i).is(':checked')) {
-			var newWord = $('#newwordcheckbox_' + i).val();
-			var wordclassid = $('#newwordclassid_' + i).val();
-			word.push(newWord + "@@" + wordclassid);
-		}
-	}
 	
+	var word = $("#newwordselect").val();
 	if (word.length == 0) {
-		$.messager.alert('系统提示', '请至少选择一个新词', "info");
+		$.messager.alert('系统提示', '请至少选择一个词条', "info");
 		return;
 	}
 	var otherWord = [];
 	$("#addotherwordtable input[name='otherwordcheckbox']:checked").each(function () {
 		otherWord.push($(this).val());
-  });
+    });
+	if (otherWord.length == 0) {
+		$.messager.alert('系统提示', '请至少选择一个词条别名', "info");
+		return;
+	}
 	$.ajax( { 
 		url : '../querymanage.action',
 		type : "post",
 		data : {
 			type : 'addOtherWord',
-			combition : word.join('#'),
+			combition : word,
 			content : otherWord.join('#')
 		},
 		async : false,
 		dataType : "json",
 		success : function(data, textStatus, jqXHR) {
 			if (data.success) {
-				$('#addotherwordtable').window('close');
+				$('#addotherwordwindow').window('close');
 			} else {
 				$.messager.alert('系统提示', data.msg, "info");
 			}

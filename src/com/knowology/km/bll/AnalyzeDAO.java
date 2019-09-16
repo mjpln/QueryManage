@@ -144,7 +144,7 @@ public class AnalyzeDAO {
 			List<String> wordpatList = new ArrayList<String>();
 			String wordpat = null;
 			//调用高析接口生成词模
-			if("0".equals(wordpattype)){
+			if("0".equals(wordpattype) || "2".equals(wordpattype)){
 				JSONObject jsonObject = getWordpat2(servicetype,query,queryCityCode);
 				if(jsonObject.getBooleanValue("success")){
 					// 将简单词模转化为普通词模，并返回转换结果
