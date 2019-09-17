@@ -139,7 +139,11 @@ public class AnalyzeDAO {
 			String kbdataid = queryArray[2];
 			String queryid = queryArray[3];
 			//排除问题的严格排除状态
-			String isstrictexclusion = queryArray[4];
+			String isstrictexclusion = "";
+			if(queryArray.length > 4){				
+			 isstrictexclusion = queryArray[4];
+			}
+
 			
 			List<String> wordpatList = new ArrayList<String>();
 			String wordpat = null;

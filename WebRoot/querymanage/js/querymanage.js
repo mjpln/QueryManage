@@ -1749,6 +1749,7 @@ function deleteNormalquery() {
 					if (data["success"] == true) {
 						$("#querymanagedatagrid").datagrid("reload");
 						$("#customerquerydatagrid").datagrid("reload");
+						$("#removequerydatagrid").datagrid("reload");
 						createNormalqueryCombobox();
 						//$('#deletenormalquerywin').window('close');
 					}

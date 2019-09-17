@@ -988,7 +988,7 @@ public class QuerymanageDAO {
 				city = tempMap.get("city");
 				Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalQuery, kbdataid);
 				queryid = queryRs.getRows()[0].get("id").toString();
-				String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid + "@#@";
+				String combition = city + "@#@" + normalQuery + "@#@" + kbdataid + "@#@" + queryid + "@#@ ";
 				JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0", request);
 				if (obj.containsKey("OOVWord")) {
 					oovWordList.add(obj.getString("OOVWord"));
@@ -4963,10 +4963,6 @@ public class QuerymanageDAO {
 		String[] otherWordArray = content.split("#");
 		for (int i = 0; i < otherWordArray.length; i++) {
 			otherWordList.add(otherWordArray[i]);
-//			String[] wArr = otherWordArray[i].split("\\|");
-//			for (int j = 0; j < wArr.length; j++) {
-//				otherWordList.add(wArr[j]);
-//			}
 		}
 		// 判断词条是否存在
 		if (!CommonLibWordDAO.exist(word, wordClassId)) {
