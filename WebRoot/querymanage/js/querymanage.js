@@ -439,13 +439,13 @@ function loadQueryManageList(hookObj) {
 						width: 250,
 
 						formatter: function(value, row, index) {
-							return '<a href="javascript:void(0)" title="共享语义" class="icon-share btn_a" onclick="openShareWin(event,' 
+							return '<a href="javascript:void(0)" title="共享语义" class="icon-share btn_a" style="margin-left: -20px;" onclick="openShareWin(event,' 
 							+ index 
 							+ ')"></a><a href="javascript:void(0)" title="交互规则" class="icon-detail btn_a" onclick="openRuleWin(event,' 
 							+ index
 							+ ')"></a><a href="javascript:void(0)" title="答案知识" class="icon-answerdetail btn_a" onclick="openFaqWin(event,' 
 							+ index 
-							+ ')"></a><br/><a href="javascript:void(0)" title="语义知识" class="icon-wordpat btn_a" style="margin-left: -24px;" onclick="openWordpatWin(event,' 
+							+ ')"></a><br/><a href="javascript:void(0)" title="语义知识" class="icon-wordpat btn_a" style="margin-left: -20px;" onclick="openWordpatWin(event,' 
 							+ index 
 							+ ')"></a><!-- 隐藏相关问题 <a href="javascript:void(0)" title="相关问题" class="icon-help btn_a" onclick="openRelateQueryWin(event,' 
 							+ index 
@@ -2830,13 +2830,13 @@ function addWordAct() {
 	var newquery = query;
 	for (var i = 0; i < wordlen; i++) {
 		if ($('#wordcheckbox_' + i).is(':checked')) {
-		var w = $("#wordclass_"+i).val().toUpperCase();		
-		if (newquery.toUpperCase().indexOf(w) == -1) {
+		  var w = $("#wordclass_"+i).val().toUpperCase();		
+		  if (newquery.toUpperCase().indexOf(w) == -1) {
 			$.messager.alert('系统提示', '当前分词【' + w + '】在标准问题中不存在或已被用于其他新词中，请选择其他新词', "info");
 			return;
-		}
+		  }
 		
-		newquery = newquery.replace(w, " ");
+		 newquery = newquery.replace(w, " ");
 		}
 		
    }

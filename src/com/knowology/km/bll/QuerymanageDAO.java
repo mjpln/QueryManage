@@ -4384,8 +4384,8 @@ public class QuerymanageDAO {
 				//词条
 				list.add("");
 				info.add(list);
-				String newword = combition;
-				if(businesswords.contains(combition)){
+				String newword = wordclass;
+				if(businesswords.contains(wordclass)){
 					newword = newword +",是";
 				}else{
 					newword = newword +",否";
@@ -4510,10 +4510,10 @@ public class QuerymanageDAO {
 					//新词
 					String[] words = string.split("\\|");
 					String wordclass = words[0];
-					if(words.length == 1 || StringUtils.isBlank(string.split("\\|")[1])){
+					if(words.length == 1 || StringUtils.isBlank(words[1])){
 						continue;
 					}
-					String[] otherword = string.split("\\|")[1].split("\n");
+					String[] otherword = words[1].split("\n");
 					String wordclassId = getWordClassId(wordclass.toUpperCase()+"近类");
 					if(StringUtils.isNotBlank(wordclassId)){
 						String otherwordcombition = wordclass+"#"+wordclassId+"#"+StringUtils.join(otherword,"|");
@@ -4526,8 +4526,12 @@ public class QuerymanageDAO {
 				}
 				
 			}else{
-				String wordclass = combition.split("\\|")[0];
-				String[] otherword = combition.split("\\|")[1].split("\n");
+				String[] words = combition.split("\\|");
+				String wordclass = words[0];
+				if(words.length == 1 || StringUtils.isBlank(words[1])){// 没有别名
+					return "新增成功";
+				}
+				String[] otherword = words[1].split("\n");
 				String wordclassId = getWordClassId(wordclass.toUpperCase()+"近类");
 				if(StringUtils.isNotBlank(wordclassId)){
 					String otherwordcombition = wordclass+"#"+wordclassId+"#"+StringUtils.join(otherword,"|");
@@ -4732,7 +4736,7 @@ public class QuerymanageDAO {
 		for(int i =0;i<words.length;i++){
 			 wordpat += words[i].toUpperCase()+"近类*";						
 		}
-		wordpat = wordpat.substring(0,wordpat.lastIndexOf("*"))+"#有序#业务X="+businesswords.replace("-", "").toUpperCase();
+		wordpat = wordpat.substring(0,wordpat.lastIndexOf("*"))+"#有序#编者=\"业务生成\"&业务X=\""+businesswords.replace("-", "").toUpperCase()+"\"";
 		wordpat =  SimpleString.SimpleWordPatToWordPat(wordpat);
 		if (Check.CheckWordpat(wordpat, request)) {
 		List<String> combList = new ArrayList<String>();

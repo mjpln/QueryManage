@@ -1118,7 +1118,7 @@ public class AnalyzeDAO {
 				}
 				// 保留自学习词模返回值，并替换 编者=\"自学习\""=>编者="问题库"&来源="(当前问题)" ---> modify
 				// 2017-05-24
-				wordpat = wordpat + "@1#编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"";
+				wordpat = "~"+wordpat + "@1#编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"";
 
 				// 判断是精准词模(有序)还是普通词模（无序）
 				String wordpatSeq = "@2#";

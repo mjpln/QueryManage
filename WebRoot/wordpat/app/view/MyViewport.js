@@ -233,7 +233,7 @@ Ext.define('MyApp.view.MyViewport', {
                                     xtype: 'gridcolumn',
                                     renderer: function(value, metaData, record, rowIndex, colIndex, store, view) {
                                         var value=Ext.htmlEncode(value);
-                                        if(value == '等于词模' || value == '排除词模'){
+                                        if(value == '等于词模'){
                                         	value = '普通词模';
                                         }
                                         return '<div style="white-space:normal;"><font size="2">' + value + '</font></div>';
