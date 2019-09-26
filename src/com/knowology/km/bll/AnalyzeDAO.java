@@ -130,6 +130,8 @@ public class AnalyzeDAO {
 		Map<String, String> wordpatMap = getAutoWordpatMap(kbIdList, wordpattype);
 		List<String> oovWordList = new ArrayList<String>();
 		List<String> wordpatResultList = new ArrayList<String>();
+		//包含OOV词的扩展问
+		List<String> oovWordQueryList = new ArrayList<String>();
 
 		for (int i = 0; i < combitionArray.length; i++) {
 			String queryArray[] = combitionArray[i].split("@#@");
@@ -157,6 +159,7 @@ public class AnalyzeDAO {
 					JSONArray oovWord = jsonObject.getJSONArray("OOVWord");
 					if (!CollectionUtils.isEmpty(oovWord)) {
 						oovWordList.add(StringUtils.join(oovWord, "$_$"));// 放入OOV分词
+						oovWordQueryList.add(combitionArray[i]);
 					}
 
 				}
@@ -260,6 +263,7 @@ public class AnalyzeDAO {
 				jsonObj.put("msg", "生成成功!");
 				jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
 				jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+				jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList, "@@"));
 			} else {
 				jsonObj.put("success", false);
 				jsonObj.put("msg", "生成失败!");
@@ -269,6 +273,7 @@ public class AnalyzeDAO {
 			jsonObj.put("msg", "生成成功!");
 			jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
 			jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+			jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList, "@@"));
 		} else {
 			jsonObj.put("success", false);
 			jsonObj.put("msg", "生成失败!!");
@@ -1061,7 +1066,9 @@ public class AnalyzeDAO {
 		Map<String, String> wordpatMap = getAutoWordpatMap(kbIdList, wordpattype);
 		List<String> oovWordList = new ArrayList<String>();
 		List<String> wordpatResultList = new ArrayList<String>();
-
+		//包含OOV词的扩展问
+		List<String> oovWordQueryList = new ArrayList<String>();
+		
 		for (int i = 0; i < combitionArray.length; i++) {
 			String queryArray[] = combitionArray[i].split("@#@");
 			String queryCityCode = queryArray[0];
@@ -1092,6 +1099,7 @@ public class AnalyzeDAO {
 						JSONArray oovWord = jsonObject.getJSONArray("OOVWord");
 						if (!CollectionUtils.isEmpty(oovWord)) {
 							oovWordList.add(StringUtils.join(oovWord, "$_$"));// 放入OOV分词
+							oovWordQueryList.add(combitionArray[i]);//放入有OOV词的扩展问
 						}
 
 					}
@@ -1184,6 +1192,7 @@ public class AnalyzeDAO {
 				jsonObj.put("msg", "生成成功!");
 				jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
 				jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+				jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList,"@@"));
 			} else {
 				jsonObj.put("success", false);
 				jsonObj.put("msg", "生成失败!");
@@ -1193,6 +1202,7 @@ public class AnalyzeDAO {
 			jsonObj.put("msg", "生成成功!");
 			jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
 			jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+			jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList,"@@"));
 		} else {
 			jsonObj.put("success", false);
 			jsonObj.put("msg", "生成失败!!");

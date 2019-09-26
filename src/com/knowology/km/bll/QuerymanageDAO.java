@@ -910,9 +910,9 @@ public class QuerymanageDAO {
 						msgs = "保存成功!";
 						JSONObject oovWordObj = (JSONObject) getOOVWord(serviceid, normalquery, request);
 						oovWordList.add(Objects.toString(oovWordObj.get("oovWord"), ""));
-						jsonObj.put("oovWord", StringUtils.join(oovWordList, "$_$"));
 					}
 				}
+				jsonObj.put("oovWord", StringUtils.join(oovWordList, "$_$"));
 				jsonObj.put("success", true);
 				jsonObj.put("msg", msgs);
 
@@ -1492,7 +1492,7 @@ public class QuerymanageDAO {
 		String userid = user.getUserID();
 		// 获取行业
 		String servicetype = user.getIndustryOrganizationApplication();
-		List<String> combitionArray = getAllQuery(serviceid,0);
+		List<String> combitionArray = getAllQuery(serviceid, 0);
 		String url = "";
 		String provinceCode = "全国";
 		int filterCount = 0;// 过滤的自学习词模数量
@@ -1612,9 +1612,9 @@ public class QuerymanageDAO {
 	 * @return
 	 * @returnType List<String>
 	 */
-	public static List<String> getAllQuery(String serviceid,int querytype) {
+	public static List<String> getAllQuery(String serviceid, int querytype) {
 		List<String> list = new ArrayList<String>();
-		Result rs = CommonLibQueryManageDAO.getQuery(serviceid,querytype);
+		Result rs = CommonLibQueryManageDAO.getQuery(serviceid, querytype);
 		if (rs != null && rs.getRowCount() > 0) {
 			// 循环遍历数据源
 			for (int i = 0; i < rs.getRowCount(); i++) {
@@ -2115,8 +2115,8 @@ public class QuerymanageDAO {
 					jsonObj.put("msg", e.getMessage());
 					return jsonObj;
 				}
-				int count = CommonLibQueryManageDAO.importQuery(map, getQueryDic(serviceid,0), serviceCityList, serviceid,
-						bussinessFlag, workerid,0);
+				int count = CommonLibQueryManageDAO.importQuery(map, getQueryDic(serviceid, 0), serviceCityList,
+						serviceid, bussinessFlag, workerid, 0);
 				if (count > 0) {
 					// 将false放入jsonObj的success对象中
 					jsonObj.put("success", true);
@@ -2152,7 +2152,7 @@ public class QuerymanageDAO {
 	@SuppressWarnings("unchecked")
 	public static File exportFile(String serviceid, String normalQuery, String responseType, String interactType) {
 		File file = null;
-		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType,0);
+		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType, 0);
 		if (result != null && result.getRowCount() > 0) {
 			List colTitle = Arrays.asList("标准问题", "客户问题", "回复类型", "交互类型", "来源地市");
 			List text = new ArrayList();
@@ -2180,6 +2180,7 @@ public class QuerymanageDAO {
 		return file;
 
 	}
+
 	/**
 	 * 导出排除问题
 	 * 
@@ -2192,9 +2193,10 @@ public class QuerymanageDAO {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static File exportFileRemove(String serviceid, String normalQuery, String responseType, String interactType) {
+	public static File exportFileRemove(String serviceid, String normalQuery, String responseType,
+			String interactType) {
 		File file = null;
-		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType,1);
+		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType, 1);
 		if (result != null && result.getRowCount() > 0) {
 			List colTitle = Arrays.asList("标准问题", "排除问题", "回复类型", "交互类型", "来源地市");
 			List text = new ArrayList();
@@ -2721,9 +2723,9 @@ public class QuerymanageDAO {
 	 * @return
 	 * @returnType Map<String,Map<String,String>>
 	 */
-	public static Map<String, Map<String, String>> getQueryDic(String serviceid,int querytype) {
+	public static Map<String, Map<String, String>> getQueryDic(String serviceid, int querytype) {
 		Map<String, Map<String, String>> map = new HashMap<String, Map<String, String>>();
-		Result rs = CommonLibQueryManageDAO.getQuery(serviceid,querytype);
+		Result rs = CommonLibQueryManageDAO.getQuery(serviceid, querytype);
 		if (rs != null && rs.getRowCount() > 0) {
 			// 循环遍历数据源
 			for (int i = 0; i < rs.getRowCount(); i++) {
@@ -4321,7 +4323,8 @@ public class QuerymanageDAO {
 	/**
 	 * 增加新词，并生成词模
 	 * 
-	 * @param combition  新词|别名\n别名#新词|别名\n别名
+	 * @param combition
+	 *            新词|别名\n别名#新词|别名\n别名
 	 * @param flag
 	 * @param normalquery
 	 * @param serviceid
@@ -4335,24 +4338,145 @@ public class QuerymanageDAO {
 		String userid = user.getUserID();
 		// 获取行业
 		String servicetype = user.getIndustryOrganizationApplication();
-		//添加新词
-		List<String> newWords = new ArrayList<String>();
+		// 插入问题库自动学习词模
+		List<List<String>> combListList = new ArrayList<List<String>>();
 
-		String wordpat = "";
-		String lockwordpat = "";
+		// 新增词类词条,词条别名
+		List<String> newWords = addWordClass(combition, businesswords, user);
+
 		Map<String, Map<String, String>> map = CommonLibQueryManageDAO.getNormalQueryDic(serviceid);
-		Map<String, String> maps = map.get(normalquery.trim());
-		String kbdataid = maps.get("kbdataid");
-		String city = maps.get("city");
+		// 多个标准问
+		String[] querys = normalquery.split("\n");
+		// 同时根据用户选择的重要和不重要作为可选和必选的判断标准， 然后将新增加的词类用*号和词模1合并
+		String[] wordArray = combition.split("#");
+		String[] levelArray = flag.split("#");
+		// 遍历标准问
+		for (int i = 0; i < querys.length; i++) {
+			String wordpat = "";
+			String lockwordpat = "";
+			Map<String, String> maps = map.get(querys[i]);
+			String kbdataid = maps.get("kbdataid");
+			String city = maps.get("city");
+			String newQuery = newnormalquery.split("\n")[i];
+			if (StringUtils.isNotBlank(newQuery)) {
+				JSONObject jsonObject = AnalyzeDAO.getWordpat2(servicetype, newQuery, city);
+				wordpat = jsonObject.getString("wordpat");
+				wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\"" + querys[i].replace("&", "\\and") + "\"");
+				lockwordpat = jsonObject.getString("lockWordpat");
+				lockwordpat = lockwordpat.replace("编者=\"自学习\"",
+						"编者=\"问题库\"&来源=\"" + querys[i].replace("&", "\\and") + "\"");
+			}
+			String wordClassStr = "";
+			// 遍历多个新词，并判断标准问是否包含此新词
+			for (int j = 0; j < wordArray.length; j++) {
+				if ("0".equals(levelArray[j])) {
+					if (querys[i].indexOf(wordArray[j].split("\\|")[0]) > -1) {
+						wordClassStr += wordArray[j].split("\\|")[0] + "近类" + "*";
+					}
 
-		if (StringUtils.isNotBlank(newnormalquery)) {
-			JSONObject jsonObject = AnalyzeDAO.getWordpat2(servicetype, newnormalquery, city);
-			wordpat = jsonObject.getString("wordpat");
-			wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\"" + normalquery.replace("&", "\\and") + "\"");
-			lockwordpat = jsonObject.getString("lockWordpat");
-			lockwordpat = lockwordpat.replace("编者=\"自学习\"",
-					"编者=\"问题库\"&来源=\"" + normalquery.replace("&", "\\and") + "\"");
+				} else if ("1".equals(levelArray[j])) {
+					if (querys[i].indexOf(wordArray[j].split("\\|")[0]) > -1) {
+						wordClassStr += "[" + wordArray[j].split("\\|")[0] + "近类" + "]*";
+					}
+				}
+			}
+			if (StringUtils.isBlank(wordpat)) {
+				wordClassStr = wordClassStr.substring(0, wordClassStr.lastIndexOf("*"));
+				wordpat = "#无序#编者=\"问题库\"&来源=\"" + querys[i].replace("&", "\\and") + "\"";
+			}
+			String simpleWordpat = wordClassStr + wordpat;
+			simpleWordpat = SimpleString.SimpleWordPatToWordPat(simpleWordpat);
+			// 精准词模
+			wordClassStr = "";
+			for (int k = 0; k < wordArray.length; k++) {
+				if (querys[i].indexOf(wordArray[k].split("\\|")[0]) > -1) {
+					wordClassStr += wordArray[k].split("\\|")[0] + "近类" + "*";
+				}
+			}
+
+			if (StringUtils.isBlank(lockwordpat)) {
+				wordClassStr = wordClassStr.substring(0, wordClassStr.lastIndexOf("*"));
+				lockwordpat = "#有序#编者=\"问题库\"&来源=\"" + querys[i].replace("&", "\\and") + "\"&最大未匹配字数=\"0\"&置信度=\"1.1\"";
+			}
+			String simpleLockWordpat = wordClassStr + lockwordpat;
+			simpleLockWordpat = SimpleString.SimpleWordPatToWordPat(simpleLockWordpat);
+
+			Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(querys[i], kbdataid);
+			String queryid = queryRs.getRows()[0].get("id").toString();
+
+			List<String> combList = null;
+			if (Check.CheckWordpat(simpleWordpat, request)) {
+				combList = new ArrayList<String>();
+				combList.add(simpleWordpat);
+				combList.add(city);
+				combList.add(querys[i]);
+				combList.add(kbdataid);
+				combList.add(queryid);
+				combListList.add(combList);
+			} else {
+				jsonObj.put("success", true);
+				jsonObj.put("msg", querys[i] + "生成的词模：【" + simpleWordpat + "】不规范");
+				return jsonObj;
+			}
+			if (Check.CheckWordpat(simpleLockWordpat, request)) {
+				combList = new ArrayList<String>();
+				combList.add(simpleLockWordpat);
+				combList.add(city);
+				combList.add(querys[i]);
+				combList.add(kbdataid);
+				combList.add(queryid);
+				combListList.add(combList);
+			} else {
+				jsonObj.put("success", true);
+				jsonObj.put("msg", querys[i] + "生成的词模：【" + simpleLockWordpat + "】不规范");
+				return jsonObj;
+			}
+
 		}
+
+		//
+
+		int count = -1;
+		if (!CollectionUtils.isEmpty(combListList)) {
+			count = CommonLibQueryManageDAO.insertWordpat(combListList, servicetype, userid, "0");
+			if (count > 0) {
+				jsonObj.put("success", true);
+				jsonObj.put("msg", "生成成功!");
+				// 调用更新支持库的方法
+				if (StringUtils.isNotBlank(combition)) {
+					// Object m_result = ExtendDao.updateKB();
+					// logger.info(JSONObject.toJSONString(m_result));
+				}
+
+			} else {
+				jsonObj.put("success", false);
+				jsonObj.put("msg", "生成失败!");
+			}
+		}
+		// 根节点下识别业务规则-业务名称获取-标准问：业务词获取增加业务词词模
+		String ktdataid = "";// 业务词标准ID
+		if (StringUtils.isNotBlank(businesswords)) {
+			JSONObject objResult = (JSONObject) addBusinessWordpat(businesswords, serviceid, request);
+			ktdataid = objResult.getString("ktdataid");
+			logger.info("新增业务词词模结果:" + objResult.getString("msg"));
+		}
+		// 新词表添加记录
+		if (!CollectionUtils.isEmpty(newWords)) {
+			String countNewWord = addNewWordInfo(StringUtils.join(newWords, "@@"), ktdataid);
+			logger.info("新增新词结果:" + countNewWord);
+		}
+		return jsonObj;
+	}
+
+	/**
+	 * 新增词类词条，别名，
+	 * 
+	 * @param combition
+	 * @param businesswords
+	 */
+	public static List<String> addWordClass(String combition, String businesswords, User user) {
+		// 添加新词
+		List<String> newWords = new ArrayList<String>();
 
 		List<List<Object>> info = new ArrayList<List<Object>>();
 		List<Object> list = new ArrayList<Object>();
@@ -4360,191 +4484,100 @@ public class QuerymanageDAO {
 			if (combition.contains("#")) {
 				String[] wordArray = combition.split("#");
 				for (String string : wordArray) {
-					//新词
+					// 新词
 					String wordclass = string.split("\\|")[0];
 					list = new ArrayList<Object>();
 					list.add(wordclass);
 					list.add("");
 					info.add(list);
-					//判断是否是业务词
+					// 判断是否是业务词
 					String newword = wordclass;
-					if(businesswords.contains(wordclass)){
-						newword = newword +",是";
-					}else{
-						newword = newword +",否";
+					if (businesswords.contains(wordclass)) {
+						newword = newword + ",是";
+					} else {
+						newword = newword + ",否";
 					}
 					newWords.add(newword);
 				}
 			} else {
 				list = new ArrayList<Object>();
-				//新词
+				// 新词
 				String wordclass = combition.split("\\|")[0];
-				//词类
+				// 词类
 				list.add(wordclass);
-				//词条
+				// 词条
 				list.add("");
 				info.add(list);
 				String newword = wordclass;
-				if(businesswords.contains(wordclass)){
-					newword = newword +",是";
-				}else{
-					newword = newword +",否";
+				if (businesswords.contains(wordclass)) {
+					newword = newword + ",是";
+				} else {
+					newword = newword + ",否";
 				}
 				newWords.add(newword);
 			}
 			CommonLibQueryManageDAO.insertWordClassAndItem(user, info);
-			//新增别名
-			String resultMsg =	addWordOtherWord(combition);
+			// 新增别名
+			String resultMsg = addWordOtherWord(combition);
 			logger.info("标准问-新增新词【" + JSONObject.toJSONString(info) + "】成功，新增新词别名结果:" + resultMsg);
 		}
-		// 同时根据用户选择的重要和不重要作为可选和必选的判断标准， 然后将新增加的词类用*号和词模1合并
-		String[] wordArray = combition.split("#");
-		String[] levelArray = flag.split("#");
-		String wordClassStr = "";
-		for (int i = 0; i < wordArray.length; i++) {
-			if ("0".equals(levelArray[i])) {
-				wordClassStr += wordArray[i].split("\\|")[0] + "近类" + "*";
-			}
-			if ("1".equals(levelArray[i])) {
-				wordClassStr += "[" + wordArray[i].split("\\|")[0] + "近类" + "]*";
-			}
+		return newWords;
 
-		}
-		if (StringUtils.isBlank(wordpat)) {
-			wordClassStr = wordClassStr.substring(0, wordClassStr.lastIndexOf("*"));
-			wordpat = "#无序#编者=\"问题库\"&来源=\"" + normalquery.replace("&", "\\and") + "\"";
-		}
-		String simpleWordpat = wordClassStr + wordpat;
-		simpleWordpat = SimpleString.SimpleWordPatToWordPat(simpleWordpat);
-
-
-		wordClassStr = "";
-		for (int i = 0; i < wordArray.length; i++) {
-			wordClassStr += wordArray[i].split("\\|")[0] + "近类" + "*";
-		}
-
-		if (StringUtils.isBlank(lockwordpat)) {
-			wordClassStr = wordClassStr.substring(0, wordClassStr.lastIndexOf("*"));
-			lockwordpat = "#无序#编者=\"问题库\"&来源=\"" + normalquery.replace("&", "\\and") + "\"&最大未匹配字数=\"0\"&置信度=\"1.1\"";
-		}
-		String simpleLockWordpat = wordClassStr + lockwordpat;
-		simpleLockWordpat = SimpleString.SimpleWordPatToWordPat(simpleLockWordpat);
-		//
-		Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalquery, kbdataid);
-		String queryid = queryRs.getRows()[0].get("id").toString();
-		// 插入问题库自动学习词模
-		List<List<String>> combListList = new ArrayList<List<String>>();
-		List<String> combList = null;
-		if (Check.CheckWordpat(simpleWordpat, request)) {
-			combList = new ArrayList<String>();
-			combList.add(simpleWordpat);
-			combList.add(city);
-			combList.add(normalquery);
-			combList.add(kbdataid);
-			combList.add(queryid);
-			combListList.add(combList);
-		}else{
-			jsonObj.put("success", true);
-			jsonObj.put("msg", normalquery+"生成的词模：【"+simpleWordpat+"】不规范");
-			return jsonObj;
-		}
-		if (Check.CheckWordpat(simpleLockWordpat, request)) {
-			combList = new ArrayList<String>();
-			combList.add(simpleLockWordpat);
-			combList.add(city);
-			combList.add(normalquery);
-			combList.add(kbdataid);
-			combList.add(queryid);
-			combListList.add(combList);
-		}else{
-			jsonObj.put("success", true);
-			jsonObj.put("msg", normalquery+"生成的词模：【"+simpleLockWordpat+"】不规范");
-			return jsonObj;
-		}
-
-		int count = -1;
-		if (list.size() > 0) {
-			count = CommonLibQueryManageDAO.insertWordpat(combListList, servicetype, userid, "0");
-			if (count > 0) {
-				jsonObj.put("success", true);
-				jsonObj.put("msg", "生成成功!");
-				//调用更新支持库的方法
-				if(StringUtils.isNotBlank(combition)){
-				   Object	m_result = ExtendDao.updateKB();
-				   logger.info(JSONObject.toJSONString(m_result));
-				}
-				
-			} else {
-				jsonObj.put("success", false);
-				jsonObj.put("msg", "生成失败!");
-			}
-		}
-		// 根节点下识别业务规则-业务名称获取-标准问：业务词获取增加业务词词模
-		String ktdataid = "";//业务词标准ID
-		if(StringUtils.isNotBlank(businesswords)){
-			JSONObject objResult = (JSONObject)addBusinessWordpat(businesswords,serviceid,request);
-			ktdataid = objResult.getString("ktdataid");
-			logger.info("新增业务词词模结果:"+objResult.getString("msg"));
-		}
-		//新词表添加记录
-		if(!CollectionUtils.isEmpty(newWords)){
-			String countNewWord = addNewWordInfo(StringUtils.join(newWords,"@@"),ktdataid);
-			logger.info("新增新词结果:"+countNewWord);
-		}
-		
-		return jsonObj;
 	}
-	
+
 	/**
 	 * 添加新词时有别名的话添加别名
-	 * @param combition 新词|别名\n别名#新词|别名
+	 * 
+	 * @param combition
+	 *            新词|别名\n别名#新词|别名
 	 * @return
 	 */
-	public static String addWordOtherWord(String combition){
+	public static String addWordOtherWord(String combition) {
 		String returnMsg = "新增成功";
 		List<String> list = new ArrayList<String>();
 		if (StringUtils.isNotBlank(combition)) {
 			if (combition.contains("#")) {
 				String[] wordArray = combition.split("#");
 				for (String string : wordArray) {
-					//新词
+					// 新词
 					String[] words = string.split("\\|");
 					String wordclass = words[0];
-					if(words.length == 1 || StringUtils.isBlank(words[1])){
+					if (words.length == 1 || StringUtils.isBlank(words[1])) {
 						continue;
 					}
 					String[] otherword = words[1].split("\n");
-					String wordclassId = getWordClassId(wordclass.toUpperCase()+"近类");
-					if(StringUtils.isNotBlank(wordclassId)){
-						String otherwordcombition = wordclass+"#"+wordclassId+"#"+StringUtils.join(otherword,"|");
+					String wordclassId = getWordClassId(wordclass.toUpperCase() + "近类");
+					if (StringUtils.isNotBlank(wordclassId)) {
+						String otherwordcombition = wordclass + "#" + wordclassId + "#"
+								+ StringUtils.join(otherword, "|");
 						list.add(otherwordcombition);
-					}else{
-						logger.info(wordclass+"近类不存在");
+					} else {
+						logger.info(wordclass + "近类不存在");
 						continue;
 					}
 
 				}
-				
-			}else{
+
+			} else {
 				String[] words = combition.split("\\|");
 				String wordclass = words[0];
-				if(words.length == 1 || StringUtils.isBlank(words[1])){// 没有别名
+				if (words.length == 1 || StringUtils.isBlank(words[1])) {// 没有别名
 					return "新增成功";
 				}
 				String[] otherword = words[1].split("\n");
-				String wordclassId = getWordClassId(wordclass.toUpperCase()+"近类");
-				if(StringUtils.isNotBlank(wordclassId)){
-					String otherwordcombition = wordclass+"#"+wordclassId+"#"+StringUtils.join(otherword,"|");
+				String wordclassId = getWordClassId(wordclass.toUpperCase() + "近类");
+				if (StringUtils.isNotBlank(wordclassId)) {
+					String otherwordcombition = wordclass + "#" + wordclassId + "#" + StringUtils.join(otherword, "|");
 					list.add(otherwordcombition);
-				}else{
-					logger.info(wordclass+"近类不存在");					
+				} else {
+					logger.info(wordclass + "近类不存在");
 				}
 			}
 		}
-		//调用新增别名方法新增别名
-		if(!CollectionUtils.isEmpty(list)){
-			JSONObject jsonObj = (JSONObject)addOtherWord(StringUtils.join(list,"@@"), false);
-			returnMsg = jsonObj.getString("msg");			
+		// 调用新增别名方法新增别名
+		if (!CollectionUtils.isEmpty(list)) {
+			JSONObject jsonObj = (JSONObject) addOtherWord(StringUtils.join(list, "@@"), false);
+			returnMsg = jsonObj.getString("msg");
 		}
 
 		return returnMsg;
@@ -4552,11 +4585,14 @@ public class QuerymanageDAO {
 
 	/**
 	 * 增加新词记录
-	 * @param newWords 格式：新词，是否业务词##新词,是否业务词
-	 *  @param ktdataid 业务词标准问ID 
+	 * 
+	 * @param newWords
+	 *            格式：新词，是否业务词##新词,是否业务词
+	 * @param ktdataid
+	 *            业务词标准问ID
 	 * @return
 	 */
-	public static String addNewWordInfo(String combition,String ktdataid){
+	public static String addNewWordInfo(String combition, String ktdataid) {
 		String str = "新增成功";
 		List<List<String>> list = new ArrayList<List<String>>();
 		Object sre = GetSession.getSessionByKey("accessUser");
@@ -4564,27 +4600,27 @@ public class QuerymanageDAO {
 		String userid = user.getUserID();
 		// 获取行业
 		String servicetype = user.getIndustryOrganizationApplication();
-		//业务词词模集合
-		Map<String,String> businessWordpatMap = new HashMap<String,String>();
-		if(StringUtils.isNotBlank(ktdataid)){//获取标准问下所有的词模
+		// 业务词词模集合
+		Map<String, String> businessWordpatMap = new HashMap<String, String>();
+		if (StringUtils.isNotBlank(ktdataid)) {// 获取标准问下所有的词模
 			List<String> kbIdList = new ArrayList<String>();
-			kbIdList.add(ktdataid);	
-			businessWordpatMap = getBusinessWordpat(kbIdList,"0");
+			kbIdList.add(ktdataid);
+			businessWordpatMap = getBusinessWordpat(kbIdList, "0");
 		}
 		String[] newWords = combition.split("@@");
 		List<String> wordList = null;
-		for(int i=0;i<newWords.length;i++){
+		for (int i = 0; i < newWords.length; i++) {
 			wordList = new ArrayList<String>();
-			
+
 			String[] newWordInfo = newWords[i].split(",");
 			String newWord = newWordInfo[0].toUpperCase();
 			String isBusinessWord = newWordInfo[1];
-			
-			//词类ID
-			String wordclassid = getWordClassId(newWord+"近类");
-			//词模ID
+
+			// 词类ID
+			String wordclassid = getWordClassId(newWord + "近类");
+			// 词模ID
 			String wordpatId = "";
-			if("是".equals(isBusinessWord)){
+			if ("是".equals(isBusinessWord)) {
 				wordpatId = businessWordpatMap.get(newWord);
 			}
 			wordList.add(servicetype);
@@ -4592,66 +4628,72 @@ public class QuerymanageDAO {
 			wordList.add(wordclassid);
 			wordList.add(wordpatId);
 			wordList.add(isBusinessWord);
-			list.add(wordList);			  
+			list.add(wordList);
 		}
 		int count = -1;
-		if(!CollectionUtils.isEmpty(list)){
+		if (!CollectionUtils.isEmpty(list)) {
 			count = CommonLibNewWordInfoDAO.insertNewWordInfo(list, userid);
 		}
-		if(count < 1){
+		if (count < 1) {
 			str = "新增失败";
 		}
-				
+
 		return str;
 	}
+
 	/**
 	 * 获取词类ID
+	 * 
 	 * @param wordClass
 	 * @return
 	 */
-	private static String getWordClassId(String wordClass){
-		String wordclassid="";
-		//查询新词对应的词类ID
-		Result rs= CommonLibWordclassDAO.getWordclassID(wordClass);
-		if(rs != null && rs.getRowCount() > 0){
-			for(int i =0;i<rs.getRowCount();i++){
+	private static String getWordClassId(String wordClass) {
+		String wordclassid = "";
+		// 查询新词对应的词类ID
+		Result rs = CommonLibWordclassDAO.getWordclassID(wordClass);
+		if (rs != null && rs.getRowCount() > 0) {
+			for (int i = 0; i < rs.getRowCount(); i++) {
 				wordclassid = rs.getRows()[i].get("wordclassid").toString();
 				break;
 			}
 		}
 		return wordclassid;
 	}
+
 	/**
 	 * 获取业务词对应词模ID
+	 * 
 	 * @param kdIdList
 	 * @param wordpattype
 	 * @return (业务词,词模ID)
 	 */
-	public static Map<String,String> getBusinessWordpat(List<String> kdIdList,String wordpattype){
-		Map<String,String> wordpatMap = new HashMap<String,String>();
-		Result rs = CommonLibQueryManageDAO.selectWordpatByKbdataid(kdIdList,wordpattype);
-		if(rs != null && rs.getRowCount()> 0){
-			for(int i =0;i<rs.getRowCount();i++){
-				if(rs.getRows()[i].get("wordpat") != null){
+	public static Map<String, String> getBusinessWordpat(List<String> kdIdList, String wordpattype) {
+		Map<String, String> wordpatMap = new HashMap<String, String>();
+		Result rs = CommonLibQueryManageDAO.selectWordpatByKbdataid(kdIdList, wordpattype);
+		if (rs != null && rs.getRowCount() > 0) {
+			for (int i = 0; i < rs.getRowCount(); i++) {
+				if (rs.getRows()[i].get("wordpat") != null) {
 					String wordpat = rs.getRows()[i].get("wordpat").toString();
 					String[] split = wordpat.split("业务X=");
-					if(split.length > 1){
-						  String bussinessword = split[1];
-						  wordpatMap.put(bussinessword, rs.getRows()[i].get("wordpatid").toString());
+					if (split.length > 1) {
+						String bussinessword = split[1];
+						wordpatMap.put(bussinessword, rs.getRows()[i].get("wordpatid").toString());
 					}
 				}
 			}
 		}
 		return wordpatMap;
 	}
+
 	/**
 	 * 添加业务词词模
+	 * 
 	 * @param businesswords
 	 * @param serviceid
 	 * @param request
 	 * @return
 	 */
-	public static Object addBusinessWordpat(String businesswords, String serviceid,HttpServletRequest request) {
+	public static Object addBusinessWordpat(String businesswords, String serviceid, HttpServletRequest request) {
 		JSONObject obj = new JSONObject();
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
@@ -4683,24 +4725,24 @@ public class QuerymanageDAO {
 			obj.put("msg", "业务根节点不存在");
 			return obj;
 		}
-		//获取识别业务规则ID 
-		ruleserviceid = getBusinessServiceId("识别规则业务",userid,servicetype,rootserviceid);
+		// 获取识别业务规则ID
+		ruleserviceid = getBusinessServiceId("识别规则业务", userid, servicetype, rootserviceid);
 		// 识别规则业务节点ID不存在
 		if (StringUtils.isBlank(ruleserviceid)) {
 			obj.put("success", false);
 			obj.put("msg", "业务根节点下【识别规则业务】不存在");
 			return obj;
 		}
-		//获取业务名称获取ID 
-		businessserviceid = getBusinessServiceId("业务名称获取",userid,servicetype,ruleserviceid);
+		// 获取业务名称获取ID
+		businessserviceid = getBusinessServiceId("业务名称获取", userid, servicetype, ruleserviceid);
 		// 业务名称获取节点ID不存在
 		if (StringUtils.isBlank(businessserviceid)) {
 			obj.put("success", false);
 			obj.put("msg", "业务根节点下【识别规则业务-业务名称获取】不存在");
 			return obj;
 		}
-		
-		//获取业务下的标准问：业务词获取
+
+		// 获取业务下的标准问：业务词获取
 		Result rs = CommonLibKbDataDAO.getAbstractInfoByServiceid(businessserviceid);
 		if (rs != null && rs.getRowCount() > 0) {
 			for (int i = 0; i < rs.getRowCount(); i++) {
@@ -4713,11 +4755,11 @@ public class QuerymanageDAO {
 			}
 		}
 		String normalquery = "业务词获取";
-		if(StringUtils.isBlank(kbdataid)){			
-			//新增业务词标准问
-			if(!(Boolean)addQueryByBussinessWord(user,businessserviceid,normalquery)){
+		if (StringUtils.isBlank(kbdataid)) {
+			// 新增业务词标准问
+			if (!(Boolean) addQueryByBussinessWord(user, businessserviceid, normalquery)) {
 				obj.put("success", false);
-				obj.put("msg", "业务根节点下【识别规则业务-业务名称获取】标准问【"+normalquery+"】不存在");
+				obj.put("msg", "业务根节点下【识别规则业务-业务名称获取】标准问【" + normalquery + "】不存在");
 				return obj;
 			}
 			Map<String, Map<String, String>> map = CommonLibQueryManageDAO.getNormalQueryDic(businessserviceid);
@@ -4727,26 +4769,27 @@ public class QuerymanageDAO {
 		}
 		Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalquery, kbdataid);
 		String queryid = queryRs.getRows()[0].get("id").toString();
-		
+
 		// 插入问题库自动学习词模
 		List<List<String>> combListList = new ArrayList<List<String>>();
-		//添加词模
-		String[] words= businesswords.split("-");
+		// 添加词模
+		String[] words = businesswords.split("-");
 		String wordpat = "";
-		for(int i =0;i<words.length;i++){
-			 wordpat += words[i].toUpperCase()+"近类*";						
+		for (int i = 0; i < words.length; i++) {
+			wordpat += words[i].toUpperCase() + "近类*";
 		}
-		wordpat = wordpat.substring(0,wordpat.lastIndexOf("*"))+"#有序#编者=\"业务生成\"&业务X=\""+businesswords.replace("-", "").toUpperCase()+"\"";
-		wordpat =  SimpleString.SimpleWordPatToWordPat(wordpat);
+		wordpat = wordpat.substring(0, wordpat.lastIndexOf("*")) + "#有序#编者=\"业务生成\"&业务X=\""
+				+ businesswords.replace("-", "").toUpperCase() + "\"";
+		wordpat = SimpleString.SimpleWordPatToWordPat(wordpat);
 		if (Check.CheckWordpat(wordpat, request)) {
-		List<String> combList = new ArrayList<String>();
+			List<String> combList = new ArrayList<String>();
 			combList.add(wordpat);
 			combList.add("全国");
 			combList.add(normalquery);
 			combList.add(kbdataid);
 			combList.add(queryid);
 			combListList.add(combList);
-		}else{
+		} else {
 			obj.put("success", false);
 			obj.put("msg", "新增业务词词模失败!");
 		}
@@ -4767,11 +4810,13 @@ public class QuerymanageDAO {
 		return obj;
 
 	}
+
 	/**
 	 * 增加业务词的标准问
+	 * 
 	 * @return
 	 */
-	private static Object addQueryByBussinessWord(User user,String serviceid,String normalquery){
+	private static Object addQueryByBussinessWord(User user, String serviceid, String normalquery) {
 		List<String> cityList = new ArrayList<String>();
 		HashMap<String, ArrayList<String>> resourseMap = CommonLibPermissionDAO.resourseAccess(user.getUserID(),
 				"querymanage", "S");
@@ -4792,23 +4837,29 @@ public class QuerymanageDAO {
 		if (serviceCityList.size() > 0) {
 			serviceCityCode = StringUtils.join(serviceCityList.toArray(), ",");
 		}
-		int rs = CommonLibQueryManageDAO.addNormalQueryAndCustomerQuery(serviceid, normalquery, normalquery,
-				"全国", user, userCityCode, serviceCityCode);
-		if(rs > 0 ){
+		int rs = CommonLibQueryManageDAO.addNormalQueryAndCustomerQuery(serviceid, normalquery, normalquery, "全国", user,
+				userCityCode, serviceCityCode);
+		if (rs > 0) {
 			return true;
 		}
-		return false;				
+		return false;
 	}
-	
+
 	/**
 	 * 获取业务ID
-	 * @param service  待获取节点的业务名称
-	 * @param userid  用户ID
-	 * @param servicetype  行业
-	 * @param rootserviceid  上级业务节点ID 
+	 * 
+	 * @param service
+	 *            待获取节点的业务名称
+	 * @param userid
+	 *            用户ID
+	 * @param servicetype
+	 *            行业
+	 * @param rootserviceid
+	 *            上级业务节点ID
 	 * @return
 	 */
-	private static String getBusinessServiceId(String service,String userid,String servicetype,String rootserviceid){
+	private static String getBusinessServiceId(String service, String userid, String servicetype,
+			String rootserviceid) {
 		String serviceid = "";
 		Result rs = CommonLibQueryManageDAO.createServiceTreeNew(userid, servicetype, "querymanage", "全国",
 				rootserviceid);
@@ -4820,34 +4871,36 @@ public class QuerymanageDAO {
 				}
 			}
 		}
-		if(StringUtils.isBlank(serviceid)){//新增业务
+		if (StringUtils.isBlank(serviceid)) {// 新增业务
 			JSONObject jsonobj = (JSONObject) appendService(rootserviceid, service);
 			serviceid = jsonobj.getString("serviceid");
 		}
 		return serviceid;
 	}
-	
+
 	/**
-	 *@description 获取排除问题列表信息
-	 *@param serviceid
-	 *@param kbdataid
-	 *@param normalQuery
-	 *@param customerQuery
-	 *@param cityCode
-	 *@param page
-	 *@param rows
-	 *@return
-	 *@returnType Object
+	 * @description 获取排除问题列表信息
+	 * @param serviceid
+	 * @param kbdataid
+	 * @param normalQuery
+	 * @param customerQuery
+	 * @param cityCode
+	 * @param page
+	 * @param rows
+	 * @return
+	 * @returnType Object
 	 */
-	public static Object selectRemoveQuery(String serviceid, String kbdataid,String normalQuery,
-			String customerQuery, String cityCode, String isTrain, String removequerystatus, int page, int rows) {
+	public static Object selectRemoveQuery(String serviceid, String kbdataid, String normalQuery, String customerQuery,
+			String cityCode, String isTrain, String removequerystatus, int page, int rows) {
 		// 定义返回的json串
 		JSONObject jsonObj = new JSONObject();
 		JSONArray jsonArr = new JSONArray();
-		int count = CommonLibQueryManageDAO.getRemoveQueryCount(serviceid,kbdataid, customerQuery, cityCode, isTrain, removequerystatus);
+		int count = CommonLibQueryManageDAO.getRemoveQueryCount(serviceid, kbdataid, customerQuery, cityCode, isTrain,
+				removequerystatus);
 		if (count > 0) {
 			jsonObj.put("total", count);
-			Result rs = CommonLibQueryManageDAO.selectRemoveQuery(serviceid,kbdataid, customerQuery, cityCode, isTrain, removequerystatus, page, rows);
+			Result rs = CommonLibQueryManageDAO.selectRemoveQuery(serviceid, kbdataid, customerQuery, cityCode, isTrain,
+					removequerystatus, page, rows);
 			// 判断数据源不为null且含有数据
 			if (rs != null && rs.getRowCount() > 0) {
 				// 循环遍历数据源
@@ -4862,15 +4915,10 @@ public class QuerymanageDAO {
 					obj.put("abs", abs);
 					obj.put("topic", rs.getRows()[i].get("topic"));
 					obj.put("abscity", rs.getRows()[i].get("abscity"));
-					obj
-							.put("responsetype", rs.getRows()[i]
-									.get("responsetype"));
-					obj
-							.put("interacttype", rs.getRows()[i]
-									.get("interacttype"));
+					obj.put("responsetype", rs.getRows()[i].get("responsetype"));
+					obj.put("interacttype", rs.getRows()[i].get("interacttype"));
 					obj.put("customerquery", rs.getRows()[i].get("query"));
-					String city = rs.getRows()[i].get("city") != null ? rs
-							.getRows()[i].get("city").toString() : "";
+					String city = rs.getRows()[i].get("city") != null ? rs.getRows()[i].get("city").toString() : "";
 					String cityName = "";
 					if (!"".equals(city)) {
 						String cityArray[] = city.split(",");
@@ -4880,8 +4928,7 @@ public class QuerymanageDAO {
 							cityNameList.add(code);
 						}
 						if (cityNameList.size() > 0) {
-							cityName = StringUtils.join(cityNameList.toArray(),
-									",");
+							cityName = StringUtils.join(cityNameList.toArray(), ",");
 						}
 					}
 
@@ -4902,8 +4949,10 @@ public class QuerymanageDAO {
 		}
 		return jsonObj;
 	}
+
 	/**
 	 * 新增排除问题
+	 * 
 	 * @param serviceid
 	 * @param queryType
 	 * @param normalQuery
@@ -4913,8 +4962,8 @@ public class QuerymanageDAO {
 	 * @param request
 	 * @return
 	 */
-	public static Object addRemoveQueryWordpat(String serviceid, String queryType,
-			String normalQuery, String customerQuery, String cityCode, String removequerystatus,  HttpServletRequest request) {
+	public static Object addRemoveQueryWordpat(String serviceid, String queryType, String normalQuery,
+			String customerQuery, String cityCode, String removequerystatus, HttpServletRequest request) {
 		JSONObject jsonObj = new JSONObject();
 		// 新增排除问题
 		int rs = addRemoveQuery(serviceid, queryType, normalQuery, customerQuery, cityCode, removequerystatus);
@@ -4933,36 +4982,37 @@ public class QuerymanageDAO {
 		}
 		return jsonObj;
 	}
+
 	/**
-	 *@description 新增排除问题
-	 *@param serviceid
-	 *@param queryType
-	 *@param normalQuery
-	 *@param customerQuery
-	 *@param cityCode
-	 *@returnType void
+	 * @description 新增排除问题
+	 * @param serviceid
+	 * @param queryType
+	 * @param normalQuery
+	 * @param customerQuery
+	 * @param cityCode
+	 * @returnType void
 	 */
-	public static int addRemoveQuery(String serviceid, String queryType,
-			String normalQuery, String customerQuery, String cityCode, String removequerystatus) {
+	public static int addRemoveQuery(String serviceid, String queryType, String normalQuery, String customerQuery,
+			String cityCode, String removequerystatus) {
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
 		int rs = -1;
 		if ("排除问题".equals(queryType)) {// 新增排除问题
-			rs = CommonLibQueryManageDAO.addRemoveQuery(normalQuery,
-					customerQuery, cityCode, user, removequerystatus);
+			rs = CommonLibQueryManageDAO.addRemoveQuery(normalQuery, customerQuery, cityCode, user, removequerystatus);
 		}
 		return rs;
 	}
-	
+
 	/**
 	 * 排除问题生成词模
-	 *@param combition
-	 *@param request
-	 *@return
-	 *@returnType Object
+	 * 
+	 * @param combition
+	 * @param request
+	 * @return
+	 * @returnType Object
 	 */
-	public static Object removeProduceWordpat(String combition,String wordpattype, HttpServletRequest request) {
-		//生成词模
+	public static Object removeProduceWordpat(String combition, String wordpattype, HttpServletRequest request) {
+		// 生成词模
 		JSONObject jsonObj = (JSONObject) AnalyzeDAO.removeProduceWordpat(combition, wordpattype, request);
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
@@ -4976,23 +5026,29 @@ public class QuerymanageDAO {
 			for (int i = 0; i < rs.getRowCount(); i++) {
 				List<String> list = new ArrayList<String>();
 				list.add(rs.getRows()[i].get("newword") != null ? rs.getRows()[i].get("newword").toString() : "");
-				list.add(rs.getRows()[i].get("wordclassid") != null ? rs.getRows()[i].get("wordclassid").toString() : "");
-				list.add(rs.getRows()[i].get("isserviceword") != null ? rs.getRows()[i].get("isserviceword").toString() : "");
+				list.add(rs.getRows()[i].get("wordclassid") != null ? rs.getRows()[i].get("wordclassid").toString()
+						: "");
+				list.add(rs.getRows()[i].get("isserviceword") != null ? rs.getRows()[i].get("isserviceword").toString()
+						: "");
 				newWordList.add(StringUtils.join(list, "@@"));
 			}
-		}		
+		}
 		jsonObj.put("newWord", StringUtils.join(newWordList, "##"));
 		return jsonObj;
 	}
-	
+
 	/**
 	 * 新增别名
 	 * 
-	 * @param combition  词条#词类ID#别名|别名 @@词条#词类ID#别名|别名 
-	 * @param flag 是否更新知识库
+	 * @param combition
+	 *            词条#词类ID#别名|别名 @@词条#词类ID#别名|别名
+	 * @param flag
+	 *            是否更新知识库
+	 * @param level
+	 *            新词重要程度
 	 * @return
 	 */
-	public static Object addOtherWord(String combition,boolean flag) {
+	public static Object addOtherWord(String combition, boolean flag) {
 		JSONObject jsonObj = new JSONObject();
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
@@ -5000,15 +5056,29 @@ public class QuerymanageDAO {
 		List<List<String>> otherWordList = new ArrayList<List<String>>();
 		// 获取词类ID和词条名称
 		String[] newWordArray = combition.split("@@");
-		for(int i =0 ;i < newWordArray.length;i++){
-			String[] newWord =  newWordArray[i].split("#");
+		for (int i = 0; i < newWordArray.length; i++) {
+			String[] newWord = newWordArray[i].split("#");
 			String word = newWord[0];
 			String wordClassId = newWord[1];
+			if(newWord.length == 2){
+				continue;
+			}
 			String[] otherwordArray = newWord[2].split("\\|");
-			
+
+			if (StringUtils.isBlank(wordClassId)) {// 词类ID不存在的话，将词条作为词类新增
+				String wordclass = word.toUpperCase() + "近类";
+				List<String> list = new ArrayList<String>();
+				list.add(wordclass);
+				if (!CommonLibWordclassDAO.exist(wordclass)) {
+					CommonLibWordclassDAO.insert(user, list, "", "基础", user.getIndustryOrganizationApplication());
+				}
+				// 获取词类ID
+				wordClassId = getWordClassId(wordclass);
+			}
+
 			// 判断词条是否存在
 			if (!CommonLibWordDAO.exist(word, wordClassId)) {
-			    CommonLibWordDAO.insert(word, wordClassId, user);
+				CommonLibWordDAO.insert(word, wordClassId, user);
 			}
 			// 获取词条ID
 			Result wordRs = CommonLibWordDAO.getWordInfo(wordClassId, word);
@@ -5021,27 +5091,24 @@ public class QuerymanageDAO {
 				List<String> list = null;
 				for (int j = 0; j < otherwordArray.length; j++) {
 					list = new ArrayList<String>();
-					if(StringUtils.isNotBlank(otherwordArray[j])){
+					if (StringUtils.isNotBlank(otherwordArray[j])) {
 						list.add(otherwordArray[j]);
 						list.add(wordId);
 						list.add(wordClassId);
-						if(!otherWordList.contains(list)){
+						if (!otherWordList.contains(list)) {
 							otherWordList.add(list);
 						}
-						
+
 					}
 				}
 			}
 		}
 
-
-
-
 		// 新增别名
 		int index = 0;
 		if (!CollectionUtils.isEmpty(otherWordList)) {
 			for (int i = 0; i < otherWordList.size(); i++) {
-				List<String> obj = (List<String>)otherWordList.get(i);
+				List<String> obj = (List<String>) otherWordList.get(i);
 				String otherword = obj.get(0);
 				String wordId = obj.get(1);
 				String wordClassId = obj.get(2);
@@ -5053,29 +5120,29 @@ public class QuerymanageDAO {
 		if (index > 0) {
 			jsonObj.put("success", true);
 			jsonObj.put("msg", "保存成功!");
-			if(flag){
-				//更新知识库
-				Object	m_result = ExtendDao.updateKB();
-				logger.info(JSONObject.toJSONString(m_result));				
+			if (flag) {
+				// 更新知识库
+				Object m_result = ExtendDao.updateKB();
+				logger.info(JSONObject.toJSONString(m_result));
 			}
 
 		} else {
 			jsonObj.put("success", false);
 			jsonObj.put("msg", "保存失败!");
 		}
+
 		return jsonObj;
 	}
-	
+
 	/**
-	 *@description 客户问生成词模
-	 *@param combition
-	 *@param request
-	 *@return
-	 *@returnType Object
+	 * @description 客户问生成词模
+	 * @param combition
+	 * @param request
+	 * @return
+	 * @returnType Object
 	 */
-	public static Object customerProduceWordpat(String combition,String wordpattype,
-			HttpServletRequest request) {
-		//生成词模
+	public static Object customerProduceWordpat(String combition, String wordpattype, HttpServletRequest request) {
+		// 生成词模
 		JSONObject jsonObj = (JSONObject) AnalyzeDAO.produceWordpat(combition, wordpattype, request);
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
@@ -5089,12 +5156,175 @@ public class QuerymanageDAO {
 			for (int i = 0; i < rs.getRowCount(); i++) {
 				List<String> list = new ArrayList<String>();
 				list.add(rs.getRows()[i].get("newword") != null ? rs.getRows()[i].get("newword").toString() : "");
-				list.add(rs.getRows()[i].get("wordclassid") != null ? rs.getRows()[i].get("wordclassid").toString() : "");
-				list.add(rs.getRows()[i].get("isserviceword") != null ? rs.getRows()[i].get("isserviceword").toString() : "");
+				list.add(rs.getRows()[i].get("wordclassid") != null ? rs.getRows()[i].get("wordclassid").toString()
+						: "");
+				list.add(rs.getRows()[i].get("isserviceword") != null ? rs.getRows()[i].get("isserviceword").toString()
+						: "");
 				newWordList.add(StringUtils.join(list, "@@"));
 			}
-		}		
+		}
 		jsonObj.put("newWord", StringUtils.join(newWordList, "##"));
 		return jsonObj;
+	}
+
+	/**
+	 * 批量训练新增新词并更新词模
+	 * 
+	 * @param combition
+	 *            新词 格式 ：新词#词类ID#别名|别名 多个@@符号分隔
+	 * @param customerquery
+	 *            存在新词的扩展问
+	 * @param querytype
+	 *            问题类型：0-扩展问，1-排除问题
+	 * @param flag
+	 *            新词重要程度
+	 * @param request
+	 * @return
+	 */
+	public static Object addOtherWordAndWordpat(String combition, String customerquery, String querytype, String flag,
+			HttpServletRequest request) {
+		// 新增别名
+		JSONObject jsonObj = (JSONObject) addOtherWord(combition, false);
+		Object sre = GetSession.getSessionByKey("accessUser");
+		User user = (User) sre;
+		String userid = user.getUserID();
+		// 获取行业
+		String servicetype = user.getIndustryOrganizationApplication();
+		// 插入问题库自动学习词模
+		List<List<String>> combListList = new ArrayList<List<String>>();
+		// 新词拆分
+		String[] combitionArray = combition.split("@@");
+		List<String> wordArray = new ArrayList<String>();
+		String wordpattype= "0";//默认是普通词模
+		if("1".equals(querytype.trim())){
+			wordpattype = "2";//排除词模
+		}
+		for (int i = 0; i < combitionArray.length; i++) {
+			String[] query = combitionArray[i].split("#");
+			// 将新词存入新词数组
+			wordArray.add(query[0]);
+		}
+		// 扩展问筛分
+		String[] customerqueryArray = customerquery.split("@@");
+		// 拆分新词重要程度
+		String[] levelArray = flag.split("#");
+
+		for (int i = 0; i < customerqueryArray.length; i++) {
+			String wordpat = "";
+			String lockwordpat = "";
+			String[] queryArray = customerqueryArray[i].split("@#@");
+			String queryCityCode = queryArray[0];
+			String query = queryArray[1];
+			String kbdataid = queryArray[2];
+			String queryid = queryArray[3];
+			String isstrictexclusion = "";
+			if(queryArray.length > 4){
+				isstrictexclusion = queryArray[4];
+			}
+
+			String newCustomerq = query;
+			for (String word : wordArray) {
+				newCustomerq = newCustomerq.replace(word, " ");
+			}
+
+			if (StringUtils.isNotBlank(newCustomerq)) {
+				JSONObject jsonObject = AnalyzeDAO.getWordpat2(servicetype, newCustomerq, queryCityCode);
+				wordpat = jsonObject.getString("wordpat");
+				wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"");
+				lockwordpat = jsonObject.getString("lockWordpat");
+				lockwordpat = lockwordpat.replace("编者=\"自学习\"",
+						"编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"");
+			}
+			String wordClassStr = "";
+			// 遍历多个新词，并判断标准问是否包含此新词
+			for (int j = 0; j < wordArray.size(); j++) {
+				if ("0".equals(levelArray[j])) {
+					if (query.indexOf(wordArray.get(j)) > -1) {
+						wordClassStr += wordArray.get(j) + "近类" + "*";
+					}
+
+				} else if ("1".equals(levelArray[j])) {
+					if (query.indexOf(wordArray.get(j)) > -1) {
+						wordClassStr += "[" + wordArray.get(j) + "近类" + "]*";
+					}
+				}
+			}
+			if (StringUtils.isBlank(wordpat)) {
+				wordClassStr = wordClassStr.substring(0, wordClassStr.lastIndexOf("*"));
+				wordpat = "#无序#编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"";
+			}
+			String simpleWordpat = wordClassStr + wordpat;
+			simpleWordpat = SimpleString.SimpleWordPatToWordPat(simpleWordpat);
+			// 精准词模
+			wordClassStr = "";
+			for (int k = 0; k < wordArray.size(); k++) {
+				if (query.indexOf(wordArray.get(k).split("\\|")[0]) > -1) {
+					wordClassStr += wordArray.get(k) + "近类" + "*";
+				}
+			}
+
+			if (StringUtils.isBlank(lockwordpat)) {
+				wordClassStr = wordClassStr.substring(0, wordClassStr.lastIndexOf("*"));
+				lockwordpat = "#有序#编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"&最大未匹配字数=\"0\"&置信度=\"1.1\"";
+			}
+			if ("2".equals(wordpattype)) {// 排除词模
+				lockwordpat = lockwordpat.replace("&置信度=\"1.1\"", "");
+				if("否".equals(isstrictexclusion)){//不严格排除
+					lockwordpat = lockwordpat.replace("&最大未匹配字数=\"0\"", "");
+				}
+			}
+			String simpleLockWordpat = wordClassStr + lockwordpat;
+			simpleLockWordpat = SimpleString.SimpleWordPatToWordPat(simpleLockWordpat);
+			List<String> combList = null;
+			if (!"2".equals(wordpattype)) {// 排除词模只有精准词模
+				if (Check.CheckWordpat(simpleWordpat, request)) {
+					combList = new ArrayList<String>();
+					combList.add(simpleWordpat);
+					combList.add(queryCityCode);
+					combList.add(query);
+					combList.add(kbdataid);
+					combList.add(queryid);
+					combListList.add(combList);
+				} else {
+					jsonObj.put("success", true);
+					jsonObj.put("msg", query + "生成的词模：【" + simpleWordpat + "】不规范");
+					return jsonObj;
+				}
+			}
+			if (Check.CheckWordpat(simpleLockWordpat, request)) {
+				combList = new ArrayList<String>();
+				combList.add(simpleLockWordpat);
+				combList.add(queryCityCode);
+				combList.add(query);
+				combList.add(kbdataid);
+				combList.add(queryid);
+				combListList.add(combList);
+			} else {
+				jsonObj.put("success", true);
+				jsonObj.put("msg", query + "生成的词模：【" + simpleLockWordpat + "】不规范");
+				return jsonObj;
+			}
+
+		}
+		int count = -1;
+		if (!CollectionUtils.isEmpty(combListList)) {
+			count = CommonLibQueryManageDAO.insertWordpat(combListList, servicetype, userid, wordpattype);
+			if (count > 0) {
+				jsonObj.put("success", true);
+				jsonObj.put("msg", "生成成功!");
+				// 调用更新支持库的方法
+				if (StringUtils.isNotBlank(combition)) {
+					// Object m_result = ExtendDao.updateKB();
+					// logger.info(JSONObject.toJSONString(m_result));
+				}
+
+			} else {
+				jsonObj.put("success", false);
+				jsonObj.put("msg", "生成失败!");
+			}
+		}
+
+		return jsonObj;
+
 	}
 }

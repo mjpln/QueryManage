@@ -1597,7 +1597,7 @@ function produceWordpat(wordpattype) {
 				var newWord = data.newWord;
 				var oovWord = data.OOVWord;
 				if(oovWord != null && oovWord != '' && newWord !=null && newWord != ''){
-				   loadNewWord(newWord, oovWord);
+				   loadNewWord(newWord, oovWord,"0",data.OOVWordQuery);
 				}
 				
 			} else {
@@ -2787,12 +2787,14 @@ function getOOVWord(oovWord, normalQuery) {
 	wordHtml += '<table cellspacing="0" cellpadding="0">';
 	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>新词</span></td><td style="padding:5px;"><span>其他别名</span></td><td style="padding:5px;"><span>是否重要</span></td><td style="padding:5px;"><span>是否业务词</span></td></tr>';
 	for (var i = 0; i < wordArray.length; i++) {
+		if(wordArray[i] != null && wordArray[i] != ''){
 		wordHtml += '<tr><td style="padding:5px;"><input type="checkbox" name="wordcheckbox" id="wordcheckbox_' + i + '" value="" /></td>';
 		wordHtml += '<td style="padding:5px;"><span><input type="text" name="wordclass_'+i+'" id="wordclass_' + i + '" value="' + wordArray[i] + '" /></span></td>';
 		wordHtml += '<td style="padding:5px;"><span><textarea name="" cols="5" rows="2" id="word_'+i+'" style="width: 120px; font-size: 12px;" placeholder="多个别名回车分隔"></textarea></span></td>';		
 		wordHtml += '<td style="padding:5px;"><select id="levelcombobox_' + i + '" style="width:100px;"><option value="0">重要</option><option value="1" selected>不重要</option></select></td>';
 		wordHtml += '<td style="padding:5px;"><select id="businesscombobox_' + i + '" style="width:100px;"><option value="0">是</option><option value="1" selected>否</option></select></td>';
 		wordHtml += '</tr>';
+		}
 	}
 	wordHtml += '</table>';
 	$("#addwordtable").html(wordHtml);
@@ -3629,8 +3631,8 @@ function removeProduceWordpat(wordpattype) {
 				$.messager.alert('系统提示', data.msg+downloadUrl, "info");
 				var newWord = data.newWord;
 				var oovWord = data.OOVWord;
-				if(oovWord != null && oovWord != '' && newWord !=null && newWord != ''){
-				   loadNewWord(newWord, oovWord);
+				if(oovWord != null && oovWord != ''){
+				   loadNewWord(newWord, oovWord,"1",data.OOVWordQuery);
 				}
 			}else{
 				$.messager.alert('系统提示', data.msg+downloadUrl, "warning");				
@@ -3644,13 +3646,14 @@ function removeProduceWordpat(wordpattype) {
 }
 
 // 展示
-function loadNewWord(newWord, oovWord) {
+function loadNewWord(newWord, oovWord,querytype,oovWordQuery) {
 	$('#addotherwordwindow').window('open');
 	var wordArray = newWord.split("##");
 	
 	var wordHtml = '';
-//	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>新词</span></td><td style="padding:5px;"><span>是否业务词</span></td></tr>';
-	var newwordHtml = '<span style="font-size: 12px; margin-left: 10px">词条 ：</span>';
+
+	var newwordHtml = '<input type="hidden" id="addotherwordwindow-query" value=" ' + oovWordQuery + '"/><input type="hidden" id="addotherwordwindow-querytype" value=" ' + querytype + '"/>';
+	newwordHtml += '<span style="font-size: 12px; margin-left: 10px">标准词条 ：</span>';
 	newwordHtml += '<select  id="newwordselect" class="easyui-combobox" data-options="editable:false" style="width: 100px;" type="text"><option value="">请选择</option>';
 	for (var i = 0; i < wordArray.length; i++) {
 		if(wordArray != null && wordArray != ''){
@@ -3662,17 +3665,19 @@ function loadNewWord(newWord, oovWord) {
 	$("#addOtherWordDiv").html(newwordHtml);
 	// 标准问题中的添加的新词|扩展问中的别名新词1|别名新词2
 	wordArray = oovWord.split("$_$");
-	wordHtml += '<span style="font-size: 12px; margin-left: 10px">新词:</span> <table cellspacing="0" cellpadding="0" style="margin-left:20px"><tr><td>';
+	wordHtml += '<table cellspacing="0" cellpadding="0">';
+	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>新词</span></td><td style="padding:5px;"><span>其他别名</span></td><td style="padding:5px;"><span>是否重要</span></td></tr>';
 	for (var i = 0; i < wordArray.length; i++) {
 		var content = wordArray[i];
 		if(content != null && content !=''){
-			wordHtml += '<input type="checkbox" name="otherwordcheckbox" id="otherwordcheckbox_' + i + '" value="' + content + '" /><span style=><input type="text" style="width:60px;margin-top:5px;" id="otherword_'+i+'" value="' + content + '"/></span>';			
-		}
-		if((i+1) % 4 == 0){
-			wordHtml += '<br/>';
+		wordHtml += '<tr><td style="padding:5px;"><input type="checkbox" name="otherwordcheckbox" id="otherwordcheckbox_' + i + '" value="" /></td>';
+		wordHtml += '<td style="padding:5px;"><span><input type="text" name="otherword_'+i+'" id="otherword_' + i + '" value="' + content + '" /></span></td>';
+		wordHtml += '<td style="padding:5px;"><span><textarea name="" cols="5" rows="2" id="word_'+i+'" style="width: 120px; font-size: 12px;" placeholder="多个别名回车分隔"></textarea></span></td>';		
+		wordHtml += '<td style="padding:5px;"><select id="levelcombobox_' + i + '" style="width:100px;"><option value="0">重要</option><option value="1" selected>不重要</option></select></td>';
+		wordHtml += '</tr>';
 		}
 	}
-	wordHtml += '</td></tr></table>';
+	wordHtml += '</table>';
 	$("#addotherwordtable").html(wordHtml);
 	
 }
@@ -3681,21 +3686,31 @@ function loadNewWord(newWord, oovWord) {
 function doRemoveNewWord() {
 	
 	var word = $("#newwordselect").val();
-	if (word.length == 0) {
-		$.messager.alert('系统提示', '请至少选择一个词条', "info");
-		return;
-	}
-	var otherWord = [];
+//	if (word.length == 0) {
+//		$.messager.alert('系统提示', '请至少选择一个词条', "info");
+//		return;
+//	}
+	//新词
+	var combitionArray = [];
 	var otherwordlen = $("#addotherwordtable input[name='otherwordcheckbox']").length;
-	console.log(otherwordlen);
+	//是否重要
+	var flagArray = [];
 	for(var i=0;i<otherwordlen;i++){
 		if($("#otherwordcheckbox_"+i).is(':checked')){
-			otherWord.push($("#otherword_"+i).val());
+			var combition = "";
+			var otherword = $("#word_"+i).val().replace(new RegExp("\r\n", 'g'),'\n');
+			if(word.length == 0){ //词条为空时，新词作为词类填入
+				combition += $("#otherword_"+i).val() + "# #" + otherword.replace('\n','|');
+			}else{
+				combition += word + "#"+ $("#otherword_"+i).val() + "|" + otherword.replace('\n','|');
+			}
+			combitionArray.push(combition);
+			flagArray.push($("#levelcombobox_"+i).val());
 		}
 	}
 
-	if (otherWord.length == 0) {
-		$.messager.alert('系统提示', '请至少选择一个词条别名', "info");
+	if (combitionArray.length == 0) {
+		$.messager.alert('系统提示', '请至少选择一个新词', "info");
 		return;
 	}
 	$.ajax( { 
@@ -3703,7 +3718,10 @@ function doRemoveNewWord() {
 		type : "post",
 		data : {
 			type : 'addOtherWord',
-			combition : word+"#"+otherWord.join('|')
+			combition : combitionArray.join('@@'),
+			customerquery : $("#addotherwordwindow-query").val(),
+			querytype : $("#addotherwordwindow-querytype").val(),
+			flag: flagArray.join('#')
 		},
 		async : false,
 		dataType : "json",

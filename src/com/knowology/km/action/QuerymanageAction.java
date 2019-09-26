@@ -237,8 +237,8 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 			m_result = ImportExportDAO.importFile(filename,serviceid,1);
 		} else if ("removeproducewordpat".equals(type)) {// 排除问题批量训练发现新词
 			m_result = QuerymanageDAO.removeProduceWordpat(combition, flag, request);
-		} else if ("addOtherWord".equals(type)) {// 新增别名
-			m_result = QuerymanageDAO.addOtherWord(combition,true);
+		} else if ("addOtherWord".equals(type)) {// 新增别名并更新词模
+			m_result = QuerymanageDAO.addOtherWordAndWordpat(combition,customerquery,querytype,flag,request);
 		} else if("customerproducewordpat".equals(type)){//客户问批量训练发现新词
 			m_result = QuerymanageDAO.customerProduceWordpat(combition, flag, request);
 		}
