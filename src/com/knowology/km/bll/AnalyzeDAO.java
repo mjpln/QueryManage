@@ -762,7 +762,7 @@ public class AnalyzeDAO {
 				String _tempWord = "";
 				String _lockWord = "";
 
-				if (!"".equals(tempWord) && !"".equals(_word.trim())) {// 分词本身不能为空
+				if (!"".equals(tempWord) && StringUtils.isNotBlank(_word)) {// 分词本身不能为空
 					//增加分词
 					arraySegment.add(_word);
 					List<String> dealWrod = dealWrod2List(tempWord);

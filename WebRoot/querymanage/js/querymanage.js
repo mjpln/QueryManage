@@ -3703,23 +3703,43 @@ function loadNewWord(newWord, oovWord,querytype,oovWordQuery,segmentWord) {
 function doRemoveNewWord() {
 	
 	var word = $("#newwordselect").val();
-//	if (word.length == 0) {
-//		$.messager.alert('系统提示', '请至少选择一个词条', "info");
-//		return;
-//	}
+	var customerQuery = $("#addotherwordwindow-query").val();
+	//包含新词的扩展问
+	var customerArray = customerQuery.split("@@");
+	var customerQueryArray = []
+	for(var i=0;i<customerArray.length;i++){
+		var queryArray = customerArray[i].split("@#@");
+		customerQueryArray.push(queryArray[1]);
+	}
 	//新词
 	var combitionArray = [];
 	var otherwordlen = $("#addotherwordtable input[name='otherwordcheckbox']").length;
 	//是否重要
 	var flagArray = [];
+	
 	for(var i=0;i<otherwordlen;i++){
 		if($("#otherwordcheckbox_"+i).is(':checked')){
+			var newWord = $("#otherword_"+i).val();
+			
+			//判断纠正的新词在扩展问是否存在
+			var count = 0;
+			for(var j=0;j<customerQueryArray.length;j++){
+				if(customerQueryArray[j].indexOf(newWord) == -1){
+					count++;
+				}
+			}
+			if(count == customerQueryArray.length){
+				$.messager.alert('系统提示', '新词【'+newWord+'】在问题中不存在', "info");
+				return;
+			}
+
 			var combition = "";
+			//别名
 			var otherword = $("#word_"+i).val().replace(new RegExp("\r\n", 'g'),'\n');
 			if(word.length == 0){ //词条为空时，新词作为词类填入
-				combition += $("#otherword_"+i).val() + "# #" + otherword.replace('\n','|');
+				combition += newWord + "# #" + otherword.replace('\n','|');
 			}else{
-				combition += word + "#"+ $("#otherword_"+i).val() + "|" + otherword.replace('\n','|');
+				combition += word + "#"+ newWord + "|" + otherword.replace('\n','|');
 			}
 			combitionArray.push(combition);
 			flagArray.push($("#levelcombobox_"+i).val());

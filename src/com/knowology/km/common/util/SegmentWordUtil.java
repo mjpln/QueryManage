@@ -53,7 +53,9 @@ public class SegmentWordUtil {
 					tailCI = new CInfo(strTmp, String.valueOf(strTmp.charAt(k)),wordIndex, i);
 			}
 		}
-		
+		if(beginCI == null){
+			return result;
+		}
 
 		int beginCInWordPos = beginCI.getCInWordPos(); //首字在词在相对位置
 		int beginCWordLength = beginCI.getWordLength();
@@ -67,6 +69,9 @@ public class SegmentWordUtil {
 
 		}
 		
+		if(tailCI == null){
+			return result;
+		}
 		int tailCInWordPos = tailCI.getCInWordPos(); //尾字在词在相对位置
 		int tailCWordLength = tailCI.getWordLength();
 		if(tailCWordLength > 1 && tailCInWordPos != tailCI.getWordLength()-1)//如果新词的尾字在原分词中属于一个词中，并且不是在该词的词尾
