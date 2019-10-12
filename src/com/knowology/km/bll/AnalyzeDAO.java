@@ -132,7 +132,8 @@ public class AnalyzeDAO {
 		List<String> wordpatResultList = new ArrayList<String>();
 		//包含OOV词的扩展问
 		List<String> oovWordQueryList = new ArrayList<String>();
-
+		//包含OOV词的原分词
+		List<String> segmentWordList = new ArrayList<String>();
 		for (int i = 0; i < combitionArray.length; i++) {
 			String queryArray[] = combitionArray[i].split("@#@");
 			String queryCityCode = queryArray[0];
@@ -157,9 +158,11 @@ public class AnalyzeDAO {
 					wordpat = SimpleString.SimpleWordPatToWordPat(jsonObject.getString("lockWordpat"));
 					wordpatList.add(wordpat);
 					JSONArray oovWord = jsonObject.getJSONArray("OOVWord");
+					JSONArray segmentWord = jsonObject.getJSONArray("segmentWord");
 					if (!CollectionUtils.isEmpty(oovWord)) {
 						oovWordList.add(StringUtils.join(oovWord, "$_$"));// 放入OOV分词
 						oovWordQueryList.add(combitionArray[i]);
+						segmentWordList.add(StringUtils.join(segmentWord,"##"));
 					}
 
 				}
@@ -194,25 +197,13 @@ public class AnalyzeDAO {
 					// modify 2017-05-24
 					wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"");
 
-					// 判断是精准词模(有序)还是普通词模（无序）
-					String wordpatSeq = "@2#";
-					if (wordpat.indexOf("@1#") > -1) {
-						wordpatSeq = "@1#";
-					}
-					if ("2".equals(wordpattype)) {// 排除词模只生成一条词模,且必须是有序词模
-						wordpat = wordpat.split("&最大未匹配字数=")[0];
-						wordpat = wordpat.replace("@2#", "@1#").replace("*", "");
-						if (isstrictexclusion != null && "是".equals(isstrictexclusion)) {
-							wordpat += "&最大未匹配字数=0";
-						}
-					}
 					// 校验自动生成的词模是否符合规范
 					if (Check.CheckWordpat(wordpat, request)) {
 						// 获取客户问对应的旧词模
-						String oldWordpat = wordpatMap.get(query + wordpatSeq);
+						String oldWordpat = wordpatMap.get(query);
 						// 存在旧词模
 						if (oldWordpat != null && !"".equals(oldWordpat)) {
-							String newWordpat = wordpat.split(wordpatSeq)[0];
+							String newWordpat = wordpat.split("@2#")[0];
 
 							logger.info("新旧词模比较 ----新词模：\"" + newWordpat + "\"，旧词模：\"" + oldWordpat + "\"，针对问题：\""
 									+ query + "\"");
@@ -263,6 +254,7 @@ public class AnalyzeDAO {
 				jsonObj.put("msg", "生成成功!");
 				jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
 				jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+				jsonObj.put("segmentWord", StringUtils.join(segmentWordList,"@@"));
 				jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList, "@@"));
 			} else {
 				jsonObj.put("success", false);
@@ -273,6 +265,7 @@ public class AnalyzeDAO {
 			jsonObj.put("msg", "生成成功!");
 			jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
 			jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+			jsonObj.put("segmentWord", StringUtils.join(segmentWordList,"@@"));
 			jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList, "@@"));
 		} else {
 			jsonObj.put("success", false);
@@ -319,7 +312,7 @@ public class AnalyzeDAO {
 	public static Object produceAllWordpat(String serviceid, String wordpattype, HttpServletRequest request) {
 		List<String> combitionArray = getAllQuery(serviceid, 0);
 		List<String> RemoveCombitionArray = getAllQuery(serviceid, 1);
-		Object obj = produceWordpat(StringUtils.join(RemoveCombitionArray, "@@"), "2", request);
+		Object obj = removeProduceWordpat(StringUtils.join(RemoveCombitionArray, "@@"), "2", request);
 		logger.info("标准问全量生成排除词模结果：" + JSONObject.toJSONString(obj));
 		return produceWordpat(StringUtils.join(combitionArray, "@@"), wordpattype, request);
 	}
@@ -393,6 +386,7 @@ public class AnalyzeDAO {
 			result.put("wordpat", object.getString("wordpat"));
 			result.put("lockWordpat", object.getString("lockWordpat"));
 			result.put("OOVWord", object.getJSONArray("OOVWord"));
+			result.put("segmentWord", object.getJSONArray("segmentWord"));
 			return result;
 		}
 		return result;
@@ -759,6 +753,9 @@ public class AnalyzeDAO {
 			boolean lastFlag = false;// 上一个分词是否是OOV
 			int requiredNum = 0;// 必选词数量
 			String _word = "";// 具体分词
+			//具体分词
+			JSONArray arraySegment = new JSONArray();
+			
 			for (int i = 0; i < wordArray.length; i++) {
 				String tempWord = wordArray[i];
 				_word = tempWord.split("\\(")[0];
@@ -766,6 +763,8 @@ public class AnalyzeDAO {
 				String _lockWord = "";
 
 				if (!"".equals(tempWord) && !"".equals(_word.trim())) {// 分词本身不能为空
+					//增加分词
+					arraySegment.add(_word);
 					List<String> dealWrod = dealWrod2List(tempWord);
 					if (dealWrod == null || dealWrod.isEmpty()) {
 						// 页面展示： word(OOV)
@@ -776,7 +775,11 @@ public class AnalyzeDAO {
 						wordpatBuilder.append(_word);
 						lockWordpat.append(_word);
 						// 记录当前词模中的OOV分词
-						array.add(_word);
+						// 过滤标点符号 --> update by 20191008 sundj
+						if(StringUtils.isNotBlank(_word.replaceAll("\\p{P}" , ""))){
+							array.add(_word);
+						}
+						
 						lastFlag = true;
 						flag = 1;
 						requiredNum++;
@@ -812,11 +815,17 @@ public class AnalyzeDAO {
 				}
 			}
 
-			String wordpat = wordpatBuilder.append("@2#").append("编者=\"").append(autor).append("\"")
-					.append("&最大未匹配字数=\"").append(requiredNum + 1).append("\"").toString();
+			String wordpat = "";
+			//如果必选词数量大于2，则去掉最大未匹配字数 ，  author=sundj
+			wordpatBuilder.append("@2#").append("编者=\"").append(autor).append("\"");
+			if(requiredNum < 2){
+				wordpatBuilder.append("&最大未匹配字数=\"").append(requiredNum + 1).append("\"");
+			}
+				
+			wordpat = wordpatBuilder.toString();
 			wordpat = SimpleString.worpattosimworpat(wordpat);
 
-			String lockWordpatStr = lockWordpat.append("@1#").append("编者=\"").append(autor).append("\"")
+			String lockWordpatStr = lockWordpat.append("@2#").append("编者=\"").append(autor).append("\"")
 					.append("&最大未匹配字数=\"").append(0).append("\"").append("&置信度=\"").append("1.1").append("\"")
 					.toString();
 
@@ -828,6 +837,8 @@ public class AnalyzeDAO {
 			jsonObject.put("lockWordpat", lockWordpatStr);
 			jsonObject.put("isValid", flag == 0);
 			jsonObject.put("OOVWord", array);
+			//增加返回分词
+			jsonObject.put("segmentWord", arraySegment);
 			list.add(jsonObject);
 		}
 		return list;
@@ -903,19 +914,12 @@ public class AnalyzeDAO {
 				if (rs.getRows()[i].get("wordpat") != null) {
 					// 自学习词模：<翼支付|!翼支付近类>*<是什>*[<么|!没有近类>]@2#编者="问题库"&来源="翼支付是什么？"&最大未匹配字数="1"
 					String wordpat = rs.getRows()[i].get("wordpat").toString();
-					String wordpatSeq = "@2#";
-					String[] split = null;
-					if (wordpat.indexOf("@1#") > -1) { // 有序词模（精准词模）
-						split = wordpat.split("@1#");
-						wordpatSeq = "@1#";
-					} else {// 无序词模（普通词模）
-						split = wordpat.split("@2#");
-					}
+					String[] split = wordpat.split("@2#");
 					if (split.length > 1) {
 						for (String str : split[1].split("&")) {
 							if (str.startsWith("来源=")) {// 自动生成的词模，返回值是来源
 								String query = str.substring(4, str.length() - 1);
-								wordpatMap.put(query + wordpatSeq, split[0]);
+								wordpatMap.put(query, split[0]);
 								break;
 							}
 						}
@@ -925,7 +929,35 @@ public class AnalyzeDAO {
 		}
 		return wordpatMap;
 	}
-
+	/**
+	 * 获取自学习词模及对应的排除问
+	 * 
+	 * @param kbIdList
+	 * @return
+	 */
+	private static Map<String, String> getAutoWordpatMapByRemove(List<String> kbIdList, String wordpattype) {
+		Result rs = CommonLibQueryManageDAO.selectWordpatByKbdataid(kbIdList, wordpattype);
+		Map<String, String> wordpatMap = new HashMap<String, String>();
+		if (rs != null && rs.getRowCount() > 0) {
+			for (int i = 0; i < rs.getRowCount(); i++) {
+				if (rs.getRows()[i].get("wordpat") != null) {
+					// 自学习词模：<翼支付|!翼支付近类>*<是什>*[<么|!没有近类>]@2#编者="问题库"&来源="翼支付是什么？"&最大未匹配字数="1"
+					String wordpat = rs.getRows()[i].get("wordpat").toString();
+					String[] split = wordpat.split("@1#");
+					if (split.length > 1) {
+						for (String str : split[1].split("&")) {
+							if (str.startsWith("来源=")) {// 自动生成的词模，返回值是来源
+								String query = str.substring(4, str.length() - 1);
+								wordpatMap.put(query, split[0]);
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		return wordpatMap;
+	}
 	/**
 	 * 获取自学习词模及对应的客户问
 	 * 
@@ -1062,12 +1094,14 @@ public class AnalyzeDAO {
 			String queryArray[] = combitionArray[i].split("@#@");
 			kbIdList.add(queryArray[2]);
 		}
-		// 生成客户问和对应的自学习词模 <客户问，词模>，一个客户问会包含两个词模，普通词模，精准词模，中间##分隔
-		Map<String, String> wordpatMap = getAutoWordpatMap(kbIdList, wordpattype);
+		// 生成客户问和对应的自学习词模 <排除问，词模>，一个排除问只有一条精准词模，中间##分隔
+		Map<String, String> wordpatMap = getAutoWordpatMapByRemove(kbIdList, wordpattype);
 		List<String> oovWordList = new ArrayList<String>();
 		List<String> wordpatResultList = new ArrayList<String>();
 		//包含OOV词的扩展问
 		List<String> oovWordQueryList = new ArrayList<String>();
+		//包含OOV词的扩展问的分词
+		List<String> segmentWordList = new ArrayList<String>();
 		
 		for (int i = 0; i < combitionArray.length; i++) {
 			String queryArray[] = combitionArray[i].split("@#@");
@@ -1094,12 +1128,15 @@ public class AnalyzeDAO {
 					JSONObject jsonObject = getWordpat2(servicetype, removequery[j], queryCityCode);
 					if (jsonObject.getBooleanValue("success")) {
 						// 将简单词模转化为普通词模，并返回转换结果
-						String removewordpat = SimpleString.SimpleWordPatToWordPat(jsonObject.getString("lockWordpat"));
-						wordpats.append(removewordpat.split("@1#")[0].replace("*", "")).append("*");
+						String 	 removewordpat = SimpleString.SimpleWordPatToWordPat(jsonObject.getString("lockWordpat"));
+
+						wordpats.append(removewordpat.split("@2#")[0]).append("*");
 						JSONArray oovWord = jsonObject.getJSONArray("OOVWord");
+						JSONArray segmentWord = jsonObject.getJSONArray("segmentWord");
 						if (!CollectionUtils.isEmpty(oovWord)) {
 							oovWordList.add(StringUtils.join(oovWord, "$_$"));// 放入OOV分词
 							oovWordQueryList.add(combitionArray[i]);//放入有OOV词的扩展问
+							segmentWordList.add(StringUtils.join(segmentWord, "##"));
 						}
 
 					}
@@ -1126,12 +1163,11 @@ public class AnalyzeDAO {
 				}
 				// 保留自学习词模返回值，并替换 编者=\"自学习\""=>编者="问题库"&来源="(当前问题)" ---> modify
 				// 2017-05-24
-				wordpat = "~"+wordpat + "@1#编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"";
 
-				// 判断是精准词模(有序)还是普通词模（无序）
-				String wordpatSeq = "@2#";
-				if (wordpat.indexOf("@1#") > -1) {
-					wordpatSeq = "@1#";
+				wordpat = "~"+wordpat + "@1#编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"";
+				//修改排除词模，oov词分隔符采用*号
+				if("否".equals(isstrictexclusion)){//非严格排除
+					wordpat = wordpat.replace("><", ">*<");
 				}
 				if ("2".equals(wordpattype) && isstrictexclusion != null && "是".equals(isstrictexclusion)) {// 排除词模只生成一条词模,且必须是有序词模
 					wordpat += "&最大未匹配字数=0";
@@ -1139,10 +1175,10 @@ public class AnalyzeDAO {
 				// 校验自动生成的词模是否符合规范
 				if (Check.CheckWordpat(wordpat, request)) {
 					// 获取客户问对应的旧词模
-					String oldWordpat = wordpatMap.get(query + wordpatSeq);
+					String oldWordpat = wordpatMap.get(query);
 					// 存在旧词模
 					if (oldWordpat != null && !"".equals(oldWordpat)) {
-						String newWordpat = wordpat.split(wordpatSeq)[0];
+						String newWordpat = wordpat.split("@1#")[0];
 
 						logger.info("新旧词模比较 ----新词模：\"" + newWordpat + "\"，旧词模：\"" + oldWordpat + "\"，针对问题：\"" + query
 								+ "\"");
@@ -1173,7 +1209,7 @@ public class AnalyzeDAO {
 					rows.add(query);
 					rows.add("生成词模【" + wordpat + "】格式不符合！");
 					text.add(rows);
-				}
+				}  
 			} else {
 				rows.add(query);
 				rows.add("生成失败！");
@@ -1185,24 +1221,27 @@ public class AnalyzeDAO {
 
 		// 插入问题库自动学习词模
 		int count = -1;
-		if (list.size() > 0) {
+		if (!CollectionUtils.isEmpty(list)) {
 			count = CommonLibQueryManageDAO.insertWordpat(list, servicetype, userid, wordpattype);
 			if (count > 0) {
 				jsonObj.put("success", true);
 				jsonObj.put("msg", "生成成功!");
-				jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
+//				jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
 				jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
 				jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList,"@@"));
+				jsonObj.put("segmentWord", StringUtils.join(segmentWordList,"@@"));
+				
 			} else {
 				jsonObj.put("success", false);
 				jsonObj.put("msg", "生成失败!");
 			}
-		} else if (combitionArray.length >= list.size() + filterCount && list.size() + filterCount > 0) {// 有成功处理的词模就算生成成功
+		} else if (combitionArray.length >  filterCount && filterCount > 0) {// 有成功处理的词模就算生成成功
 			jsonObj.put("success", true);
 			jsonObj.put("msg", "生成成功!");
-			jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
+//			jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
 			jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
 			jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList,"@@"));
+			jsonObj.put("segmentWord", StringUtils.join(segmentWordList,"@@"));
 		} else {
 			jsonObj.put("success", false);
 			jsonObj.put("msg", "生成失败!!");

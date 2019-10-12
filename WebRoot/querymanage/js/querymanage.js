@@ -1597,7 +1597,7 @@ function produceWordpat(wordpattype) {
 				var newWord = data.newWord;
 				var oovWord = data.OOVWord;
 				if(oovWord != null && oovWord != '' && newWord !=null && newWord != ''){
-				   loadNewWord(newWord, oovWord,"0",data.OOVWordQuery);
+				   loadNewWord(newWord, oovWord,"0",data.OOVWordQuery,data.segmentWord);
 				}
 				
 			} else {
@@ -1619,8 +1619,14 @@ function produceAllWordpat(wordpattype) {
 	$.messager.confirm("操作提示", "全量语义训练需要让您等待一会会哦，确定训练吗？", function(data) {
 		if (data) {
 			$("#querymanagedatagrid").datagrid('loading');
-			$("#customerquerydatagrid").datagrid('loading');
-			$("#removequerydatagrid").datagrid('loading');
+			
+			if(!$("#customerquery_panel").is(':hidden')){
+				$("#customerquerydatagrid").datagrid('loading');	
+			}
+			if(!$("#removequery_panel").is(':hidden')){
+				$("#removequerydatagrid").datagrid('loading');
+			}
+			
 			$(".datagrid-mask-msg").text('请耐心等待,语义训练中......');
 			$.ajax({
 				url: '../querymanage.action',
@@ -1637,8 +1643,12 @@ function produceAllWordpat(wordpattype) {
 				dataType: "json",
 				success: function(data, textStatus, jqXHR) {
 					$("#querymanagedatagrid").datagrid('loaded');
-					$("#customerquerydatagrid").datagrid('loaded');
-					$("#removequerydatagrid").datagrid('loaded');
+					if(!$("#customerquery_panel").is(':hidden')){
+					  $("#customerquerydatagrid").datagrid('loaded');
+					}
+					if(!$("#removequery_panel").is(':hidden')){
+					  $("#removequerydatagrid").datagrid('loaded');
+					}
 					var downloadUrl = '';
 					if(data.fileName){
 						downloadUrl = '</br>生成报告：</br>'
@@ -1648,7 +1658,12 @@ function produceAllWordpat(wordpattype) {
 					
 					if (data.success == true) {
 						$("#querymanagedatagrid").datagrid("load");
-						$("#customerquerydatagrid").datagrid("load");
+						if(!$("#customerquery_panel").is(':hidden')){
+						  $("#customerquerydatagrid").datagrid("load");
+						}
+						if(!$("#removequery_panel").is(':hidden')){
+					    	$("#removequerydatagrid").datagrid('load');
+						}
 						$.messager.alert('系统提示', data.msg+downloadUrl, "info");
 					} else {
 						$.messager.alert('系统提示', data.msg+downloadUrl, "warning");
@@ -2226,7 +2241,9 @@ function addQuery(savebtn) {
 					if (selectOption == "标准问题") {
 						var oovWord = data.oovWord;
 						if (oovWord != null && oovWord != '') {
-							getOOVWord(oovWord, normalQuery);
+							//标准问的原分词
+							var segmentWord = data.segmentWord;
+							getOOVWord(oovWord, normalQuery,segmentWord);
 						}
 					}
 				}
@@ -2780,10 +2797,10 @@ function reportError() {
 }
 
 //获取新词
-function getOOVWord(oovWord, normalQuery) {
+function getOOVWord(oovWord, normalQuery,segmentWord) {
 	$('#addwordwindow').window('open');
 	var wordArray = oovWord.split("$_$");
-	var wordHtml = '<input type="hidden" id="addwordwindow-query" value=" ' + normalQuery + '">';
+	var wordHtml = '<input type="hidden" id="addwordwindow-query" value=" ' + normalQuery + '"><input type="hidden" id="addwordwindow-segmentWord" value=" ' + segmentWord + '">';
 	wordHtml += '<table cellspacing="0" cellpadding="0">';
 	wordHtml += '<tr><td style="padding:5px;"><span>选择</span></td><td style="padding:5px;"><span>新词</span></td><td style="padding:5px;"><span>其他别名</span></td><td style="padding:5px;"><span>是否重要</span></td><td style="padding:5px;"><span>是否业务词</span></td></tr>';
 	for (var i = 0; i < wordArray.length; i++) {
@@ -2851,11 +2868,8 @@ function addWordAct() {
 		return;
 	}
 	
-
-//	$("#addwordtable input[name='wordcheckbox']:checked").each(function () {
-//		var w = $(this).val();
-//		newquery = newquery.replace(w, " ");
-//  });
+	console.log($("#addwordwindow-segmentWord").val());
+	
 	$.ajax( { 
 		url : '../querymanage.action',
 		type : "post",
@@ -2866,7 +2880,8 @@ function addWordAct() {
 			normalquery : trim(query),
 			newnormalquery: newquery,
 			flag : wordlevel.join('#'),
-			businesswords: wordbusiness.join('-')
+			businesswords: wordbusiness.join('-'),
+			segmentWord:$("#addwordwindow-segmentWord").val()
 		},
 		async : false,
 		dataType : "json",
@@ -2907,7 +2922,7 @@ function openRemoveQuery(index) {
 		}
 	}).panel('expand');
 	// 加载排除问题管理列表
-	loadRemoveQuerydDatagridList(gHookOpts);
+	loadRemoveQuerydDatagridList(gHookOpts,index);
 //	$('#querymanagedatagrid').datagrid('selectRow', index);
 }
 //查询标准问题下排除问题
@@ -2935,13 +2950,14 @@ function searchRemoveQuery() {
 	});
 }
 //加载排除问题管理列表
-function loadRemoveQuerydDatagridList(hookObj) {
+function loadRemoveQuerydDatagridList(hookObj,index) {
 	var params;
+	var row = $('#querymanagedatagrid').datagrid('getData').rows[index];
 	if (!hookObj) {
 		params = {
 				type: "selectremovequery",
 				serviceid: serviceid,
-				kbdataid: "",
+				kbdataid: row.kbdataid,
 				normalquery: "",
 				customerquery: "",
 				citycode: "",
@@ -2952,7 +2968,7 @@ function loadRemoveQuerydDatagridList(hookObj) {
 		params = {
 			type: 'selectremovequery',
 			serviceid: serviceid,
-			kbdataid: hookObj.panel1.kbdataid ? hookObj.panel1.kbdataid : '' ,
+			kbdataid: kbdataid.kbdataid ? kbdataid.kbdataid : '' ,
 			normalquery:  '',
 			customerquery: hookObj.panel2.customerquery ? hookObj.panel2.customerquery : '',
 			citycode: '',
@@ -3632,7 +3648,7 @@ function removeProduceWordpat(wordpattype) {
 				var newWord = data.newWord;
 				var oovWord = data.OOVWord;
 				if(oovWord != null && oovWord != ''){
-				   loadNewWord(newWord, oovWord,"1",data.OOVWordQuery);
+				   loadNewWord(newWord, oovWord,"1",data.OOVWordQuery,data.segmentWord);
 				}
 			}else{
 				$.messager.alert('系统提示', data.msg+downloadUrl, "warning");				
@@ -3646,13 +3662,14 @@ function removeProduceWordpat(wordpattype) {
 }
 
 // 展示
-function loadNewWord(newWord, oovWord,querytype,oovWordQuery) {
+function loadNewWord(newWord, oovWord,querytype,oovWordQuery,segmentWord) {
 	$('#addotherwordwindow').window('open');
 	var wordArray = newWord.split("##");
 	
 	var wordHtml = '';
 
 	var newwordHtml = '<input type="hidden" id="addotherwordwindow-query" value=" ' + oovWordQuery + '"/><input type="hidden" id="addotherwordwindow-querytype" value=" ' + querytype + '"/>';
+	newwordHtml += '<input type="hidden" id="addotherwordwindow-segmentWord" value=" ' + segmentWord + '"/>';
 	newwordHtml += '<span style="font-size: 12px; margin-left: 10px">标准词条 ：</span>';
 	newwordHtml += '<select  id="newwordselect" class="easyui-combobox" data-options="editable:false" style="width: 100px;" type="text"><option value="">请选择</option>';
 	for (var i = 0; i < wordArray.length; i++) {
@@ -3721,7 +3738,8 @@ function doRemoveNewWord() {
 			combition : combitionArray.join('@@'),
 			customerquery : $("#addotherwordwindow-query").val(),
 			querytype : $("#addotherwordwindow-querytype").val(),
-			flag: flagArray.join('#')
+			flag: flagArray.join('#'),
+			segmentWord: $("#addotherwordwindow-segmentWord").val()
 		},
 		async : false,
 		dataType : "json",

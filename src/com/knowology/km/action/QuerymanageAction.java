@@ -80,6 +80,10 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	 * 是否严格排除状态
 	 */
 	private String removequerystatus;
+	/**
+	 * 扩展问原分词
+	 */
+	private String segmentWord;
 	
 	public String execute() {
 		 if(!"".equals(m_request)&&m_request!=null){// 解析参数 m_request
@@ -226,7 +230,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if ("importkb".equals(type)) {// 导入语义
 			m_result = ImportExportDAO.importKBData(filename, serviceid);
 		} else if ("addWord".equals(type)) {// 新增词条
-			m_result = QuerymanageDAO.addWord(combition, flag, normalquery,newnormalquery, serviceid,businesswords, request);
+			m_result = QuerymanageDAO.addWord(combition, flag, normalquery,newnormalquery, serviceid,businesswords,segmentWord, request);
 		} else if ("selectremovequery".equals(type)) {// 查询排除问题
 			m_result = QuerymanageDAO.selectRemoveQuery(serviceid, kbdataid, normalquery, customerquery, citycode, istrain, removequerystatus, page, rows);
 		} else if ("findremovequery".equals(type)) {// 查找排除问
@@ -238,7 +242,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		} else if ("removeproducewordpat".equals(type)) {// 排除问题批量训练发现新词
 			m_result = QuerymanageDAO.removeProduceWordpat(combition, flag, request);
 		} else if ("addOtherWord".equals(type)) {// 新增别名并更新词模
-			m_result = QuerymanageDAO.addOtherWordAndWordpat(combition,customerquery,querytype,flag,request);
+			m_result = QuerymanageDAO.addOtherWordAndWordpat(combition,customerquery,querytype,flag,segmentWord,request);
 		} else if("customerproducewordpat".equals(type)){//客户问批量训练发现新词
 			m_result = QuerymanageDAO.customerProduceWordpat(combition, flag, request);
 		}
@@ -670,6 +674,14 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 
 	public void setRemovequerystatus(String removequerystatus) {
 		this.removequerystatus = removequerystatus;
+	}
+
+	public String getSegmentWord() {
+		return segmentWord;
+	}
+
+	public void setSegmentWord(String segmentWord) {
+		this.segmentWord = segmentWord;
 	}
 	
 

@@ -55,6 +55,7 @@ import com.knowology.dal.Database;
 import com.knowology.km.NLPAppWS.AnalyzeEnterDelegate;
 import com.knowology.km.NLPCallerWS.NLPCaller4WSDelegate;
 import com.knowology.km.access.UserOperResource;
+import com.knowology.km.common.util.SegmentWordUtil;
 import com.knowology.km.entity.InsertOrUpdateParam;
 import com.knowology.km.util.Check;
 import com.knowology.km.util.GetLoadbalancingConfig;
@@ -897,6 +898,8 @@ public class QuerymanageDAO {
 			if ("true".equals(multinormalquery)) {
 				String msgs = "";
 				List<String> oovWordList = new ArrayList<String>();
+				//oov对应的原有标准问分词
+				List<String> segmentWordList = new ArrayList<String>();
 				for (String normalquery : normalQuery.split("\n")) {
 					rs = CommonLibQueryManageDAO.addNormalQueryAndCustomerQuery(serviceid, normalquery, customerQuery,
 							cityCode, user, userCityCode, serviceCityCode);
@@ -910,9 +913,11 @@ public class QuerymanageDAO {
 						msgs = "保存成功!";
 						JSONObject oovWordObj = (JSONObject) getOOVWord(serviceid, normalquery, request);
 						oovWordList.add(Objects.toString(oovWordObj.get("oovWord"), ""));
+						segmentWordList.add(Objects.toString(oovWordObj.get("segmentWord"), ""));
 					}
 				}
 				jsonObj.put("oovWord", StringUtils.join(oovWordList, "$_$"));
+				jsonObj.put("segmentWord", StringUtils.join(segmentWordList, "@@"));
 				jsonObj.put("success", true);
 				jsonObj.put("msg", msgs);
 
@@ -923,6 +928,7 @@ public class QuerymanageDAO {
 				if (rs > 0) {
 					JSONObject oovWordObj = (JSONObject) getOOVWord(serviceid, normalQuery, request);
 					jsonObj.put("oovWord", oovWordObj.get("oovWord"));
+					jsonObj.put("segmentWord",oovWordObj.get("segmentWord"));
 				}
 			}
 
@@ -954,6 +960,8 @@ public class QuerymanageDAO {
 	public static Object getOOVWord(String serviceid, String normalQuery, HttpServletRequest request) {
 		JSONObject jsonObj = new JSONObject();
 		List<String> oovWordList = new ArrayList<String>();
+		//原分词
+		List<String> segmentWordList = new ArrayList<String>();
 		List<String> wordpatList = new ArrayList<String>();
 		List<String> combitionList = new ArrayList<String>();
 		// 查询当前kbdataid
@@ -974,6 +982,8 @@ public class QuerymanageDAO {
 					JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0", request);
 					if (obj.containsKey("OOVWord")) {
 						oovWordList.add(obj.getString("OOVWord"));
+						//有oov词时需要用到原分词，用于分词矫正
+						segmentWordList.add(obj.getString("segmentWord"));
 					}
 					if (obj.containsKey("wordpatList")) {
 						wordpatList.add(obj.getString("wordpatList"));
@@ -992,6 +1002,8 @@ public class QuerymanageDAO {
 				JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat(combition, "0", request);
 				if (obj.containsKey("OOVWord")) {
 					oovWordList.add(obj.getString("OOVWord"));
+					//有oov词时需要用到原分词，用于分词矫正
+					segmentWordList.add(obj.getString("segmentWord"));
 				}
 				if (obj.containsKey("wordpatList")) {
 					wordpatList.add(obj.getString("wordpatList"));
@@ -1001,6 +1013,8 @@ public class QuerymanageDAO {
 		}
 
 		jsonObj.put("oovWord", StringUtils.join(oovWordList, "$_$"));
+		//原分词,用@@分隔不同的问题
+		jsonObj.put("segmentWord", StringUtils.join(segmentWordList, "@@"));
 		jsonObj.put("wordpatList", StringUtils.join(wordpatList, "@_@"));
 		jsonObj.put("combition", StringUtils.join(combitionList, "&_&"));
 		return jsonObj;
@@ -4326,12 +4340,14 @@ public class QuerymanageDAO {
 	 * @param combition
 	 *            新词|别名\n别名#新词|别名\n别名
 	 * @param flag
-	 * @param normalquery
+	 * @param normalquery 标准问
 	 * @param serviceid
+	 * @param businesswords  业务词
+	 * @param segmentWord 扩展问原分词
 	 * @return
 	 */
 	public static Object addWord(String combition, String flag, String normalquery, String newnormalquery,
-			String serviceid, String businesswords, HttpServletRequest request) {
+			String serviceid, String businesswords,String segmentWord, HttpServletRequest request) {
 		JSONObject jsonObj = new JSONObject();
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
@@ -4345,11 +4361,15 @@ public class QuerymanageDAO {
 		List<String> newWords = addWordClass(combition, businesswords, user);
 
 		Map<String, Map<String, String>> map = CommonLibQueryManageDAO.getNormalQueryDic(serviceid);
-		// 多个标准问
+		// 多个扩展问
 		String[] querys = normalquery.split("\n");
+		//多个扩展问对应的原分词
+		String[] segmentsWordArray = segmentWord.split("@@");
 		// 同时根据用户选择的重要和不重要作为可选和必选的判断标准， 然后将新增加的词类用*号和词模1合并
 		String[] wordArray = combition.split("#");
 		String[] levelArray = flag.split("#");
+		//错别字词类集合
+		List<String> errorWordList = new ArrayList<String>();
 		// 遍历标准问
 		for (int i = 0; i < querys.length; i++) {
 			String wordpat = "";
@@ -4366,6 +4386,7 @@ public class QuerymanageDAO {
 				lockwordpat = lockwordpat.replace("编者=\"自学习\"",
 						"编者=\"问题库\"&来源=\"" + querys[i].replace("&", "\\and") + "\"");
 			}
+
 			String wordClassStr = "";
 			// 遍历多个新词，并判断标准问是否包含此新词
 			for (int j = 0; j < wordArray.length; j++) {
@@ -4386,10 +4407,21 @@ public class QuerymanageDAO {
 			}
 			String simpleWordpat = wordClassStr + wordpat;
 			simpleWordpat = SimpleString.SimpleWordPatToWordPat(simpleWordpat);
+			
+			//获取扩展问对应的原分词列表
+			List<String> segmentList=(List<String>)Arrays.asList(segmentsWordArray[i].split("##"));
+			
 			// 精准词模
 			wordClassStr = "";
 			for (int k = 0; k < wordArray.length; k++) {
 				if (querys[i].indexOf(wordArray[k].split("\\|")[0]) > -1) {
+					//进行错别字词纠正
+					List<String> list = SegmentWordUtil.getVetifiedSegStr(wordArray[k].split("\\|")[0], segmentList);
+					for(String errorWord:list){
+						if(!errorWordList.contains(errorWord)){
+							errorWordList.add(errorWord);
+						}
+					}
 					wordClassStr += wordArray[k].split("\\|")[0] + "近类" + "*";
 				}
 			}
@@ -4444,14 +4476,19 @@ public class QuerymanageDAO {
 				jsonObj.put("msg", "生成成功!");
 				// 调用更新支持库的方法
 				if (StringUtils.isNotBlank(combition)) {
-					// Object m_result = ExtendDao.updateKB();
-					// logger.info(JSONObject.toJSONString(m_result));
+//					 Object m_result = ExtendDao.updateKB();
+//					 logger.info(JSONObject.toJSONString(m_result));
 				}
 
 			} else {
 				jsonObj.put("success", false);
 				jsonObj.put("msg", "生成失败!");
 			}
+		}
+		if(!CollectionUtils.isEmpty(errorWordList)){//错别字词表列表不为空，增加词条
+
+			int rows =addErrorWord(errorWordList,user);
+			logger.info("新增错别字词表词条条数："+rows);
 		}
 		// 根节点下识别业务规则-业务名称获取-标准问：业务词获取增加业务词词模
 		String ktdataid = "";// 业务词标准ID
@@ -4466,6 +4503,22 @@ public class QuerymanageDAO {
 			logger.info("新增新词结果:" + countNewWord);
 		}
 		return jsonObj;
+	}
+	
+	public static int addErrorWord(List<String> errorWordList,User user){
+		String wordclassid = getWordClassId("错别字词表");
+		int count = 0;
+		if(StringUtils.isNotBlank(wordclassid)){
+			for(String word: errorWordList){
+				// 判断词条是否存在
+				if (!CommonLibWordDAO.exist(word, wordclassid)) {
+					CommonLibWordDAO.insert(word, wordclassid, user);
+					count++;
+				}
+			}
+
+		}
+		return count;
 	}
 
 	/**
@@ -5033,7 +5086,9 @@ public class QuerymanageDAO {
 				newWordList.add(StringUtils.join(list, "@@"));
 			}
 		}
+		if((Boolean)jsonObj.get("success")){
 		jsonObj.put("newWord", StringUtils.join(newWordList, "##"));
+		}
 		return jsonObj;
 	}
 
@@ -5060,26 +5115,29 @@ public class QuerymanageDAO {
 			String[] newWord = newWordArray[i].split("#");
 			String word = newWord[0];
 			String wordClassId = newWord[1];
-			if(newWord.length == 2){
-				continue;
-			}
-			String[] otherwordArray = newWord[2].split("\\|");
-
+			
 			if (StringUtils.isBlank(wordClassId)) {// 词类ID不存在的话，将词条作为词类新增
 				String wordclass = word.toUpperCase() + "近类";
-				List<String> list = new ArrayList<String>();
+				List<List<Object>> info = new ArrayList<List<Object>>();
+				List<Object> list = new ArrayList<Object>();
 				list.add(wordclass);
-				if (!CommonLibWordclassDAO.exist(wordclass)) {
-					CommonLibWordclassDAO.insert(user, list, "", "基础", user.getIndustryOrganizationApplication());
-				}
+				list.add("");
+				info.add(list);
+				//新增词类词条
+				CommonLibQueryManageDAO.insertWordClassAndItem(user, info);
 				// 获取词类ID
 				wordClassId = getWordClassId(wordclass);
 			}
-
 			// 判断词条是否存在
 			if (!CommonLibWordDAO.exist(word, wordClassId)) {
 				CommonLibWordDAO.insert(word, wordClassId, user);
 			}
+			
+			if(newWord.length == 2){//长度为2，标识没有别名，直接跳过
+				continue;
+			}
+			String[] otherwordArray = newWord[2].split("\\|");
+
 			// 获取词条ID
 			Result wordRs = CommonLibWordDAO.getWordInfo(wordClassId, word);
 			String wordId = "";
@@ -5120,11 +5178,6 @@ public class QuerymanageDAO {
 		if (index > 0) {
 			jsonObj.put("success", true);
 			jsonObj.put("msg", "保存成功!");
-			if (flag) {
-				// 更新知识库
-				Object m_result = ExtendDao.updateKB();
-				logger.info(JSONObject.toJSONString(m_result));
-			}
 
 		} else {
 			jsonObj.put("success", false);
@@ -5181,10 +5234,11 @@ public class QuerymanageDAO {
 	 * @param request
 	 * @return
 	 */
-	public static Object addOtherWordAndWordpat(String combition, String customerquery, String querytype, String flag,
+	public static Object addOtherWordAndWordpat(String combition, String customerquery, String querytype, String flag,String segmentWord,
 			HttpServletRequest request) {
 		// 新增别名
 		JSONObject jsonObj = (JSONObject) addOtherWord(combition, false);
+		
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
 		String userid = user.getUserID();
@@ -5194,7 +5248,10 @@ public class QuerymanageDAO {
 		List<List<String>> combListList = new ArrayList<List<String>>();
 		// 新词拆分
 		String[] combitionArray = combition.split("@@");
+		//新词词组
 		List<String> wordArray = new ArrayList<String>();
+		//错别字分词纠正列表
+		List<String> errorWordList = new ArrayList<String>();
 		String wordpattype= "0";//默认是普通词模
 		if("1".equals(querytype.trim())){
 			wordpattype = "2";//排除词模
@@ -5204,8 +5261,10 @@ public class QuerymanageDAO {
 			// 将新词存入新词数组
 			wordArray.add(query[0]);
 		}
-		// 扩展问筛分
+		// 扩展问拆分
 		String[] customerqueryArray = customerquery.split("@@");
+		// 扩展问对应的原分词拆分
+		String[] segmentsWordArray = segmentWord.split("@@");
 		// 拆分新词重要程度
 		String[] levelArray = flag.split("#");
 
@@ -5255,26 +5314,40 @@ public class QuerymanageDAO {
 			}
 			String simpleWordpat = wordClassStr + wordpat;
 			simpleWordpat = SimpleString.SimpleWordPatToWordPat(simpleWordpat);
+			
+			//获取扩展问对应的原分词列表
+			List<String> segmentList=(List<String>)Arrays.asList(segmentsWordArray[i].split("##"));
+			
 			// 精准词模
 			wordClassStr = "";
 			for (int k = 0; k < wordArray.size(); k++) {
 				if (query.indexOf(wordArray.get(k).split("\\|")[0]) > -1) {
+					//进行错别字词纠正
+					List<String> list = SegmentWordUtil.getVetifiedSegStr(wordArray.get(k).split("\\|")[0], segmentList);
+					for(String errorWord:list){
+						if(!errorWordList.contains(errorWord)){
+							errorWordList.add(errorWord);
+						}
+					}
 					wordClassStr += wordArray.get(k) + "近类" + "*";
 				}
 			}
 
 			if (StringUtils.isBlank(lockwordpat)) {
 				wordClassStr = wordClassStr.substring(0, wordClassStr.lastIndexOf("*"));
-				lockwordpat = "#有序#编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"&最大未匹配字数=\"0\"&置信度=\"1.1\"";
+				lockwordpat = "#无序#编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"&最大未匹配字数=\"0\"&置信度=\"1.1\"";
 			}
-			if ("2".equals(wordpattype)) {// 排除词模
-				lockwordpat = lockwordpat.replace("&置信度=\"1.1\"", "");
-				if("否".equals(isstrictexclusion)){//不严格排除
-					lockwordpat = lockwordpat.replace("&最大未匹配字数=\"0\"", "");
-				}
-			}
+
 			String simpleLockWordpat = wordClassStr + lockwordpat;
 			simpleLockWordpat = SimpleString.SimpleWordPatToWordPat(simpleLockWordpat);
+			
+			if ("2".equals(wordpattype)) {// 排除词模
+				simpleLockWordpat = "~"+simpleLockWordpat.replace("&置信度=\"1.1\"", "").replace("@2#", "@1#");
+				if("否".equals(isstrictexclusion)){//不严格排除
+					simpleLockWordpat = simpleLockWordpat.replace("&最大未匹配字数=\"0\"", "").replace("><", ">*<");
+				}
+			}
+			
 			List<String> combList = null;
 			if (!"2".equals(wordpattype)) {// 排除词模只有精准词模
 				if (Check.CheckWordpat(simpleWordpat, request)) {
@@ -5291,6 +5364,7 @@ public class QuerymanageDAO {
 					return jsonObj;
 				}
 			}
+			
 			if (Check.CheckWordpat(simpleLockWordpat, request)) {
 				combList = new ArrayList<String>();
 				combList.add(simpleLockWordpat);
@@ -5312,16 +5386,22 @@ public class QuerymanageDAO {
 			if (count > 0) {
 				jsonObj.put("success", true);
 				jsonObj.put("msg", "生成成功!");
-				// 调用更新支持库的方法
-				if (StringUtils.isNotBlank(combition)) {
-					// Object m_result = ExtendDao.updateKB();
-					// logger.info(JSONObject.toJSONString(m_result));
-				}
+				// 调用更新知识库的方法
+//				if (StringUtils.isNotBlank(combition)) {
+//					 Object m_result = ExtendDao.updateKB();
+//					 logger.info(JSONObject.toJSONString(m_result));
+//				}
 
 			} else {
 				jsonObj.put("success", false);
 				jsonObj.put("msg", "生成失败!");
 			}
+		}
+		//新词纠正错别字词
+		if(!CollectionUtils.isEmpty(errorWordList)){//错别字词表列表不为空，增加词条
+
+			int rows =addErrorWord(errorWordList,user);
+			logger.info("新增错别字词表词条条数："+rows);
 		}
 
 		return jsonObj;
