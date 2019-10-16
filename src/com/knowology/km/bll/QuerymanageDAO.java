@@ -4476,8 +4476,8 @@ public class QuerymanageDAO {
 				jsonObj.put("msg", "生成成功!");
 				// 调用更新支持库的方法
 				if (StringUtils.isNotBlank(combition)) {
-					 Object m_result = ExtendDao.updateKB();
-					 logger.info(JSONObject.toJSONString(m_result));
+//					 Object m_result = ExtendDao.updateKB();
+//					 logger.info(JSONObject.toJSONString(m_result));
 				}
 
 			} else {

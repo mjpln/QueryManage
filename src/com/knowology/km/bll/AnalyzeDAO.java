@@ -764,7 +764,9 @@ public class AnalyzeDAO {
 
 				if (!"".equals(tempWord) && StringUtils.isNotBlank(_word)) {// 分词本身不能为空
 					//增加分词
-					arraySegment.add(_word);
+					if(StringUtils.isNotBlank(_word.replaceAll("\\p{P}" , ""))){
+					    arraySegment.add(_word);
+					}
 					List<String> dealWrod = dealWrod2List(tempWord);
 					if (dealWrod == null || dealWrod.isEmpty()) {
 						// 页面展示： word(OOV)

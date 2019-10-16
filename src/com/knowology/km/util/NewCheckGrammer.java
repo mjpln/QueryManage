@@ -503,14 +503,15 @@ public class NewCheckGrammer {
 								&& !NewEquals.equals("7",wordclass)
 								&& !NewEquals.equals("8",wordclass)
 								&& !NewEquals.equals("9",wordclass)) {
-							if (!CommonLibNewCheckGrammerDAO
-									.IsWordClassExist(wordclass
-											.replace("!", ""))) {
-								m_errorDesc = GlobalValues.html("词类:【"
-										+ wordclass.replace("!", "")
-										+ "】 不在数据库中,如需添加请到基础词库添加!");
-								return false;
-							}
+							//注释不是词类判断  --update by sundj 20191015
+//							if (!CommonLibNewCheckGrammerDAO
+//									.IsWordClassExist(wordclass
+//											.replace("!", ""))) {
+//								m_errorDesc = GlobalValues.html("词类:【"
+//										+ wordclass.replace("!", "")
+//										+ "】 不在数据库中,如需添加请到基础词库添加!");
+//								return false;
+//							}
 						}
 					}
 				}
