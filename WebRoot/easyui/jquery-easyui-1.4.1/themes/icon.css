@@ -226,7 +226,9 @@
 .icon-large-smartart {
 	background: url('icons/large_smartart.png') no-repeat center left;
 }
-
+.icon-forbid {
+	background: url('icons/forbid.png') no-repeat center left;
+}
 
 .btn_a {
 	cursor: pointer;

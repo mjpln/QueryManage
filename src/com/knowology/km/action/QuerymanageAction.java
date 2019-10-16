@@ -68,6 +68,22 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	private int page;
 	private int rows;
 	private String q;
+	/*
+	 * 去除新词后的标准问
+	 */
+	private String newnormalquery;
+	/*
+	 * 业务词，多个逗号分隔
+	 */
+	private String businesswords; 
+	/*
+	 * 是否严格排除状态
+	 */
+	private String removequerystatus;
+	/**
+	 * 扩展问原分词
+	 */
+	private String segmentWord;
 	
 	public String execute() {
 		 if(!"".equals(m_request)&&m_request!=null){// 解析参数 m_request
@@ -80,6 +96,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 			citycode = json.getString("citycode");
 			citycode = citycode.replace("\"", "").replace("[", "").replace("]", "");
 			type = json.getString("type");
+			removequerystatus = json.getString("removequerystatus");
 		 }
 		 if ("createuserinfo".equals(type)) {// 创建用户信息
 			JSONObject jsonObj = new JSONObject();
@@ -121,9 +138,9 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if("findnormalquery".equals(type)){// 查找标准问
 			m_result = QuerymanageDAO.findNormalquery(normalquery.trim(), citySelect);
 		}else if("findcustomerquery".equals(type)){// 查找客户问
-			m_result = QuerymanageDAO.findCustomerquery(customerquery.trim(), citySelect);
+			m_result = QuerymanageDAO.findCustomerquery(customerquery.trim(), citySelect,0);
 		}else if("addquery".equals(type)){//新增问题
-			m_result = QuerymanageDAO.addQuery(serviceid,querytype.trim(), normalquery.trim(), multinormalquery, customerquery.trim(), citycode);
+			m_result = QuerymanageDAO.addQuery(serviceid,querytype.trim(), normalquery.trim(), multinormalquery, customerquery.trim(), citycode, request);
 		}else if("producewordpat".equals(type)){//生成词模
 			m_result = AnalyzeDAO.produceWordpat(combition,flag,request);
 		}else if("produceallwordpat".equals(type)){//全量生成词模
@@ -135,7 +152,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if("deletenormalquery".equals(type)){//删除标准问题
 			m_result = QuerymanageDAO.deleteNormalQuery(kbdataid);
 		}else if ("import".equals(type)) {// 导入客户问题
-			m_result = ImportExportDAO.importFile(filename,serviceid);
+			m_result = ImportExportDAO.importFile(filename,serviceid,0);
 		}else if ("importwordxls".equals(type)) {// 导入词类词条
 			m_result = QuerymanageDAO.importwordxls(filename);
 		}else if ("importfaqxls".equals(type)) {// 导入FAQ
@@ -212,6 +229,22 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 			m_result = QuerymanageDAO.getKMUrl();
 		}else if ("importkb".equals(type)) {// 导入语义
 			m_result = ImportExportDAO.importKBData(filename, serviceid);
+		} else if ("addWord".equals(type)) {// 新增词条
+			m_result = QuerymanageDAO.addWord(combition, flag, normalquery,newnormalquery, serviceid,businesswords,segmentWord, request);
+		} else if ("selectremovequery".equals(type)) {// 查询排除问题
+			m_result = QuerymanageDAO.selectRemoveQuery(serviceid, kbdataid, normalquery, customerquery, citycode, istrain, removequerystatus, page, rows);
+		} else if ("findremovequery".equals(type)) {// 查找排除问
+			m_result = QuerymanageDAO.findCustomerquery(customerquery.trim(), citySelect, 1);
+		} else if ("addremovequery".equals(type)) {// 新增排除问题
+			m_result = QuerymanageDAO.addRemoveQueryWordpat(serviceid, querytype.trim(), normalquery.trim(), customerquery.trim(), citycode, removequerystatus, request);
+		} else if("importremove".equals(type)){// 导入排除问题
+			m_result = ImportExportDAO.importFile(filename,serviceid,1);
+		} else if ("removeproducewordpat".equals(type)) {// 排除问题批量训练发现新词
+			m_result = QuerymanageDAO.removeProduceWordpat(combition, flag, request);
+		} else if ("addOtherWord".equals(type)) {// 新增别名并更新词模
+			m_result = QuerymanageDAO.addOtherWordAndWordpat(combition,customerquery,querytype,flag,segmentWord,request);
+		} else if("customerproducewordpat".equals(type)){//客户问批量训练发现新词
+			m_result = QuerymanageDAO.customerProduceWordpat(combition, flag, request);
 		}
 		return "success";
 	}
@@ -618,5 +651,38 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	public void setUnderstandstatus(String understandstatus) {
 		this.understandstatus = understandstatus;
 	}
+
+	public String getNewnormalquery() {
+		return newnormalquery;
+	}
+
+	public void setNewnormalquery(String newnormalquery) {
+		this.newnormalquery = newnormalquery;
+	}
+
+	public String getBusinesswords() {
+		return businesswords;
+	}
+
+	public void setBusinesswords(String businesswords) {
+		this.businesswords = businesswords;
+	}
+
+	public String getRemovequerystatus() {
+		return removequerystatus;
+	}
+
+	public void setRemovequerystatus(String removequerystatus) {
+		this.removequerystatus = removequerystatus;
+	}
+
+	public String getSegmentWord() {
+		return segmentWord;
+	}
+
+	public void setSegmentWord(String segmentWord) {
+		this.segmentWord = segmentWord;
+	}
+	
 
 }

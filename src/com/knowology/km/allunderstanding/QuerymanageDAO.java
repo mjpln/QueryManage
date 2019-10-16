@@ -1209,7 +1209,7 @@ public class QuerymanageDAO {
 			 info.remove(0);
 			}
 			
-			int count  = CommonLibQueryManageDAO.importQuery(getImportQueryDic(info,userCityList),getQueryDic(serviceid),userCityList, serviceid,bussinessFlag,workerid);
+			int count  = CommonLibQueryManageDAO.importQuery(getImportQueryDic(info,userCityList),getQueryDic(serviceid),userCityList, serviceid,bussinessFlag,workerid,0);
 			if(count>0){ 
 				// 将false放入jsonObj的success对象中
 				jsonObj.put("success", true);
@@ -1246,7 +1246,7 @@ public class QuerymanageDAO {
 	public static File exportFile(String serviceid, String normalQuery, String responseType,
 			String interactType){
 		File file = null;
-		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType);
+		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType,0);
 		if (result != null && result.getRowCount() > 0){
 			List colTitle = Arrays.asList("标准问题","客户问题","回复类型","交互类型","来源地市");
 			List text = new ArrayList();
@@ -1383,7 +1383,7 @@ public class QuerymanageDAO {
 	 */
  	public static Map<String, Map<String, String>> getQueryDic(String serviceid) {
 		Map<String, Map<String, String>> map = new HashMap<String, Map<String, String>>();
-		Result rs = CommonLibQueryManageDAO.getQuery(serviceid);
+		Result rs = CommonLibQueryManageDAO.getQuery(serviceid,0);
 		if (rs != null && rs.getRowCount() > 0) {
 			// 循环遍历数据源
 			for (int i = 0; i < rs.getRowCount(); i++) {

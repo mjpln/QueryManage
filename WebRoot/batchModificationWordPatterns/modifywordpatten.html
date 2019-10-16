@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>批量修改词模</title>
+
+<meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+<meta http-equiv="description" content="this is my page">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<!--<link rel="stylesheet" type="text/css" href="./styles.css">-->
+<link type="text/css" rel="stylesheet"
+	href="../easyui/jquery-easyui-1.4.1/themes/default/easyui.css" />
+<link type="text/css" rel="stylesheet"
+	href="../easyui/jquery-easyui-1.4.1/themes/icon.css" />
+<link type="text/css" rel="stylesheet" href="../css/scrollbar.css" />
+<script type="text/javascript" src="../easyui/jquery-1.8.0.min.js"></script>
+<script type="text/javascript"
+	src="../easyui/jquery-easyui-1.4.1/jquery.easyui.min.js"></script>
+<script type="text/javascript"
+	src="../easyui/jquery-easyui-1.4.1/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="./js/modifywordpatten.js"></script>
+
+</head>
+
+<body>
+	<div align="center">
+		<div id="body" class="easyui-layout">
+			<div class="easyui-panel" title="替换词模" style="width:700px;height:200px;padding:10px;" align="center">
+				<div>
+					<table>
+						<tr>
+							<td><label>商    家：</label>
+							</td>
+							<td ><input id="combForBrand" class="easyui-combobox easyui-validatebox"
+								data-options="required:true,novalidate:true,editable:false"
+								style="width:200px"></input>
+							</td>
+						</tr>
+						<tr>
+							<td><label>标 准 问：</label>
+							</td>
+							<td><input id="combForReplace" class="easyui-combobox"
+								style="width:200px"></input>
+							</td>
+						</tr>
+						<tr>
+							<td><label>被替换串：</label></td>
+							<td><input id="target"
+								class="easyui-textbox easyui-validatebox"
+								data-options="required:true,validType:'match',novalidate:true"
+								style="width:200px"></input></td>
+						</tr>
+						<tr>
+							<td><label>目标串：</label></td>
+							<td><input id="replace"
+								class="easyui-textbox easyui-validatebox"
+								data-options="required:true,validType:'match',novalidate:true"
+								style="width:200px"></input></td>
+						</tr>
+					</table>
+				</div>
+				<div style="margin-top: 20px;">
+					<a href="#" class="easyui-linkbutton"
+						data-options="iconCls:'icon-save'" onclick="replace()">替换词模</a>
+				</div>
+			</div>
+			<div class="easyui-panel" title="添加必选词" style="width:700px;height:200px;padding:10px;" align="center">
+				<div>
+					<table>
+						<tr>
+							<td><label>商    家：</label>
+							</td>
+							<td ><input id="combForBrandsec" class="easyui-combobox easyui-validatebox"
+								data-options="required:true,novalidate:true,editable:false"
+								style="width:200px"></input>
+							</td>
+						</tr>
+						<tr>
+							<td><label>客户意图：</label>
+							</td>
+							<td><input id="combForMandatory" class="easyui-combobox"
+								style="width:200px"></input>
+							</td>
+						</tr>
+						<tr>
+							<td><label>必选词类：</label>
+							</td>
+							<td><input id="requiredWord"
+								class="easyui-textbox easyui-validatebox"
+								data-options="required:true,validType:'matchRequire',novalidate:true"
+								style="width:200px"></input>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="margin-top: 20px">
+					<a href="#" class="easyui-linkbutton"
+						data-options="iconCls:'icon-save'" onclick="addMastWordClass()">添加必选词</a>
+				</div>
+			</div>
+			
+			<!-- <div style="margin-top: 20px">
+				<input id="fb" class="easyui-filebox" style="width:280px;" data-option="">
+			</div> -->
+		</div>
+	</div>
+</body>
+</html>

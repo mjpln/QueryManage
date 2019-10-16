@@ -34,6 +34,8 @@ public class FileDownloadAction extends BaseAction{
 			file = QuerymanageDAO.exportFile(serviceid, normalquery, responsetype, interacttype);
 		}else if("wordpatexport".equals(type)){//导出词模
 			file = new File(QuerymanageDAO.FILE_PATH_EXPORT + fileName);
+		}else if("removequerymanageexport".equals(type)){//导出排除问题
+			file = QuerymanageDAO.exportFileRemove(serviceid, normalquery, responsetype, interacttype);
 		}
 		try {
 			if(file != null){

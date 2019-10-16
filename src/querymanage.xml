@@ -138,4 +138,11 @@
 			</result>
         </action>  
     </package>
+    <package name="servicechangewordpat" namespace="/" extends="valid-default,result-global">
+		<action name="changewordpat" class="com.knowology.km.action.BatchChangeWordpatAction" method="execute">
+			<result name="success" type="json">
+				<param name="root">m_result</param>
+			</result>
+		</action>
+	</package>
 </struts>

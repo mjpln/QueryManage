@@ -199,6 +199,11 @@ gen
 
 *.log
 target
+<<<<<<< HEAD
 
+=======
+.mymetadata
+.mystrutsdata
+>>>>>>> refs/remotes/origin/dev-sundj
 # Java class files
 *.class

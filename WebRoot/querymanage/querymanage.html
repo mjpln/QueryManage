@@ -2,252 +2,408 @@
 <html>
 <head>
 
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
-	<link type="text/css" rel="stylesheet" href="../easyui/jquery-easyui-1.4.1/themes/default/easyui.css" />
-	<link type="text/css" rel="stylesheet" href="../easyui/jquery-easyui-1.4.1/themes/icon.css" />
-	<link type="text/css" rel="stylesheet" href="../css/scrollbar.css" />
-	<link href="../umeditor1_2_2-utf8-jsp/themes/default/css/umeditor.css" type="text/css" rel="stylesheet">    
-    <script type="text/javascript" src="../umeditor1_2_2-utf8-jsp/third-party/jquery.min.js"></script>
-    <script type="text/javascript" charset="utf-8" src="../umeditor1_2_2-utf8-jsp/umeditor.config.js"></script>
-    <script type="text/javascript" charset="utf-8" src="../umeditor1_2_2-utf8-jsp/umeditor.min.js"></script>
-    <script type="text/javascript" src="../umeditor1_2_2-utf8-jsp/lang/zh-cn/zh-cn.js"></script>
-	<script type="text/javascript" src="../easyui/jquery-easyui-1.4.1/jquery.easyui.min.js"></script>
-	<script type="text/javascript" src="../easyui/jquery-easyui-1.4.1/locale/easyui-lang-zh_CN.js"></script>
-	<script type="text/javascript" src="../script/json2.js"></script>
-	<script type="text/javascript" src="../script/common.js"></script>
-	<script type="text/javascript" src="../script/loading.js"></script>
-	<script type="text/javascript" src="../script/publicSetup.js"></script>
-	<script type="text/javascript" src="./js/querymanage.js?v=20160608"></script>
- 	
- 	<style type="text/css">
- 	.filterHeaderCls{
-	    background: #e9f1ff;
-	    border-bottom-color: #e9f1ff;
- 	}
- 	.filterBodyCls{
- 		background: #e9f1ff;
- 		border-bottom-color: #e9f1ff;
- 	}
- 	</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+<link type="text/css" rel="stylesheet"
+	href="../easyui/jquery-easyui-1.4.1/themes/default/easyui.css" />
+<link type="text/css" rel="stylesheet"
+	href="../easyui/jquery-easyui-1.4.1/themes/icon.css" />
+<link type="text/css" rel="stylesheet" href="../css/scrollbar.css" />
+<link href="../umeditor1_2_2-utf8-jsp/themes/default/css/umeditor.css"
+	type="text/css" rel="stylesheet">
+<script type="text/javascript"
+	src="../umeditor1_2_2-utf8-jsp/third-party/jquery.min.js"></script>
+<script type="text/javascript" charset="utf-8"
+	src="../umeditor1_2_2-utf8-jsp/umeditor.config.js"></script>
+<script type="text/javascript" charset="utf-8"
+	src="../umeditor1_2_2-utf8-jsp/umeditor.min.js"></script>
+<script type="text/javascript"
+	src="../umeditor1_2_2-utf8-jsp/lang/zh-cn/zh-cn.js"></script>
+<script type="text/javascript"
+	src="../easyui/jquery-easyui-1.4.1/jquery.easyui.min.js"></script>
+<script type="text/javascript"
+	src="../easyui/jquery-easyui-1.4.1/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="../script/json2.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript" src="../script/loading.js"></script>
+<script type="text/javascript" src="../script/publicSetup.js"></script>
+<script type="text/javascript" src="./js/querymanage.js?v=20160608"></script>
+
+<style type="text/css">
+.filterHeaderCls {
+	background: #e9f1ff;
+	border-bottom-color: #e9f1ff;
+}
+
+.filterBodyCls {
+	background: #e9f1ff;
+	border-bottom-color: #e9f1ff;
+}
+</style>
 </head>
-<body onkeydown="myKeyDown()" >
-	<div class="easyui-layout" style="padding:0px">
-	
-	<div id="aa" class="easyui-tabs" style="width:100%;height:auto">
-	
-		<div title="问题详情"  style="float:left;display:inline;padding:5px;position:relative;">
-		
-		<div style="float:left">
-		<div  id='datagrid_tb' class="easyui-panel " data-options="">
-			<table cellspacing="0" cellpadding="0" style="margin:5px;">
-				<tr>
-					<td>
-						<span style="margin-left:10px;">标准问题:</span>
-						<span><input id="normalqueryselect"  class="easyui-combobox" style="width:265px;"/></span>
-					</td>
-					<!-- <td>
+<body onkeydown="myKeyDown()">
+	<div class="easyui-layout" style="padding: 0px">
+
+		<div id="aa" class="easyui-tabs" style="width: 100%; height: auto">
+
+			<div title="问题详情"
+				style="float: left; display: inline; padding: 5px; position: relative;">
+
+				<div style="float: left">
+					<div id='datagrid_tb' class="easyui-panel " data-options="">
+						<table cellspacing="0" cellpadding="0" style="margin: 5px;">
+							<tr>
+								<td><span style="margin-left: 10px;">标准问题:</span> <span><input
+										id="normalqueryselect" class="easyui-combobox"
+										style="width: 265px;" /></span></td>
+								<!-- <td>
 				   <a style="margin-left:10px;" class="easyui-linkbutton" data-options="iconCls:'icon-download'" plain="false" onclick="exportFile()">导出标准问题</a>
 					</td>
 					 -->
-				
-				</tr>
-			</table>
-			<table cellspacing="0" cellpadding="0" style="margin:5px;">
-				<tr>
-					<td>
-						<span style="margin-left:10px;">回复类型:</span>
-                        <span><input id="responsetypeselect"  class="easyui-combobox" style="width:100px;"/></span>
-					</td>
-						<td>
-						<span style="margin-left:10px;">交互类型:</span>
-						 <span><input id="interacttypeselect"  class="easyui-combobox" style="width:100px;"/></span>
-					</td>
-					
-					<td>
-						<form id="qm_form" method="post" visiabled=false></form>
-						<a id="normalquerysearch" style="margin-left:10px;" class="easyui-linkbutton" data-options="iconCls:'icon-search'" plain="false" onclick="searchNormalQuery()">查询</a>
-					</td>
-				</tr>
-			</table>
-			</div>
-		 <table id="querymanagedatagrid"></table>
-		</div>
-		
-	    <div style="float:left;margin-left:5px;">
-	    	<div  id='datagrid_tb2' class="easyui-panel" data-options="">
-			<table cellspacing="0" cellpadding="0" style="margin:5px;">
-				<tr>
-					<td>
-						<span style="margin-left:10px;">文件名称:</span>
-						<form id="formUpload" style="display:inline;" method="post" enctype="multipart/form-data">
-							<input name="upload" id="fileuploadtxt" class="easyui-filebox" data-options="buttonText:'选择文件'" style="width:210px;"/>
-						</form>
-					
-						
-					</td> 
-					<td>
-					<a style="margin-left:10px;" class="easyui-linkbutton" data-options="iconCls:'icon-upload'" plain="false" onclick="upload()">导入问题</a>
-					<a style="margin-left:0;" class="easyui-linkbutton" data-options="iconCls:'icon-download'" plain="false" onclick="exportExcel()">导出问题</a>
-					<!--  <span style="margin-left:10px;color:red"> ^_^：上传文件为Excel表格 内容格式为：标准问题    客户问题    来源地市   多个来源地市以英文逗号分隔</span>-->
-					</td>
-				</tr>
-				<!-- <tr>
+
+							</tr>
+						</table>
+						<table cellspacing="0" cellpadding="0" style="margin: 5px;">
+							<tr>
+								<td><span style="margin-left: 10px;">回复类型:</span> <span><input
+										id="responsetypeselect" class="easyui-combobox"
+										style="width: 100px;" /></span></td>
+								<td><span style="margin-left: 10px;">交互类型:</span> <span><input
+										id="interacttypeselect" class="easyui-combobox"
+										style="width: 100px;" /></span></td>
+
+								<td>
+									<form id="qm_form" method="post" visiabled=false></form> <a
+									id="normalquerysearch" style="margin-left: 10px;"
+									class="easyui-linkbutton" data-options="iconCls:'icon-search'"
+									plain="false" onclick="searchNormalQuery()">查询</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<table id="querymanagedatagrid"></table>
+				</div>
+
+				<div style="float: left; margin-left: 5px;">
+					<!-- 客户问题区域 start -->
+					<div id="customerquery_panel" class="easyui-panel" data-options="border:false" style="width: 550px;">
+						<div id='datagrid_tb2' class="easyui-panel" data-options="">
+							<table cellspacing="0" cellpadding="0" style="margin: 5px;">
+								<tr>
+									<td><span style="margin-left: 10px;">文件名称:</span>
+										<form id="formUpload" style="display: inline;" method="post" enctype="multipart/form-data">
+											<input name="upload" id="fileuploadtxt" class="easyui-filebox" data-options="buttonText:'选择文件'"
+												style="width: 210px;" />
+										</form></td>
+									<td>
+									   <a style="margin-left: 10px;"	class="easyui-linkbutton" data-options="iconCls:'icon-upload'" plain="false" onclick="upload()">导入问题</a>
+									   <a style="margin-left: 0;" class="easyui-linkbutton" data-options="iconCls:'icon-download'" plain="false"
+										   onclick="exportExcel()">导出问题</a> <!--  <span style="margin-left:10px;color:red"> ^_^：上传文件为Excel表格 内容格式为：标准问题    客户问题    来源地市   多个来源地市以英文逗号分隔</span>-->
+									</td>
+								</tr>
+								<!-- <tr>
 					<td></td>
 					<td colspan="2" align="left" style="padding-top: 5px">
 						<a style="margin-left:10px;" class="easyui-linkbutton" data-options="iconCls:'icon-download'" plain="false" onclick="exportCustomerQuery('1')">导出客户问</a>
 					</td>
 				</tr> -->
-			</table>
-			<table cellspacing="0" cellpadding="0" style="margin:5px;">
-				<tr>
-				<td>
-						<span style="margin-left:10px;">客户问题:</span>
-						<span><input id="customerqueryselect" type="text" class="easyui-textbox" style="width:150px;"/></span>
-					</td>
-					<td>
-						<span style="margin-left:10px;">来源地市:</span>
-						<span><input id="cityselect" class="easyui-combotree"  style="width:100px;" type="text" ></input></span>
-					</td>
-					
-					<td>
-				   <a style="margin-left:10px;" class="easyui-linkbutton" data-options="iconCls:'icon-search'" plain="false" onclick="searchCustomerQuery()">查询</a>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<span style="margin-left:10px;">理解状态:</span>
-						<span><select id="understandstatus" class="easyui-combobox"  data-options="editable:false" style="width:100px;" type="text" >
-							<option value="">全部</option>
-							<option value="0">一致</option>
-							<option value="-1">不一致</option>
-							<option value="-2">无结果</option>
-							<option value="none">未理解</option>
-						</select></span>
-					</td>
-					<td>
-						<span style="margin-left:10px;">是否训练:</span>
-						<span><select id="istrain" class="easyui-combobox"  data-options="editable:false" style="width:100px;" type="text" >
-							<option value="">全部</option>
-							<option value="是">是</option>
-							<option value="否">否</option>
-						</select></span>
-					</td>
-				</tr>
-			</table>
-			<table cellspacing="0" cellpadding="0" style="margin:5px;">
-				<tr>
-				
-				</tr>
-			</table>
-			</div>
-		<table id="customerquerydatagrid" ></table>
-		</div>		
-        <div style="clear:both"></div>
-        
-         <!-- 新增客户问题 window start-->
-    	<div id="addquerywindow" class="easyui-window" title="新增问题"
-							data-options="modal:true,closed:true,iconCls:'icon-add'"
-							style="width: 500px; padding: 10px;">
-							<div style="padding: 10px;" id="add_interactiveoptions_div">
-								<span style="font-size: 12px; margin-left: 10px">问题类型：</span>
-								<select id="querytype" class="easyui-combobox" name="responsetype_name" style="width:320px;" data-options="readonly:true,hasDownArrow:false">
-							    			  <option value="客户问题">客户问题</option>
-                                              <option value="标准问题">标准问题</option>
-                                  </select>
-							</div>
-							<div style="padding: 10px;" id="choose_normalquerycombobox_div">
-								<span style="font-size: 12px; margin-left: 10px">标准问题：</span>
-								<input id="normalquerycombobox"  class="easyui-combobox" style="width: 320px;" />	
-							</div>
-						
-							<div style="padding: 10px;" id="input_normalquerycombobox_div">
-								<span style="font-size: 12px; margin-left: 10px">标准问题：</span>
-								<!-- 
+							</table>
+							<table cellspacing="0" cellpadding="0" style="margin: 5px;">
+								<tr>
+									<td><span style="margin-left: 10px;">客户问题:</span> <span><input
+											id="customerqueryselect" type="text" class="easyui-textbox"
+											style="width: 150px;" /></span></td>
+									<td><span style="margin-left: 10px;">来源地市:</span> <span><input
+											id="cityselect" class="easyui-combotree"
+											style="width: 100px;" type="text"></input></span></td>
+
+									<td><a style="margin-left: 10px;"
+										class="easyui-linkbutton" data-options="iconCls:'icon-search'"
+										plain="false" onclick="searchCustomerQuery()">查询</a></td>
+								</tr>
+								<tr>
+									<td><span style="margin-left: 10px;">理解状态:</span>
+									 <span>
+									   <select id="understandstatus" class="easyui-combobox" data-options="editable:false" style="width: 100px;"
+											type="text">
+												<option value="">全部</option>
+												<option value="0">一致</option>
+												<option value="-1">不一致</option>
+												<option value="-2">无结果</option>
+												<option value="none">未理解</option>
+										</select></span></td>
+									<td><span style="margin-left: 10px;">是否训练:</span> <span><select
+											id="istrain" class="easyui-combobox"
+											data-options="editable:false" style="width: 100px;"
+											type="text">
+												<option value="">全部</option>
+												<option value="是">是</option>
+												<option value="否">否</option>
+										</select></span></td>
+								</tr>
+							</table>
+							<table cellspacing="0" cellpadding="0" style="margin: 5px;">
+								<tr>
+
+								</tr>
+							</table>
+						</div>
+						<table id="customerquerydatagrid"></table>
+					</div>
+					<!-- 客户问题区域 end -->
+					<!-- 排除问题区域 start -->
+					<div id="removequery_panel" class="easyui-panel" data-options="border:false" style="width: 550px;">
+						<div id="removequery_datagrid_tb2" class="easyui-panel" data-options="">
+							<table cellspacing="0" cellpadding="0" style="margin: 5px;">
+								<tr>
+									<td><span style="margin-left: 10px;">文件名称:</span>
+										<form id="removequery_formUpload" style="display: inline;" method="post" enctype="multipart/form-data">
+											<input name="removequery_upload" id="removequestion_fileuploadtxt" class="easyui-filebox"
+												data-options="buttonText:'选择文件'" style="width: 210px;" />
+										</form></td>
+									<td>
+									  <a style="margin-left: 10px;" class="easyui-linkbutton" data-options="iconCls:'icon-upload'" plain="false" onclick="removequery_upload()">导入问题</a>
+									  <a style="margin-left: 0;" class="easyui-linkbutton" data-options="iconCls:'icon-download'" plain="false"
+										onclick="removequery_exportExcel()">导出问题</a> <!-- <span style="margin-left:10px;color:red"> ^_^：上传文件为Excel表格 内容格式为：标准问题    客户问题    来源地市   多个来源地市以英文逗号分隔</span>-->
+									</td>
+								</tr>
+							</table>
+							<table cellspacing="0" cellpadding="0" style="margin: 5px;">
+								<tr>
+									<td><span style="margin-left: 10px;">排除问题:</span> 
+									    <span><input
+											id="removequeryselect" type="text" class="easyui-textbox"
+											style="width: 150px;" /></span></td>
+									<td><span style="margin-left: 10px;">来源地市:</span> <span><input
+											id="removequerycityselect" class="easyui-combotree"
+											style="width: 100px;"></input></span></td>
+									<td><a style="margin-left: 10px;"
+										class="easyui-linkbutton" data-options="iconCls:'icon-search'"
+										plain="false" onclick="searchRemoveQuery()">查询</a></td>
+								</tr>
+								<tr>
+									<td><span style="margin-left: 10px;">严格排除:</span> <span>
+										<select id="removequerystatusselect" class="easyui-combobox"
+											data-options="editable:false" style="width: 100px;" type="text">
+												<option value="">全部</option>
+												<option value="是">是</option>
+												<option value="否">否</option>
+										</select>
+									</span></td>
+									<td><span style="margin-left: 10px;">是否训练:</span> <span>
+											<select id="removequeryistrain" class="easyui-combobox"
+											data-options="editable:false" style="width: 100px;">
+												<option value="">全部</option>
+												<option value="是">是</option>
+												<option value="否">否</option>
+										</select>
+									</span></td>
+								</tr>
+							</table>
+							<table cellspacing="0" cellpadding="0" style="margin: 5px;">
+								<tr>
+								</tr>
+							</table>
+						</div>
+						<table id="removequerydatagrid"></table>
+					</div>
+					<!-- 排除问题区域 end -->
+				</div>
+
+				<div style="clear: both"></div>
+
+				<!-- 新增客户问题 window start-->
+				<div id="addquerywindow" class="easyui-window" title="新增问题" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width: 500px; padding: 10px;">
+					<div style="padding: 10px;" id="add_interactiveoptions_div">
+						<span style="font-size: 12px; margin-left: 10px">问题类型：</span> <select
+							id="querytype" class="easyui-combobox" name="responsetype_name"
+							style="width: 320px;"
+							data-options="readonly:true,hasDownArrow:false">
+							<option value="客户问题">客户问题</option>
+							<option value="标准问题">标准问题</option>
+						</select>
+					</div>
+					<div style="padding: 10px;" id="choose_normalquerycombobox_div">
+						<span style="font-size: 12px; margin-left: 10px">标准问题：</span> <input
+							id="normalquerycombobox" class="easyui-combobox"
+							style="width: 320px;" />
+					</div>
+
+					<div style="padding: 10px;" id="input_normalquerycombobox_div">
+						<span style="font-size: 12px; margin-left: 10px">标准问题：</span>
+						<!-- 
 								<input id="normalqueryinput" type="text" class="easyui-textbox" style="width: 320px;" />
 								 -->
-								<textarea name="" cols="5" rows="10" id="normalqueryinput"
-									style="width: 320px; font-size: 12px;"
-									onfocus="if(this.value == '多条以回车分隔'){  this.value =''; this.style.color = '#000000'; } "
-									onblur="if(this.value == ''){this.style.color = '#ACA899'; this.value = '多条以回车分隔'; }"></textarea>
-							</div>
-							
-							<div style="padding: 10px;" id="add_city_div">
-							<span style="font-size: 12px; margin-left: 10px" >问题地市：</span>
-									<span><input id="customerquerycity" class="easyui-combotree"
-											style="width: 320px;" ></input>
-									</span>
-							</div>
-							<div style="padding: 10px;" id="add_customerquery_div">
-								<span style="font-size: 12px; margin-left: 10px">客户问题：</span>
-								<textarea name="" cols="5" rows="10" id="customerquerytextarea"
-									style="width: 320px; font-size: 12px;"
-									onfocus="if(this.value == '多条以回车分隔'){  this.value =''; this.style.color = '#000000'; } "
-									onblur="if(this.value == ''){this.style.color = '#ACA899'; this.value = '多条以回车分隔'; }"></textarea>
-							</div>
-							
-							<div id="add-dd"></div>
-							
-							<div style='text-align: center'>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-add'" plain="false"
-									onclick="addQueryAct(this)">保存</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-cancel'" plain="false"
-									onclick="btnCancel('addquerywindow')">取消</a>
-							</div>
-						</div>
-         <!-- 新增客户问题  window end--> 
-		<!--客户问题编辑   window start -->
-		<div id="editnormalquerywin" class="easyui-window" title="修改"  data-options="modal:true,closed:true,iconCls:'icon-edit'" style="width: 500px; height: 460px; padding: 10px;" >
-	    	
-		
-		<div style="padding: 10px;" id="edit_input_normalquerycombobox_div">
-								<span style="font-size: 12px; margin-left: 10px">标准问题：</span>
-								<input id="editnormalqueryinput" type="text" class="easyui-textbox" style="width: 320px;" />
-		</div>
-		
-		<div style="padding: 10px;" id="edit_editresponsetypecombobox_div">
-		               <span style="font-size: 12px; margin-left: 10px" >回复类型：</span>
-                        <span><input id="editresponsetype"  class="easyui-combobox" style="width:320px;"/></span>
-		</div>
-		
-		<div style="padding: 10px;" id="edit_editinteracttype_div" >
-		                 <span style="font-size: 12px; margin-left: 10px">交互类型：</span>
-						 <span><input id="editinteracttype"  class="easyui-combobox" style="width:320px;"/></span>
-		</div>
-		<input type="hidden" id="normalquery-rowids"/>
-		<div style='text-align: center'>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-add'" plain="false"
-									onclick="editNormalQuery()">保存</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-cancel'" plain="false"
-									onclick="btnCancel('editnormalquerywin')">取消</a>
-		</div>
-		
-	    </div>
-	    	
-		<!--客户问题编辑   window end -->
-		
-		
-		<!--客户问题编辑   window start -->
-		
-		<div id="editcustomerquerywin" class="easyui-window" title="修改"  data-options="modal:true,closed:true,iconCls:'icon-edit'" style="width: 500px; height: 460px; padding: 10px;" >
-	    	<div style="padding: 10px;" id="edit_input_normalquerycombobox_div2">
-								<span style="font-size: 12px; margin-left: 10px">标准问题：</span>
-								<input id="editnormalqueryinput2" type="text"   readonly="readonly" style="width: 320px;border-style:none;" />
-		    </div>
-	    	<div style="padding: 10px;" id="edit_input_customerquerycombobox_div">
-								<span style="font-size: 12px; margin-left: 10px">客户问题：</span>
-								<input id="editcustomerquery" type="text" class="easyui-textbox" style="width: 320px;" />
-			</div>
-	    <div style="padding: 10px;" id="edit_combotree_customerquerycombobox_div">
-							<span style="font-size: 12px; margin-left: 10px" >来源地市：</span>
-									<span><input id="editcustomerquerycity" class="easyui-combotree"
-											style="width: 320px;" ></input>
-									</span>
-		</div>
-		<!-- 
+						<textarea name="" cols="5" rows="10" id="normalqueryinput"
+							style="width: 320px; font-size: 12px;"
+							onfocus="if(this.value == '多条以回车分隔'){  this.value =''; this.style.color = '#000000'; } "
+							onblur="if(this.value == ''){this.style.color = '#ACA899'; this.value = '多条以回车分隔'; }"></textarea>
+					</div>
+
+					<div style="padding: 10px;" id="add_city_div">
+						<span style="font-size: 12px; margin-left: 10px">问题地市：</span> <span><input
+							id="customerquerycity" class="easyui-combotree"
+							style="width: 320px;"></input> </span>
+					</div>
+					<div style="padding: 10px;" id="add_customerquery_div">
+						<span style="font-size: 12px; margin-left: 10px">客户问题：</span>
+						<textarea name="" cols="5" rows="10" id="customerquerytextarea"
+							style="width: 320px; font-size: 12px;"
+							onfocus="if(this.value == '多条以回车分隔'){  this.value =''; this.style.color = '#000000'; } "
+							onblur="if(this.value == ''){this.style.color = '#ACA899'; this.value = '多条以回车分隔'; }"></textarea>
+					</div>
+
+					<div id="add-dd"></div>
+
+					<div style='text-align: center'>
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-add'" plain="false"
+							onclick="addQueryAct(this)">保存</a> <a href="javascript:void(0)"
+							class="easyui-linkbutton" data-options="iconCls:'icon-cancel'"
+							plain="false" onclick="btnCancel('addquerywindow')">取消</a>
+					</div>
+				</div>
+				<!-- 新增客户问题  window end-->
+         		<!-- 新增排除问题 window start-->
+    			<div id="addremovequerywindow" class="easyui-window" title="新增排除问题" data-options="modal:true,closed:true,iconCls:'icon-add'" style="width: 500px; padding: 10px;">
+					<div style="padding: 10px;" id="add_interactiveoptions_div">
+						<span style="font-size: 12px; margin-left: 10px">问题类型：</span>
+						<select id="removequerytype" class="easyui-combobox" name="responsetype_name" style="width:320px;" data-options="readonly:true,hasDownArrow:false">
+		    				<option value="排除问题">排除问题</option>
+                            <option value="标准问题">标准问题</option>
+                        </select>
+					</div>
+					<div style="padding: 10px;" id="choose_remove_normalquerycombobox_div">
+						<span style="font-size: 12px; margin-left: 10px">标准问题：</span>
+						<input id="removenormalquerycombobox"  class="easyui-combobox" style="width: 320px;" />	
+					</div>
+					<div style="padding: 10px;" id="input_remove_normalquerycombobox_div">
+						<span style="font-size: 12px; margin-left: 10px">标准问题：</span>
+						<!-- 
+						<input id="normalqueryinput" type="text" class="easyui-textbox" style="width: 320px;" />
+						 -->
+						<textarea name="" cols="5" rows="10" id="removenormalqueryinput"
+							style="width: 320px; font-size: 12px;"
+							onfocus="if(this.value == '多条以回车分隔'){  this.value =''; this.style.color = '#000000'; } "
+							onblur="if(this.value == ''){this.style.color = '#ACA899'; this.value = '多条以回车分隔'; }"></textarea>
+					</div>
+					<div style="padding: 10px;" id="add_city_div">
+						<span style="font-size: 12px; margin-left: 10px" >问题地市：</span>
+						<span>
+							<input id="removequerycity" class="easyui-combotree" style="width: 320px;" ></input>
+						</span>
+					</div>
+					<div style="padding: 10px;">
+						<span style="font-size: 12px; margin-left: 10px">严格排除：</span>
+						<select id="removequerystatus" class="easyui-combobox"  style="width:100px;">
+                            <option value="否">否</option>
+							<option value="是">是</option>						
+						</select>
+					</div>
+					<div style="padding: 10px;" id="add_customerquery_div">
+						<span style="font-size: 12px; margin-left: 10px">排除问题：</span>
+						<textarea name="" cols="5" rows="10" id="removequerytextarea"
+							style="width: 320px; font-size: 12px;"
+							onfocus="if(this.value == '多条以回车分隔'){  this.value =''; this.style.color = '#000000'; } "
+							onblur="if(this.value == ''){this.style.color = '#ACA899'; this.value = '多条以回车分隔'; }"></textarea>
+					</div>
+					<div id="remove_add-dd"></div>
+					<div style='text-align: center'>
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-add'" plain="false"
+							onclick="addRemoveQueryAct(this)">保存</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-cancel'" plain="false"
+							onclick="btnCancel('addremovequerywindow')">取消</a>
+					</div>
+				</div>
+         		<!-- 新增排除问题  window end-->
+				<!-- 新词 window start -->
+				<div id="addwordwindow" class="easyui-window" title="新词录入"
+					data-options="modal:true,closed:true,iconCls:'icon-add'"
+					style="width: 600px; padding: 10px;">
+					<div style="text-align: center;" id="addworddiv">
+						<table cellspacing="0" cellpadding="0">
+							<tr align="center">
+								<td><span>系统发现新词，是否录入系统？</span></td>
+							</tr>
+							<tr>
+								<td>
+									<div id="addwordtable"></div>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<div style="text-align: center;">
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-add'" plain="false"
+							onclick="addWordAct(this)">保存</a> <a href="javascript:void(0)"
+							class="easyui-linkbutton" data-options="iconCls:'icon-cancel'"
+							plain="false" onclick="btnCancel('addwordwindow')">取消</a>
+					</div>
+				</div>
+				<!-- 新词 window end -->
+
+				<!--客户问题编辑   window start -->
+				<div id="editnormalquerywin" class="easyui-window" title="修改"
+					data-options="modal:true,closed:true,iconCls:'icon-edit'"
+					style="width: 500px; height: 460px; padding: 10px;">
+
+
+					<div style="padding: 10px;" id="edit_input_normalquerycombobox_div">
+						<span style="font-size: 12px; margin-left: 10px">标准问题：</span> <input
+							id="editnormalqueryinput" type="text" class="easyui-textbox"
+							style="width: 320px;" />
+					</div>
+
+					<div style="padding: 10px;" id="edit_editresponsetypecombobox_div">
+						<span style="font-size: 12px; margin-left: 10px">回复类型：</span> <span><input
+							id="editresponsetype" class="easyui-combobox"
+							style="width: 320px;" /></span>
+					</div>
+
+					<div style="padding: 10px;" id="edit_editinteracttype_div">
+						<span style="font-size: 12px; margin-left: 10px">交互类型：</span> <span><input
+							id="editinteracttype" class="easyui-combobox"
+							style="width: 320px;" /></span>
+					</div>
+					<input type="hidden" id="normalquery-rowids" />
+					<div style='text-align: center'>
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-add'" plain="false"
+							onclick="editNormalQuery()">保存</a> <a href="javascript:void(0)"
+							class="easyui-linkbutton" data-options="iconCls:'icon-cancel'"
+							plain="false" onclick="btnCancel('editnormalquerywin')">取消</a>
+					</div>
+
+				</div>
+
+				<!--客户问题编辑   window end -->
+
+
+				<!--客户问题编辑   window start -->
+
+				<div id="editcustomerquerywin" class="easyui-window" title="修改"
+					data-options="modal:true,closed:true,iconCls:'icon-edit'"
+					style="width: 500px; height: 460px; padding: 10px;">
+					<div style="padding: 10px;"
+						id="edit_input_normalquerycombobox_div2">
+						<span style="font-size: 12px; margin-left: 10px">标准问题：</span> <input
+							id="editnormalqueryinput2" type="text" readonly="readonly"
+							style="width: 320px; border-style: none;" />
+					</div>
+					<div style="padding: 10px;"
+						id="edit_input_customerquerycombobox_div">
+						<span style="font-size: 12px; margin-left: 10px">客户问题：</span> <input
+							id="editcustomerquery" type="text" class="easyui-textbox"
+							style="width: 320px;" />
+					</div>
+					<div style="padding: 10px;"
+						id="edit_combotree_customerquerycombobox_div">
+						<span style="font-size: 12px; margin-left: 10px">来源地市：</span> <span><input
+							id="editcustomerquerycity" class="easyui-combotree"
+							style="width: 320px;"></input> </span>
+					</div>
+					<!-- 
 		<div style="padding: 10px;" id="edit_input_normalquerycombobox_div2">
 								<span style="font-size: 12px; margin-left: 10px">是否允许匹配过长问题：</span>
 								<input id="istolong" class="easyui-combobox" style="width: 250px;" data-options="
@@ -265,133 +421,173 @@
 	    	"/>
 		</div>
 		 -->
-		
-		<input type="hidden" id="editrowidx"/>
-		<div style='text-align: center'>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-add'" plain="false"
-									onclick="editCustomerQuery()">保存</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-cancel'" plain="false"
-									onclick="btnCancel('editcustomerquerywin')">取消</a>
-		</div>
-		
-	    </div>
-	    	
-		<!--客户问题编辑   window end -->
-		
-		<!-- 理解详情窗口 win start-->
-			<div id="understandresultwin" class="easyui-window" title="理解详情"  data-options="modal:true,closed:true,iconCls:'icon-edit'" style="width: 500px; height: 460px; padding: 10px;" >
-				<div style="padding: 10px;" id="understandresult_div"></div>
-				
-				<div style="display:none" id="understandnormalquery_div"></div>
-				<div style="display:none" id="understandcustomerquery_div"></div>
-				<div style="display:none" id="understandcitycode_div"></div>
-				<div style="display:none" id="understandreason_div"></div>
-				<div style='text-align: center'>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-cancel'" plain="false"
-									onclick="reportError()">报错</a>
+
+					<input type="hidden" id="editrowidx" />
+					<div style='text-align: center'>
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-add'" plain="false"
+							onclick="editCustomerQuery()">保存</a> <a href="javascript:void(0)"
+							class="easyui-linkbutton" data-options="iconCls:'icon-cancel'"
+							plain="false" onclick="btnCancel('editcustomerquerywin')">取消</a>
+					</div>
+
 				</div>
-			</div>
-		<!-- 理解详情窗口 win end-->
-		
-		<!-- 删除标准问题页面 window start -->	
-		
-		<div id="deletenormalquerywin" class="easyui-window" title="删除标准问题(批量)"  data-options="modal:true,closed:true,iconCls:'icon-delete'" style="width: 500px; height: 240px; padding: 10px;" >
-		<div style="padding: 10px;" id="delete_normalquerycombobox_div">
-		               <span style="font-size: 12px; margin-left: 10px" >选择标准问题：</span>
-                        <span><input id="deletenormalquery"  class="easyui-combobox" style="width:320px;"/></span>
-		</div>
-		<div style='text-align: center'>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-delete'" plain="false"
-									onclick="deleteNormalquery()">删除</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-cancel'" plain="false"
-									onclick="btnCancel('deletenormalquerywin')">取消</a>
-		</div>
-	    </div>
-	    	
-		<!-- 删除标准问题页面 window end-->	
-			
-			
-		<!-- 迁移标准问题页面 window start -->	 
-		
-		<div id="transfernormalquerywin" class="easyui-window" title="迁移标准问题"  data-options="modal:true,closed:true,iconCls:'icon-redo'" style="width: 500px; height: 295px; padding: 10px;" >
-		<div style="padding: 10px;" id="service_div">
-		               <span style="font-size: 12px; margin-left: 10px" >模型级别：</span>
-                        <span><select id="service" class="easyui-combotree"style="width: 320px;"></select></span>
-		</div>
-		<div style='text-align: center'>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-ok'" plain="false"
-									onclick="transferNormalQuery()">确认</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-cancel'" plain="false"
-									onclick="btnCancel('transfernormalquerywin')">取消</a>
-		</div>
-	    </div>
-		
-		
-		<!-- 移标准问题页面 window end-->	
-		
-		
-			<!-- 标准问题对应场景配置页面 window start -->	
-		
-		<div id="normalquerytoscenarioswin" class="easyui-window" title="标准问题对应场景关系配置"  data-options="modal:true,closed:true,iconCls:'icon-edit'" style="width: 500px; height: 295px; padding: 10px;" >
-		<div style="padding: 10px;" id="service_div">
-		               <span style="font-size: 12px; margin-left: 10px" >场景名称：</span>
-                        <span><select id="scenariosname" class="easyui-combotree"style="width: 320px;"></select></span>
-		</div>
-		<input type="hidden" id="kbdataid"/>
-		<input type="hidden" id="rowindex"/>
-		<div style='text-align: center'>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-delete'" plain="false"
-									onclick="saveScenarios()">确认</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton"
-									data-options="iconCls:'icon-cancel'" plain="false"
-									onclick="btnCancel('normalquerytoscenarioswin')">取消</a>
-		</div>
-	    </div>
-		
-		
-		<!-- 标准问题对应场景配置页面 window end-->		
-		
-	   <div id="wordpatwin" class="easyui-window" title="词模详情"  data-options="modal:true,closed:true,iconCls:'icon-wordpat',maximized:true,maximizable:true" >
-	   </div>
-	   <div id="faqwin" class="easyui-window" title="答案详情"  data-options="modal:true,closed:true,iconCls:'icon-servicehit',maximized:true,maximizable:true" >
-	   </div>
-	    <div id="relatequerywin" class="easyui-window" title="相关问题详情"  data-options="modal:true,closed:true,iconCls:'icon-help',maximized:true,maximizable:true" >
-	   </div>
-	     <div id="rulewin" class="easyui-window" title="规则详情"  data-options="modal:true,closed:true,iconCls:'icon-detail',maximized:true,maximizable:true" >
-	   </div>
-	  <div id="sharewin" class="easyui-window" title="共享语义"  data-options="modal:true,closed:true,iconCls:'icon-share',maximized:true,maximizable:true" >
-	   </div>
-	  	
-	  	<div id="produceWordpatwin" class="easyui-window" style="width:500px;height:200px;padding:10px;" title="选择训练模式 " data-options="modal:true,closed:true,iconCls:'icon-wordpat'" >
-           <div class="easyui-layout" data-options="fit:true">
-				<div data-options="region:'center'" style="padding:10px;">
-					<div style="/*! margin: 0 auto; */position: absolute;left: 25%;top: 37%;">
-						<span style="margin-left:10px;">训练模式 :</span>
-	                    <span><input id="produceWordpatselect"  class="easyui-combobox" style="width:150px;"/></span>
-	                    <input id="produceWordpatType" type="hidden" style="width:100px;"/>
+
+				<!--客户问题编辑   window end -->
+
+				<!-- 理解详情窗口 win start-->
+				<div id="understandresultwin" class="easyui-window" title="理解详情"
+					data-options="modal:true,closed:true,iconCls:'icon-edit'"
+					style="width: 500px; height: 460px; padding: 10px;">
+					<div style="padding: 10px;" id="understandresult_div"></div>
+
+					<div style="display: none" id="understandnormalquery_div"></div>
+					<div style="display: none" id="understandcustomerquery_div"></div>
+					<div style="display: none" id="understandcitycode_div"></div>
+					<div style="display: none" id="understandreason_div"></div>
+					<div style='text-align: center'>
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-cancel'" plain="false"
+							onclick="reportError()">报错</a>
 					</div>
 				</div>
-				<div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
-					<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="javascript:doProduceWordpat()" style="width:80px">确定</a>
-					<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#produceWordpatwin').window('close');" style="width:80px">取消</a>
+				<!-- 理解详情窗口 win end-->
+
+				<!-- 删除标准问题页面 window start -->
+
+				<div id="deletenormalquerywin" class="easyui-window"
+					title="删除标准问题(批量)"
+					data-options="modal:true,closed:true,iconCls:'icon-delete'"
+					style="width: 500px; height: 240px; padding: 10px;">
+					<div style="padding: 10px;" id="delete_normalquerycombobox_div">
+						<span style="font-size: 12px; margin-left: 10px">选择标准问题：</span> <span><input
+							id="deletenormalquery" class="easyui-combobox"
+							style="width: 320px;" /></span>
+					</div>
+					<div style='text-align: center'>
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-delete'" plain="false"
+							onclick="deleteNormalquery()">删除</a> <a href="javascript:void(0)"
+							class="easyui-linkbutton" data-options="iconCls:'icon-cancel'"
+							plain="false" onclick="btnCancel('deletenormalquerywin')">取消</a>
+					</div>
 				</div>
+
+				<!-- 删除标准问题页面 window end-->
+
+
+				<!-- 迁移标准问题页面 window start -->
+
+				<div id="transfernormalquerywin" class="easyui-window"
+					title="迁移标准问题"
+					data-options="modal:true,closed:true,iconCls:'icon-redo'"
+					style="width: 500px; height: 295px; padding: 10px;">
+					<div style="padding: 10px;" id="service_div">
+						<span style="font-size: 12px; margin-left: 10px">模型级别：</span> <span><select
+							id="service" class="easyui-combotree" style="width: 320px;"></select></span>
+					</div>
+					<div style='text-align: center'>
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-ok'" plain="false"
+							onclick="transferNormalQuery()">确认</a> <a
+							href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-cancel'" plain="false"
+							onclick="btnCancel('transfernormalquerywin')">取消</a>
+					</div>
+				</div>
+
+
+				<!-- 移标准问题页面 window end-->
+
+
+				<!-- 标准问题对应场景配置页面 window start -->
+
+				<div id="normalquerytoscenarioswin" class="easyui-window"
+					title="标准问题对应场景关系配置"
+					data-options="modal:true,closed:true,iconCls:'icon-edit'"
+					style="width: 500px; height: 295px; padding: 10px;">
+					<div style="padding: 10px;" id="service_div">
+						<span style="font-size: 12px; margin-left: 10px">场景名称：</span> <span><select
+							id="scenariosname" class="easyui-combotree" style="width: 320px;"></select></span>
+					</div>
+					<input type="hidden" id="kbdataid" /> <input type="hidden"
+						id="rowindex" />
+					<div style='text-align: center'>
+						<a href="javascript:void(0)" class="easyui-linkbutton"
+							data-options="iconCls:'icon-delete'" plain="false"
+							onclick="saveScenarios()">确认</a> <a href="javascript:void(0)"
+							class="easyui-linkbutton" data-options="iconCls:'icon-cancel'"
+							plain="false" onclick="btnCancel('normalquerytoscenarioswin')">取消</a>
+					</div>
+				</div>
+
+
+				<!-- 标准问题对应场景配置页面 window end-->
+
+				<div id="wordpatwin" class="easyui-window" title="词模详情"
+					data-options="modal:true,closed:true,iconCls:'icon-wordpat',maximized:true,maximizable:true">
+				</div>
+				<div id="faqwin" class="easyui-window" title="答案详情"
+					data-options="modal:true,closed:true,iconCls:'icon-servicehit',maximized:true,maximizable:true">
+				</div>
+				<div id="relatequerywin" class="easyui-window" title="相关问题详情"
+					data-options="modal:true,closed:true,iconCls:'icon-help',maximized:true,maximizable:true">
+				</div>
+				<div id="rulewin" class="easyui-window" title="规则详情"
+					data-options="modal:true,closed:true,iconCls:'icon-detail',maximized:true,maximizable:true">
+				</div>
+				<div id="sharewin" class="easyui-window" title="共享语义"
+					data-options="modal:true,closed:true,iconCls:'icon-share',maximized:true,maximizable:true">
+				</div>
+				
+                <!-- 客户问题批量训练窗口 window start -->
+				<div id="produceWordpatwin" class="easyui-window"
+					style="width: 500px; height: 200px; padding: 10px;" title="选择训练模式 "
+					data-options="modal:true,closed:true,iconCls:'icon-wordpat'">
+					<div class="easyui-layout" data-options="fit:true">
+						<div data-options="region:'center'" style="padding: 10px;">
+							<div style="position: absolute; left: 25%; top: 37%;">
+								<span style="margin-left: 10px;">训练模式 :</span> <span><input
+									id="produceWordpatselect" class="easyui-combobox"
+									style="width: 150px;" /></span> <input id="produceWordpatType"
+									type="hidden" style="width: 100px;" />
+							</div>
+						</div>
+						<div data-options="region:'south',border:false"
+							style="text-align: right; padding: 5px 0 0;">
+							<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'"
+								href="javascript:void(0)"
+								onclick="javascript:doProduceWordpat()" style="width: 80px">确定</a>
+							<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'"
+								href="javascript:void(0)"
+								onclick="$('#produceWordpatwin').window('close');"
+								style="width: 80px">取消</a>
+						</div>
+					</div>
+
+
+				</div>
+				<!-- 客户问题批量训练窗口 window end -->
+	   			<!-- 排除问题批量训练新增别名窗口 window start -->
+	   			<div id="addotherwordwindow" class="easyui-window" style="width:500px;padding:10px;" title="词类别名录入" data-options="modal:true,closed:true,iconCls:'icon-wordpat'" >
+           			<div style="padding: 10px;" >
+           			<span style="font-size: 12px; margin-left: 10px">系统发现新词，是否作为词条别名录入系统？</span>
+           			</div>
+           			<div style="padding: 10px;" id="addOtherWordDiv">
+           			</div>
+           			<div style="padding: 10px;" id="addotherwordtable">
+           			  
+           			   
+           			</div> 
+						<div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
+							<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="javascript:doRemoveNewWord()" style="width:80px">确定</a>
+							<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#addotherwordwindow').window('close');" style="width:80px">取消</a>
+						</div>
+					
+	   			</div>
+	   			<!-- 排除问题批量训练新增别名窗口 window end -->				
 			</div>
-		
-           
-	   </div>
-	</div>
-		
-	</div>
 
-
-
+		</div>
 </body>
 </html>

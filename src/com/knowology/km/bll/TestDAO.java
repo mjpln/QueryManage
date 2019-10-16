@@ -1060,7 +1060,7 @@ public class TestDAO {
 	 */
  	public static Map<String, Map<String, String>> getQueryDic(String serviceid) {
 		Map<String, Map<String, String>> map = new HashMap<String, Map<String, String>>();
-		Result rs = CommonLibQueryManageDAO.getQuery(serviceid);
+		Result rs = CommonLibQueryManageDAO.getQuery(serviceid,0);
 		if (rs != null && rs.getRowCount() > 0) {
 			// 循环遍历数据源
 			for (int i = 0; i < rs.getRowCount(); i++) {

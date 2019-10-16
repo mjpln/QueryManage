@@ -80,7 +80,7 @@ public class ImportExportDAO {
 	 *            业务ID
 	 * @return
 	 */
-	public static Object importFile(String filename, String serviceid) {
+	public static Object importFile(String filename, String serviceid,int queryType) {
 		// 定义返回的json串
 		JSONObject jsonObj = new JSONObject();
 		Object sre = GetSession.getSessionByKey("accessUser");
@@ -164,7 +164,7 @@ public class ImportExportDAO {
 				jsonObj.put("msg", e.getMessage());	
 				return jsonObj;
 			}
-			int count  = CommonLibQueryManageDAO.importQuery(map,getQueryDic(serviceid),serviceCityList, serviceid,bussinessFlag,workerid);
+			int count  = CommonLibQueryManageDAO.importQuery(map,getQueryDic(serviceid,queryType),serviceCityList, serviceid,bussinessFlag,workerid,queryType);
 			if(count>0){ 
 				// 将false放入jsonObj的success对象中
 				jsonObj.put("success", true);
@@ -267,9 +267,9 @@ public class ImportExportDAO {
 	 *@return
 	 *@returnType Map<String,Map<String,String>>
 	 */
- 	public static Map<String, Map<String, String>> getQueryDic(String serviceid) {
+ 	public static Map<String, Map<String, String>> getQueryDic(String serviceid,int querytype) {
 		Map<String, Map<String, String>> map = new HashMap<String, Map<String, String>>();
-		Result rs = CommonLibQueryManageDAO.getQuery(serviceid);
+		Result rs = CommonLibQueryManageDAO.getQuery(serviceid,querytype);
 		if (rs != null && rs.getRowCount() > 0) {
 			// 循环遍历数据源
 			for (int i = 0; i < rs.getRowCount(); i++) {
@@ -335,7 +335,7 @@ public class ImportExportDAO {
 	public static File exportFile(String serviceid, String normalQuery, String responseType,
 			String interactType){
 		File file = null;
-		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType);
+		Result result = CommonLibQueryManageDAO.exportQuery(serviceid, normalQuery, responseType, interactType,0);
 		if (result != null && result.getRowCount() > 0){
 			List colTitle = Arrays.asList("标准问题","客户问题","回复类型","交互类型","来源地市");
 			List text = new ArrayList();
@@ -1445,7 +1445,7 @@ public class ImportExportDAO {
 							Map<String, ImportQuery> queryMap = importKbData.getQueryMap();
 							if(queryMap != null){
 								importKbData.setQueryMap(null);
-								Map<String, String> queryDic = CommonLibQueryManageDAO.getCustomerQueryDic(importKbData.getKbdataId());
+								Map<String, String> queryDic = CommonLibQueryManageDAO.getCustomerQueryDic(importKbData.getKbdataId(),0);
 								for(ImportQuery importQuery : queryMap.values()){
 									String query = importQuery.getQuery();
 									//客户问不重复
