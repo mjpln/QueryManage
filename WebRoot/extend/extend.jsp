@@ -38,28 +38,22 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	        <table>
   				<tr>
   					<td>
-    					<div id="standardWord" class="easyui-datagrid" style="float:left;"></div>
+    					<div id="addServiceWord" class="easyui-datagrid" style="padding:5px;"></div>
     				</td>
-    				<td>
-						<div id="otherWord" class="easyui-datagrid" style="float:right;"></div>
-					</td>
   				</tr>
   			</table>
 
-			<div id="standardWordTool"> 
-				<div>词类选择<input id="wordclasssel" type="text" class="easyui-combobox" style="width:150px;height:25px"/></div>
-				<input id="wordsel" type="text" class="easyui-textbox" style="width:150px;height:25px"/>
-				<a href="javascript:void(0)" id="standardWordSel" class="easyui-linkbutton" data-options="iconCls:'icon-search'" plain="false" onclick="selStandardWord()">查询</a>
-				
-				<div style="text-align: right;float: right">
-					<a href="javascript:void(0)" id="standardWordSave" class="easyui-linkbutton" data-options="iconCls:'icon-save'" plain="false" onclick="wordSave('standard')">保存</a>
-					<a href="javascript:void(0)" id="standardWordCancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="wordCancel('standard')">取消</a>
-					<a href="javascript:void(0)" id="standardWordAdd" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="wordAdd('standard')">新增</a>
-					<a href="javascript:void(0)" id="standardWordEdit" class="easyui-linkbutton" data-options="iconCls:'icon-edit'" plain="false" onclick="wordEdit('standard')">修改</a>
-				</div>
+			<div id="addServiceWordTool"> 
+				<label  style="padding:10px;font-size: 12px">业务词:</label>
+				<input id="serviceword" type="text" class="easyui-textbox"  style="width:150px"/>				
+				<a href="javascript:void(0)" id="standardWordSel" class="easyui-linkbutton" data-options="iconCls:'icon-search'" plain="false" onclick="selServiceWord()">查询</a>
+				<a href="javascript:void(0)" id="serviceWordSave" class="easyui-linkbutton" data-options="iconCls:'icon-save'" plain="false" onclick="wordSave('serviceWord')">保存</a>
+				<a href="javascript:void(0)" id="serviceWordCancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="wordCancel('serviceWord')">取消</a>
+				<a href="javascript:void(0)" id="serviceWordAdd" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="serviceWordAdd('serviceWord')">新增</a>
+				<a class="easyui-linkbutton" onclick="updateKbdata()"  data-options="iconCls:'icon-reload'">更新知识库</a>
 			</div>
 	
-  			<div id="otherWordTool"> 
+<!--   			<div id="otherWordTool"> 
 				<input id="wordsel2" type="text" class="easyui-textbox" style="width:150px;height:25px"/>
 				<a href="javascript:void(0)" id="otherWordSel" class="easyui-linkbutton" data-options="iconCls:'icon-search'" plain="false" onclick="selOtherWord()">查询</a>
 				<div style="text-align: right;float: right">
@@ -67,18 +61,18 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 					<a href="javascript:void(0)" id="otherWordCancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" plain="false" onclick="wordCancel('other')">取消</a>
 					<a href="javascript:void(0)" id="otherWordAdd" class="easyui-linkbutton" data-options="iconCls:'icon-add'" plain="false" onclick="wordAdd('other')">新增</a>
 					<a href="javascript:void(0)" id="otherWordEdit" class="easyui-linkbutton" data-options="iconCls:'icon-edit'" plain="false" onclick="wordEdit('other')">修改</a>
-					<!--  <a class="easyui-linkbutton" onclick="updateKbdata()"  data-options="iconCls:'icon-reload'">更新知识库</a>-->
+					 <a class="easyui-linkbutton" onclick="updateKbdata()"  data-options="iconCls:'icon-reload'">更新知识库</a>
 				</div>
-			</div>
+			</div> -->
   
-  			<div id="wordCity" class="easyui-dialog" style="padding:10px;display:none;">
+<!--   			<div id="wordCity" class="easyui-dialog" style="padding:10px;display:none;">
   				<br>
   				<span style="margin:10px 10px 10px 0px">词类名称:</span><input id="worclassname" type="text" readonly="readonly" editable="false" class="easyui-textbox" style="width:300px;"/><br/><br/>
     			<span style="margin:10px 10px 10px 0px">词条名称:</span><input id="wordname" type="text" readonly="readonly" editable="false" class="easyui-textbox" style="width:300px;"/><br/><br/>
     			<span style="margin:10px 10px 10px 0px">归属地市:</span><textarea id ="cityname" name="" cols="6" rows="6" readonly="readonly"  style="width:295px;font-size:12px;" ></textarea><br/><br/>
     			<span style="margin:10px 10px 10px 0px">编辑地市:</span><input id="selLocal" class="easyui-combotree" style="width:300px;">
    				<a class="easyui-linkbutton"  plain="false" onclick="update()">更新</a>
-  			</div>
+  			</div> -->
 	    </div>
 	</div>
 			<!-- 新增 dialog -->
@@ -189,7 +183,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	<script type="text/javascript" src="easyui/jquery-easyui-1.4.1/jquery.easyui.min.js"></script>
 	<script type="text/javascript" src="easyui/jquery-easyui-1.4.1/locale/easyui-lang-zh_CN.js"></script>
 	<script type="text/javascript" src="extend/extends.js"></script>
- 	<script type="text/javascript" src="serviceword/js/serviceword.js"></script>
+ 	<script type="text/javascript" src="extend/serviceword.js"></script>
 	<script type="text/javascript" src="script/json2.js"></script>
 	<script type="text/javascript" src="script/common.js"></script>
 	<script type="text/javascript" src="script/publicSetup.js"></script>

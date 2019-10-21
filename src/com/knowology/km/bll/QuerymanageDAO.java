@@ -4476,8 +4476,8 @@ public class QuerymanageDAO {
 				jsonObj.put("msg", "生成成功!");
 				// 调用更新支持库的方法
 				if (StringUtils.isNotBlank(combition)) {
-//					 Object m_result = ExtendDao.updateKB();
-//					 logger.info(JSONObject.toJSONString(m_result));
+					 Object m_result = ExtendDao.updateKB();
+					 logger.info(JSONObject.toJSONString(m_result));
 				}
 
 			} else {
@@ -4491,16 +4491,16 @@ public class QuerymanageDAO {
 			logger.info("新增错别字词表词条条数："+rows);
 		}
 		// 根节点下识别业务规则-业务名称获取-标准问：业务词获取增加业务词词模
-		String ktdataid = "";// 业务词标准ID
+		String kbdataid = "";// 业务词标准ID
 		if (StringUtils.isNotBlank(businesswords)) {
 			JSONObject objResult = (JSONObject) addBusinessWordpat(businesswords, serviceid, request);
-			ktdataid = objResult.getString("ktdataid");
+			kbdataid = objResult.getString("kbdataid");
 			logger.info("新增业务词词模结果:" + objResult.getString("msg"));
 		}
 		// 新词表添加记录
 		if (!CollectionUtils.isEmpty(newWords)) {
-			String countNewWord = addNewWordInfo(StringUtils.join(newWords, "@@"), ktdataid);
-			logger.info("新增新词结果:" + countNewWord);
+			int countNewWord = addNewWordInfo(StringUtils.join(newWords, "@@"), kbdataid);
+			logger.info("新增新词条数:" + countNewWord);
 		}
 		return jsonObj;
 	}
@@ -4640,13 +4640,12 @@ public class QuerymanageDAO {
 	 * 增加新词记录
 	 * 
 	 * @param newWords
-	 *            格式：新词，是否业务词##新词,是否业务词
+	 *            格式：新词，是否业务词@@新词,是否业务词
 	 * @param ktdataid
 	 *            业务词标准问ID
 	 * @return
 	 */
-	public static String addNewWordInfo(String combition, String ktdataid) {
-		String str = "新增成功";
+	public static int addNewWordInfo(String combition, String ktdataid) {
 		List<List<String>> list = new ArrayList<List<String>>();
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
@@ -4687,11 +4686,7 @@ public class QuerymanageDAO {
 		if (!CollectionUtils.isEmpty(list)) {
 			count = CommonLibNewWordInfoDAO.insertNewWordInfo(list, userid);
 		}
-		if (count < 1) {
-			str = "新增失败";
-		}
-
-		return str;
+		return count;
 	}
 
 	/**
@@ -4831,16 +4826,14 @@ public class QuerymanageDAO {
 		for (int i = 0; i < words.length; i++) {
 			wordpat += words[i].toUpperCase() + "近类*";
 		}
-		wordpat = wordpat.substring(0, wordpat.lastIndexOf("*")) + "#有序#编者=\"业务生成\"&业务X=\""
-				+ businesswords.replace("-", "").toUpperCase() + "\"";
+		wordpat = wordpat.substring(0, wordpat.lastIndexOf("*")) + "#有序#编者=\"业务生成\"&业务X=<!"
+				+ wordpat.substring(0, wordpat.lastIndexOf("*")) + ">";
 		wordpat = SimpleString.SimpleWordPatToWordPat(wordpat);
 		if (Check.CheckWordpat(wordpat, request)) {
 			List<String> combList = new ArrayList<String>();
 			combList.add(wordpat);
 			combList.add("全国");
-			combList.add(normalquery);
 			combList.add(kbdataid);
-			combList.add(queryid);
 			combListList.add(combList);
 		} else {
 			obj.put("success", false);
@@ -4858,7 +4851,7 @@ public class QuerymanageDAO {
 				obj.put("msg", "新增业务词词模失败!");
 			}
 		}
-		obj.put("ktdataid", kbdataid);
+		obj.put("kbdataid", kbdataid);
 
 		return obj;
 
@@ -5099,8 +5092,6 @@ public class QuerymanageDAO {
 	 *            词条#词类ID#别名|别名 @@词条#词类ID#别名|别名
 	 * @param flag
 	 *            是否更新知识库
-	 * @param level
-	 *            新词重要程度
 	 * @return
 	 */
 	public static Object addOtherWord(String combition, boolean flag) {
@@ -5164,6 +5155,7 @@ public class QuerymanageDAO {
 
 		// 新增别名
 		int index = 0;
+		int  filtercount = 0;
 		if (!CollectionUtils.isEmpty(otherWordList)) {
 			for (int i = 0; i < otherWordList.size(); i++) {
 				List<String> obj = (List<String>) otherWordList.get(i);
@@ -5172,6 +5164,8 @@ public class QuerymanageDAO {
 				String wordClassId = obj.get(2);
 				if (!CommonLibWordDAO.existOtherWord(otherword, wordId)) {
 					index = CommonLibWordDAO.insertOtherWord(otherword, wordId, wordClassId, user);
+				}else{
+					filtercount++;
 				}
 			}
 		}
@@ -5179,7 +5173,10 @@ public class QuerymanageDAO {
 			jsonObj.put("success", true);
 			jsonObj.put("msg", "保存成功!");
 
-		} else {
+		} else if ((index+filtercount) == otherWordList.size()){
+			jsonObj.put("success", true);
+			jsonObj.put("msg", "保存成功!");
+		}else {
 			jsonObj.put("success", false);
 			jsonObj.put("msg", "保存失败!");
 		}

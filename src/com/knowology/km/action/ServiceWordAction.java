@@ -3,7 +3,7 @@ package com.knowology.km.action;
 import com.knowology.km.bll.ServiceWordDao;
 
 
-public class ServiceWordAction {
+public class ServiceWordAction extends BaseAction{
 	private Object m_result;
 	private int page;
 	private int rows;
@@ -14,6 +14,12 @@ public class ServiceWordAction {
 	private String wordid;
 	private String word;
 	private String wordclass;
+	//业务词
+	private String serviceword;
+	//其他别名
+	private String otherword;
+	//业务名
+	private String serviceid;
 	
 	public String execute() {
 		if ("getStandardWordClass".equals(type)){
@@ -28,6 +34,10 @@ public class ServiceWordAction {
 			m_result = ServiceWordDao.selOtherWord(ioa,wordclass,word,rows,page);
 		} else if ("getStandardWordByOtherWord".equals(type)){
 			m_result = ServiceWordDao.getStandardWordByOtherWord(ioa,wordclass,word,rows,page);
+		} else if ("getServiceWord".equals(type)){//查找业务词
+			m_result = ServiceWordDao.getServiceWord(serviceword,rows,page);
+		} else if ("insertServiceWord".equals(type)){//查找业务词
+			m_result = ServiceWordDao.insertServiceWord(serviceword,otherword,serviceid,httpRequest);
 		}
 		return "success";
 	}
@@ -79,4 +89,24 @@ public class ServiceWordAction {
 	public void setWordclass(String wordclass) {
 		this.wordclass = wordclass;
 	}
+	public String getServiceword() {
+		return serviceword;
+	}
+	public void setServiceword(String serviceword) {
+		this.serviceword = serviceword;
+	}
+	public String getOtherword() {
+		return otherword;
+	}
+	public void setOtherword(String otherword) {
+		this.otherword = otherword;
+	}
+	public String getServiceid() {
+		return serviceid;
+	}
+	public void setServiceid(String serviceid) {
+		this.serviceid = serviceid;
+	}
+	
+	
 }
