@@ -4782,11 +4782,11 @@ public class QuerymanageDAO {
 			return obj;
 		}
 		// 获取业务名称获取ID
-		businessserviceid = getBusinessServiceId("业务名称获取", userid, servicetype, ruleserviceid);
+		businessserviceid = getBusinessServiceId("业务词获取业务", userid, servicetype, ruleserviceid);
 		// 业务名称获取节点ID不存在
 		if (StringUtils.isBlank(businessserviceid)) {
 			obj.put("success", false);
-			obj.put("msg", "业务根节点下【识别规则业务-业务名称获取】不存在");
+			obj.put("msg", "业务根节点下【识别规则业务-业务词获取业务】不存在");
 			return obj;
 		}
 
@@ -4807,7 +4807,7 @@ public class QuerymanageDAO {
 			// 新增业务词标准问
 			if (!(Boolean) addQueryByBussinessWord(user, businessserviceid, normalquery)) {
 				obj.put("success", false);
-				obj.put("msg", "业务根节点下【识别规则业务-业务名称获取】标准问【" + normalquery + "】不存在");
+				obj.put("msg", "业务根节点下【识别规则业务-业务词获取业务】标准问【" + normalquery + "】不存在");
 				return obj;
 			}
 			Map<String, Map<String, String>> map = CommonLibQueryManageDAO.getNormalQueryDic(businessserviceid);
@@ -4815,8 +4815,9 @@ public class QuerymanageDAO {
 			kbdataid = maps.get("kbdataid");
 
 		}
-		Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalquery, kbdataid);
-		String queryid = queryRs.getRows()[0].get("id").toString();
+		//不在查询扩展问ID
+//		Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(normalquery, kbdataid);
+//		String queryid = queryRs.getRows()[0].get("id").toString();
 
 		// 插入问题库自动学习词模
 		List<List<String>> combListList = new ArrayList<List<String>>();
@@ -4827,7 +4828,7 @@ public class QuerymanageDAO {
 			wordpat += words[i].toUpperCase() + "近类*";
 		}
 		wordpat = wordpat.substring(0, wordpat.lastIndexOf("*")) + "#有序#编者=\"业务生成\"&业务X=<!"
-				+ wordpat.substring(0, wordpat.lastIndexOf("*")) + ">";
+				+ wordpat.substring(0, wordpat.lastIndexOf("*")) + ">&置信度=\"1.1\"";
 		wordpat = SimpleString.SimpleWordPatToWordPat(wordpat);
 		if (Check.CheckWordpat(wordpat, request)) {
 			List<String> combList = new ArrayList<String>();

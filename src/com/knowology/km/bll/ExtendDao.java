@@ -59,6 +59,87 @@ public class ExtendDao {
 		String cityCode ="";
 		String url ="";
 		String provinceCode ="";
+		//商家行业
+		String serviceApplication = service;
+		//处理业务库服务名称
+		if(service.indexOf("->")!=-1){
+			String[] businessArr = service.split("->", 3);
+			String industry = businessArr[0];
+			service = industry+"->通用商家->问题库应用";
+		}
+		
+
+		// 根据服务获取相应的四层结构的接口入参的serviceinfo串
+		String serviceInfo = MyUtil.getServiceInfo(service, "继承高级分析", "", false,cityCode);
+		// 获取调用高级分析接口的接口串
+		String queryObject = MyUtil.getDAnalyzeQueryObject(phone, query,service, serviceInfo);
+
+		// add by sundj 20191022 新增根据本行业商家获取业务X--------------------------------------
+		//根据本商家去高级分析 
+		Result configResult = CommonLibMetafieldmappingDAO.getConfigValue("知识点继承业务配置", serviceApplication);
+		String returnvalue = null;
+		if(configResult != null && configResult.getRowCount() > 0){
+			String id = configResult.getRows()[0].get("name").toString();
+			String businessServiceInfo = MyUtil.getServiceInfoWithID(serviceApplication, "继承高级分析", "",
+					id, false,city.replace(",", "|"));
+			// 获取调用高级分析接口的接口串
+			String businessQueryObject = MyUtil.getDAnalyzeQueryObject(phone, query,serviceApplication, businessServiceInfo);
+			logger.info("本商家继承高级分析接口的输入串：" + businessQueryObject);
+			JSONObject resJson = (JSONObject)DetailAnalyzeResultByLocal(businessQueryObject,city,attr6);
+			 returnvalue = resJson.getString("result");
+//			if(StringUtils.isNotBlank(result)){
+//				//行业商家的高级分析结果
+//				JSONArray resultJsonIns = jsonObj.getJSONArray("result");
+//				JSONArray ja = new JSONArray();
+//				for(int i=0;i<resultJsonIns.size();i++){
+//					//
+//					JSONObject jsonObjIns = resultJsonIns.getJSONObject(i);
+//					JSONArray jsonObjArray = jsonObjIns.getJSONArray("creditresults");
+//					if(jsonObjArray != null & jsonObjArray.size()>0){//替换业务X						
+//						JSONArray busiArray = new JSONArray();
+//						for(int j=0;j<jsonObjArray.size();j++){
+//							JSONObject json = jsonObjArray.getJSONObject(i);
+//							if(json.containsKey("attr8")){
+//								json.put("attr8", result);
+//							}
+//							busiArray.add(json);
+//						}
+//						jsonObjIns.put("creditresults", busiArray);
+//					}
+//					ja.add(jsonObjIns);
+//					
+//				}
+//				
+//				jsonObj.put("result", ja);
+//			}
+//			
+		}
+		logger.info("行业商家继承高级分析接口的输入串：" + queryObject);
+		jsonObj = (JSONObject)DetailAnalyzeResult(queryObject,city,attr6,returnvalue);
+		if(!jsonObj.getBoolean("success")){
+		   return jsonObj;
+		}
+		
+		return jsonObj;
+	}
+	
+	
+	/**
+	 * 行业商家高级分析
+	 * @param queryObject
+	 * @param city
+	 * @param attr6
+	 * @param returnvalue  本商家业务X返回值
+	 * @return
+	 */
+	public static Object DetailAnalyzeResult(String queryObject, String city,String attr6,String returnvalue){
+		// 定义返回的json串
+		JSONObject jsonObj = new JSONObject();
+		JSONArray jsonArr = new JSONArray();
+		String cityCode ="";
+		String url ="";
+		String provinceCode ="";
+		
 		if(city!=null){
 			cityCode = city.replace(",", "|");
 			if(!"全国".equals(cityCode)){
@@ -81,22 +162,11 @@ public class ExtendDao {
 			url = GetLoadbalancingConfig.getDetailAnalyzeUrlByProvince("默认");
 			logger.info("继承高级分析请求【默认】地址：" + url);
 		}
-		//处理业务库服务名称
-		if(service.indexOf("->")!=-1){
-			String[] businessArr = service.split("->", 3);
-			String industry = businessArr[0];
-			service = industry+"->通用商家->问题库应用";
-		}
 		
 		// 获取高级分析的客户端
-	
+		
 		NLPCaller4WSDelegate NLPCaller4WSClient = getServiceClient.NLPCaller4WSClient(url);
-		// 根据服务获取相应的四层结构的接口入参的serviceinfo串
-		String serviceInfo = MyUtil.getServiceInfo(service, "继承高级分析", "", false,cityCode);
-		// 获取调用高级分析接口的接口串
-		String queryObject = MyUtil.getDAnalyzeQueryObject(phone, query,service, serviceInfo);
-		logger.info("继承高级分析接口的输入串：" + queryObject);
-				
+		
 		// 定义接口的返回串变量
 		String result = "";
 		// 判断接口是否为null
@@ -210,8 +280,14 @@ public class ExtendDao {
 							// 将entitiesArray数组中第r个转换为json对象
 							JSONObject entitiesObj = JSONObject.parseObject(entitiesArray.get(r).toString());
 							if(entitiesObj.getString("key").contains("X")){
-								abs = abs.replace("X", "["+entitiesObj.getString("value")+"]");
-								attr8X = entitiesObj.getString("value");
+								if(StringUtils.isNotBlank(returnvalue)){//本商家的业务X不为空,使用本商家的业务X
+									abs = abs.replace("X", "["+returnvalue+"]");
+									attr8X = returnvalue;									
+								}else{
+									abs = abs.replace("X", "["+entitiesObj.getString("value")+"]");
+									attr8X = entitiesObj.getString("value");									
+								}
+
 							}
 							if(entitiesObj.getString("key").contains("Y")){
 								abs = abs.replace("Y", "["+entitiesObj.getString("value")+"]");
@@ -234,6 +310,7 @@ public class ExtendDao {
 								attr13N = entitiesObj.getString("value");
 							}
 						}
+
 						o.put("attr8", attr8X);
 						o.put("attr9", attr9Y);
 						o.put("attr10", attr10Z);
@@ -241,7 +318,7 @@ public class ExtendDao {
 						o.put("attr12", attr12M);
 						o.put("attr13", attr13N);
 						// 得到返回值内容，并生成returnvalue对象
-//						o.put("returnvalue", sb_returnValue.toString());
+						//o.put("returnvalue", sb_returnValue.toString());
 						
 						String abstractID = abstractsObj.getString("abstractID");
 						//被继承摘要不存在数据库中，执行过滤
@@ -318,6 +395,143 @@ public class ExtendDao {
 			// 将jsonArr放入jsonObj的result对象中
 			jsonObj.put("result", jsonArr);
 			jsonObj.put("abscity", getCityInfo(city));
+		} catch (Exception e) {
+			e.printStackTrace();
+			// 出现错误
+			// 将false放入jsonObj的success对象中
+			jsonObj.put("success", false);
+			// 将返回结果解析失败放入jsonObj的result对象中
+			jsonObj.put("result", "返回结果解析失败");
+		}
+		return jsonObj;
+	}
+	/**
+	 * 本商家高级分析
+	 * @param queryObject
+	 * @param city
+	 * @param attr6
+	 * @return
+	 */
+	public static Object DetailAnalyzeResultByLocal(String queryObject, String city,String attr6){
+		// 定义返回的json串
+		JSONObject jsonObj = new JSONObject();
+		JSONArray jsonArr = new JSONArray();
+		String cityCode ="";
+		String url ="";
+		String provinceCode ="";
+		
+		if(city!=null){
+			cityCode = city.replace(",", "|");
+			if(!"全国".equals(cityCode)){
+				provinceCode = cityCode.split("\\|")[0];
+				provinceCode = provinceCode.substring(0,2)+"0000";
+				if("010000".equals(provinceCode)||"000000".equals(provinceCode)){//如何为集团、电渠编码 去默认url
+					provinceCode="默认";
+					url = GetLoadbalancingConfig.getDetailAnalyzeUrlByProvince("默认");
+				}else{
+					url = GetLoadbalancingConfig.getDetailAnalyzeUrlByProvinceCode(provinceCode);
+				}
+				logger.info("继承高级分析请求【"+GetLoadbalancingConfig.cityCodeToCityName.get(provinceCode)+"】地址：" + url);
+			}else{
+				cityCode ="全国";
+				url = GetLoadbalancingConfig.getDetailAnalyzeUrlByProvince("默认");
+				logger.info("继承高级分析请求【默认】地址：" + url);
+			}
+		}else{
+			cityCode ="全国";
+			url = GetLoadbalancingConfig.getDetailAnalyzeUrlByProvince("默认");
+			logger.info("继承高级分析请求【默认】地址：" + url);
+		}
+		
+		// 获取高级分析的客户端
+		
+		NLPCaller4WSDelegate NLPCaller4WSClient = getServiceClient.NLPCaller4WSClient(url);
+		
+		// 定义接口的返回串变量
+		String result = "";
+		// 判断接口是否为null
+		if (NLPCaller4WSClient == null) {
+			// 将false放入jsonObj的success对象中
+			jsonObj.put("success", false);
+			// 将分析失败信息放入jsonObj的result对象中
+			jsonObj.put("result", "分析失败");
+			return jsonObj;
+		}
+		try {
+			// 定义接口的detailAnalyze方法获取返回串
+			result = NLPCaller4WSClient.detailAnalyze(queryObject);
+			// 替换掉返回串中的回车符
+			result = result.replace("\n", "");
+			logger.info("高级分析接口的输出串：" + result);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			// 出现错误
+			// 将false放入jsonObj的success对象中
+			jsonObj.put("success", false);
+			// 将分析失败信息放入jsonObj的result对象中
+			jsonObj.put("result", "分析失败");
+			return jsonObj;
+		}
+		// 判断返回串是否为"接口请求参数不合规范！"、""、null
+		if ("接口请求参数不合规范！".equals(result) || "".equals(result) || result == null) {
+			// 将false放入jsonObj的success对象中
+			jsonObj.put("success", false);
+			// 将分析失败信息放入jsonObj的result对象中
+			jsonObj.put("result", "结果出现错误");
+			return jsonObj;
+		}
+		try {
+			// 将接口返回的json串,反序列化为json数组
+			JSONArray jsonArray = JSONArray.parseArray(result);
+			// 循环遍历jsonArray数组
+			for (int i = 0; i < jsonArray.size(); i++) {
+				// 将jsonArray数组中的第i个转换成json对象
+				JSONObject obj = JSONObject.parseObject(jsonArray.get(i).toString());
+
+				// 得到多个结果的json串
+				JSONArray creditResults = new JSONArray();
+
+				// 将obj对象中key为CreditResults的value变成json数组
+				JSONArray creditResultsArray = obj.getJSONArray("creditResults");
+				// 遍历循环creditResultsArray数组,只取第一组结果
+				for (int k = 0; k < 1; k++) {
+					// 将creditResultsArray数组中第k个转换为json对象
+					JSONObject creditResultsObj = JSONObject.parseObject(creditResultsArray.get(k).toString());
+					// 获取creditResultsObj对象中credit
+				//	String credit = creditResultsObj.getString("credit");
+					// 将creditResultsObj对象中key为abstracts的value变成abstractsArray数组
+					JSONArray abstractsArray = creditResultsObj.getJSONArray("abstracts");
+					// 遍历循环abstractsArray数组
+					for (int m = 0; m < abstractsArray.size(); m++) {
+						// 将abstractsArray数组中第m个转换为json对象
+						JSONObject abstractsObj = JSONObject.parseObject(abstractsArray.get(m).toString());
+
+						
+						// 将abstractsObj对象中key为WordPatterns的value变成wordPatternsArray数组
+						JSONArray wordPatternsArray = abstractsObj.getJSONArray("wordPatterns");
+						// 遍历循环abstractsArray数组，只取第一个
+						// 将wordPatternsArray数组中第n个转换为json对象
+						JSONObject wordPatternsObj = JSONObject.parseObject(wordPatternsArray.get(0).toString());
+
+						// 将wordPatternsObj对象中key为entities的value变成entitiesArray数组
+						JSONArray entitiesArray = wordPatternsObj.getJSONArray("entities");
+
+						for (int r = 0; r < entitiesArray.size(); r++) {
+							// 将entitiesArray数组中第r个转换为json对象
+							JSONObject entitiesObj = JSONObject.parseObject(entitiesArray.get(r).toString());
+							String rkey = entitiesObj.getString("key");
+							if("业务X".equals(rkey)){
+								jsonObj.put("result", entitiesObj.getString("value"));
+								break;
+							}
+
+						}
+					}
+				}
+			}
+			// 将true放入jsonObj的success对象中
+			jsonObj.put("success", true);
 		} catch (Exception e) {
 			e.printStackTrace();
 			// 出现错误

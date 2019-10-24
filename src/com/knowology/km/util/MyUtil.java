@@ -1477,8 +1477,121 @@ public class MyUtil {
 		}
 		return newMap;
 	}
+	/**
+	 * 根据服务获取相应的四层结构的接口入参的serviceinfo串
+	 * 
+	 * @param business参数服务
+	 * @param type参数不同的调用接口类型
+	 * @param service参数type为同义词模时才需要使用的参数其他的不起作用
+	 * @param isall参数是否使用全行业
+	 * @param city 城市编码
+	 * @return 接口入参的serviceinfo串
+	 */
+	public static String getServiceInfoWithID(String business, String type,
+			String service,String ServiceId, boolean isall,String city) {
+		// 定义接口入参的serviceInfo的变量
+		String serviceInfo = "";
+		// 判断服务是否含有->
+		if (business.contains("->")) {
+			// 将服务按照->拆分
+			String[] businessArr = business.split("->", 3);
+			// 定义SQL语句
+			StringBuilder sql = new StringBuilder();
+			// 查询商家、组织、应用配置表的SQL语句
+			sql.append("select serviceroot,compservice,analyzeconfig from m_industryapplication2services where industry=? and organization=? and application=?");
+			// 定义绑定参数集合
+			List<String> lstpara = new ArrayList<String>();
+			// 绑定商家参数
+			lstpara.add(businessArr[0]);
+			// 绑定组织参数
+			lstpara.add(businessArr[1]);
+			// 绑定应用参数
+			lstpara.add(businessArr[2]);
+			try {
+				// 执行SQL语句，获取相应的数据源
+				Result rs = Database.executeQuery(sql.toString(), lstpara.toArray());
+				// 判断数据源不为null且含有数据
+				if (rs != null && rs.getRowCount() > 0) {
+					// 获取serviceroot信息
+					String serviceroot = rs.getRows()[0].get("serviceroot")
+							.toString();
+					// 获取compservice信息
+					String compservice = rs.getRows()[0].get("compservice") != null ? rs
+							.getRows()[0].get("compservice").toString()
+							: "";
+					// 获取analyzeconfig信息
+					String analyzeconfig = rs.getRows()[0].get("analyzeconfig") != null ? rs
+							.getRows()[0].get("analyzeconfig").toString()
+							: "";
+					// 将serviceroot按照|拆分
+					String[] servicerootArr = serviceroot.split("\\|");
+					// 定义去除行业主题的后的集合
+					List<String> servicerootList = new ArrayList<String>();
+					// 判断当前是否为同义词模，同义词模需要加上新增的业务"相似问题-xxx"对应的serviceID
+					if ("同义词模".equals(type)) {
+						servicerootList.add(service);
+					}
+
+					// 循环遍历serviceroot数组
+					for (String ser : servicerootArr) {
+						// 判断业务是否含有行业主题，且组织不为通用组织
+						if (ser.contains("行业主题")
+								&& !servicerootArr[1].equals("通用组织")) {
+						} else {
+							// 将业务放入集合中
+							servicerootList.add(ser);
+						}
+					}
+					// 生成auto词模时个性化业务不参与匹配
+					if ("问题生成词模".equals(type) || ("生成词模").equals(type)||("相似问题").equals(type)) {
+						servicerootList.remove("个性化业务");
+					}
+					// 获取业务根的业务id集合
+//					List<String> lstServiceRootId = getServiceIDByServiceLst(servicerootList);
+					List<String> lstServiceRootId = new ArrayList<String>();
+					lstServiceRootId.add(ServiceId);
+					// 定义存放对比业务的集合
+					List<String> compserviceList = new ArrayList<String>();
+					// 定义存放对比业务的业务id集合
+					List<String> lstCompServiceId = new ArrayList<String>();
+					// 判断compservice是否为空
+					if (compservice != null && !"".equals(compservice)) {
+						// 将compservice按照|拆分，并存放到集合中
+						compserviceList = Arrays.asList(compservice
+								.split("\\|"));
+						// 获取对比业务的业务id集合
+						lstCompServiceId = getServiceIDByServiceLst(compserviceList);
+//						lstCompServiceId.add(ServiceId);
+					}
+					// 判断业务根id的个数是否为0
+					if (lstServiceRootId.size() > 0) {
+						
+						// 根据不同接口类型获取不同的接口串中的serviceInfo
+						serviceInfo = getServiceInfoByType(type, analyzeconfig,
+								lstServiceRootId, lstCompServiceId, isall,city);
+						
+					} else {
+						// 没有查询到相应的业务id，直接返回空的serviceInfo字符串
+						serviceInfo = "{}";
+					}
+				} else {
+					// 没有查询到，直接返回空的serviceInfo字符串
+					serviceInfo = "{}";
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				// 出现错误，直接返回空的serviceInfo字符串
+				serviceInfo = "{}";
+			}
+		} else {
+			// 服务不含有->，直接返回空的serviceInfo字符串
+			serviceInfo = "{}";
+		}
+		return serviceInfo;
+	}
 	
 }
+
 
 class MapKeyComparator implements Comparator<String> {
 	public int compare(String str1, String str2) {

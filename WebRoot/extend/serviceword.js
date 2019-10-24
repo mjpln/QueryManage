@@ -107,7 +107,7 @@ function wordSave(flag){
 
 			}
 		}
-		console.log("ok");
+
 		$.ajax({
 			type : "POST",
 			url : "serviceword.action",
@@ -132,7 +132,7 @@ function wordSave(flag){
 			$.messager.alert('系统异常', "请求数据失败!", "error");
 		}
 		});
-		console.log("ok1");
+
 }
 
 // 取消按钮

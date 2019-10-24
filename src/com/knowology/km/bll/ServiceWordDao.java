@@ -280,7 +280,7 @@ public class ServiceWordDao {
 		} 
 		//新增词类别名
 		//新增业务词别名
-		String combition = serviceword+"##"+otherword;
+		String combition = serviceword+"# #"+otherword;
 		JSONObject addobj =(JSONObject)QuerymanageDAO.addOtherWord(combition, false);
 
 		if (!addobj.getBoolean("success")){

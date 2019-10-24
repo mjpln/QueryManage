@@ -36,7 +36,7 @@ public class ServiceWordAction extends BaseAction{
 			m_result = ServiceWordDao.getStandardWordByOtherWord(ioa,wordclass,word,rows,page);
 		} else if ("getServiceWord".equals(type)){//查找业务词
 			m_result = ServiceWordDao.getServiceWord(serviceword,rows,page);
-		} else if ("insertServiceWord".equals(type)){//查找业务词
+		} else if ("insertServiceWord".equals(type)){//添加业务词
 			m_result = ServiceWordDao.insertServiceWord(serviceword,otherword,serviceid,httpRequest);
 		}
 		return "success";
