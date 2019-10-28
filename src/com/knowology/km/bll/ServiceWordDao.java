@@ -288,7 +288,6 @@ public class ServiceWordDao {
 			jsonObj.put("msg", "新增失败,新增业务词别名失败！");
 			return jsonObj;
 		} 
-	    String wordclassId = addobj.getString("wordclassId");
 		//新增词模	    
 		JSONObject updateObj = (JSONObject)QuerymanageDAO.addBusinessWordpat(serviceword, serviceid, request);
 		

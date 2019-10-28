@@ -4722,9 +4722,9 @@ public class QuerymanageDAO {
 			for (int i = 0; i < rs.getRowCount(); i++) {
 				if (rs.getRows()[i].get("wordpat") != null) {
 					String wordpat = rs.getRows()[i].get("wordpat").toString();
-					String[] split = wordpat.split("业务X=");
+					String[] split = wordpat.split("业务X=<!");
 					if (split.length > 1) {
-						String bussinessword = split[1];
+						String bussinessword = split[1].split(">")[0].replace("近类", "");
 						wordpatMap.put(bussinessword, rs.getRows()[i].get("wordpatid").toString());
 					}
 				}
@@ -4756,15 +4756,16 @@ public class QuerymanageDAO {
 		String businessserviceid = "";
 		// 标准问题ID
 		String kbdataid = "";
+		String brand = "";
 		// 根据serviceid获取根节点
-		Result result = CommonLibQueryManageDAO.getServicePIdById(serviceid);
+		Result result = CommonLibMetafieldmappingDAO.getConfigValue("问题库业务根对应关系配置",servicetype);;
+		
 
 		if (result != null && result.getRowCount() > 0) {
-			for (int i = 0; i < result.getRowCount(); i++) {
-				if ("0".equals(result.getRows()[i].get("parentid").toString())) {
-					rootserviceid = result.getRows()[i].get("serviceid").toString();
-					break;
-				}
+			brand = result.getRows()[0].get("name").toString();
+			Result rootrs = CommonLibServiceDAO.getServiceID("'"+brand+"'", "'"+brand+"'");
+			if(rootrs != null && rootrs.getRowCount() > 0){
+				rootserviceid = rootrs.getRows()[0].get("serviceid").toString();
 			}
 		}
 		// 根据根节点查询下级的识别规则业务节点
