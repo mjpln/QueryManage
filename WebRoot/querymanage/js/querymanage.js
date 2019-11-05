@@ -2818,10 +2818,10 @@ function getOOVWord(oovWord, normalQuery,segmentWord) {
 }
 
 function addWordAct() {
-	//新词数组
-	var word = [];
 	//新词重要程度数据
 	var wordlevel = [];
+	//新词列表
+	var combition = [];
 	//业务词
 	var wordbusiness = [];
 	
@@ -2829,16 +2829,18 @@ function addWordAct() {
 	for (var i = 0; i < wordlen; i++) {
 		if ($('#wordcheckbox_' + i).is(':checked')) {
 			var otherword = $("#word_"+i).val().replace(new RegExp("\r\n", 'g'),"\n");
-			word.push($('#wordclass_' + i).val()+"|"+otherword);
-			wordlevel.push($('#levelcombobox_' + i).val());
+			otherword = otherword.replace("\n","|")
+
+			wordlevel.push($('#levelcombobox_' + i).val())
 			if("0" == $('#businesscombobox_' + i).val()){//判断是否是业务词
 				wordbusiness.push($('#wordclass_' + i).val());
 			}
+			combition.push($('#wordclass_' + i).val()+"# #"+otherword);
 			
 		}
 	}
 	
-	if (word.length == 0) {
+	if (combition.length == 0) {
 		$.messager.alert('系统提示', '请至少选择一个新词', "info");
 		return;
 	}
@@ -2864,7 +2866,7 @@ function addWordAct() {
 	}
 	//判断业务词是否连续
 	if(query.toUpperCase().indexOf(wordbusiness.join('').toUpperCase()) == -1 ){//业务词不连续
-		$.messager.alert('系统提示', '选择的业务词【' + wordbusiness.join('，') + '】在标准问题中不连续，只能选择一个作为业务词', "info");
+		$.messager.alert('系统提示', '选择的业务词【' + wordbusiness.join(',') + '】在标准问题中不连续，只能选择一个作为业务词', "info");
 		return;
 	}
 	
@@ -2876,9 +2878,8 @@ function addWordAct() {
 		data : {
 			type : 'addWord',
 			serviceid : serviceid ,
-			combition : word.join('#'),
+			combition : combition.join('#'),
 			normalquery : trim(query),
-			newnormalquery: newquery,
 			flag : wordlevel.join('#'),
 			businesswords: wordbusiness.join('-'),
 			segmentWord:$("#addwordwindow-segmentWord").val()
@@ -3689,7 +3690,7 @@ function loadNewWord(newWord, oovWord,querytype,oovWordQuery,segmentWord) {
 		if(content != null && content !=''){
 		wordHtml += '<tr><td style="padding:5px;"><input type="checkbox" name="otherwordcheckbox" id="otherwordcheckbox_' + i + '" value="" /></td>';
 		wordHtml += '<td style="padding:5px;"><span><input type="text" name="otherword_'+i+'" id="otherword_' + i + '" value="' + content + '" /></span></td>';
-		wordHtml += '<td style="padding:5px;"><span><textarea name="" cols="5" rows="2" id="word_'+i+'" style="width: 120px; font-size: 12px;" placeholder="多个别名回车分隔"></textarea></span></td>';		
+		wordHtml += '<td style="padding:5px;"><span><textarea name="" cols="5" rows="2" id="worditems_'+i+'" style="width: 120px; font-size: 12px;" placeholder="多个别名回车分隔"></textarea></span></td>';		
 		wordHtml += '<td style="padding:5px;"><select id="levelcombobox_' + i + '" style="width:100px;"><option value="0">重要</option><option value="1" selected>不重要</option></select></td>';
 		wordHtml += '</tr>';
 		}
@@ -3735,7 +3736,7 @@ function doRemoveNewWord() {
 
 			var combition = "";
 			//别名
-			var otherword = $("#word_"+i).val().replace(new RegExp("\r\n", 'g'),'\n');
+			var otherword = $("#worditems_"+i).val().replace(new RegExp("\r\n", 'g'),'\n');
 			if(word.length == 0){ //词条为空时，新词作为词类填入
 				combition += newWord + "# #" + otherword.replace('\n','|');
 			}else{

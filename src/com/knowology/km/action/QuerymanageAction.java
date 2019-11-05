@@ -142,7 +142,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if("addquery".equals(type)){//新增问题
 			m_result = QuerymanageDAO.addQuery(serviceid,querytype.trim(), normalquery.trim(), multinormalquery, customerquery.trim(), citycode, request);
 		}else if("producewordpat".equals(type)){//生成词模
-			m_result = AnalyzeDAO.produceWordpat(combition,flag,request);
+			m_result = AnalyzeDAO.produceWordpat_new(combition,flag);
 		}else if("produceallwordpat".equals(type)){//全量生成词模
 			m_result = AnalyzeDAO.produceAllWordpat(serviceid,flag,request);
 		}else if("updatecustomerquery".equals(type)){//修改客户问题
@@ -230,7 +230,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if ("importkb".equals(type)) {// 导入语义
 			m_result = ImportExportDAO.importKBData(filename, serviceid);
 		} else if ("addWord".equals(type)) {// 新增词条
-			m_result = QuerymanageDAO.addWord(combition, flag, normalquery,newnormalquery, serviceid,businesswords,segmentWord, request);
+			m_result = QuerymanageDAO.addWord(combition, flag, normalquery, serviceid,businesswords,segmentWord, request);
 		} else if ("selectremovequery".equals(type)) {// 查询排除问题
 			m_result = QuerymanageDAO.selectRemoveQuery(serviceid, kbdataid, normalquery, customerquery, citycode, istrain, removequerystatus, page, rows);
 		} else if ("findremovequery".equals(type)) {// 查找排除问

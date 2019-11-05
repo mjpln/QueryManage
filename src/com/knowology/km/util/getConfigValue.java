@@ -38,6 +38,8 @@ public class getConfigValue {
 	public static String gaoxidizhi = getDatabase("gaoxidizhi");
 	public static String jianxidizhi = getDatabase("jianxidizhi");
 	public static String kmipAndPort =getDatabase("KMipandport");
+	//获取生成词模地址
+	public static String onlineTrainer_url =getDatabase("onlineTrainer_url");
 
 	/*
 	 * 读取SQL配置文件

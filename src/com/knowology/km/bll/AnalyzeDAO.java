@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.knowology.API.HttpClient;
 import com.knowology.Bean.User;
 import com.knowology.bll.CommonLibKbDataDAO;
 import com.knowology.bll.CommonLibMetafieldmappingDAO;
@@ -31,8 +32,10 @@ import com.knowology.km.util.Check;
 import com.knowology.km.util.GetLoadbalancingConfig;
 import com.knowology.km.util.GetSession;
 import com.knowology.km.util.MyUtil;
+import com.knowology.km.util.OnlineTrainerPathValue;
 import com.knowology.km.util.ReadExcel;
 import com.knowology.km.util.SimpleString;
+import com.knowology.km.util.getConfigValue;
 import com.knowology.km.util.getServiceClient;
 
 /**
@@ -54,10 +57,11 @@ public class AnalyzeDAO {
 	 * @returnType Object
 	 */
 	public static Object produceWordpat(String combition, HttpServletRequest request) {
-		return produceWordpat(combition, "5", request);
+		return produceWordpat_new(combition, "5");
 	}
 
 	/**
+	 * 已废弃
 	 * @description 生成词模
 	 * @param combition
 	 * @param removeFlag
@@ -66,229 +70,229 @@ public class AnalyzeDAO {
 	 * @return
 	 * @returnType Object
 	 */
-	public static Object produceWordpat(String combition, String wordpattype, HttpServletRequest request) {
-		JSONObject jsonObj = new JSONObject();
-
-		Object sre = GetSession.getSessionByKey("accessUser");
-		User user = (User) sre;
-		String userid = user.getUserID();
-		// 获取行业
-		String servicetype = user.getIndustryOrganizationApplication();
-		String combitionArray[] = combition.split("@@");
-
-		List<List<String>> list = new ArrayList<List<String>>();// 待插入的词模数据
-		List<List<String>> text = new ArrayList<List<String>>();// 错误报告数据
-
-		int filterCount = 0;// 过滤的自学习词模数量
-		if (StringUtils.isEmpty(wordpattype)) {
-			wordpattype = "5";
-		}
-		// String wordpattype = "5";//词模类型
-		String autoWordpatRule = "默认方式";// 客户问自学习规则
-		// 读取自学习规则配置，商家默认配置
-		Result configValue = CommonLibMetafieldmappingDAO.getConfigValue("客户问自学习规则", servicetype);
-		if (configValue != null && configValue.getRowCount() > 0) {
-			autoWordpatRule = Objects.toString(configValue.getRows()[0].get("name"), "");
-			if ("分词学习".equals(autoWordpatRule)) {
-				wordpattype = "0";
-			}
-		}
-		// 可选词配置
-		Set<String> set = optionWordMap.get(servicetype);
-		if (CollectionUtils.isEmpty(set)) {
-			set = new HashSet<>();
-			Result optionWordRs = CommonLibMetafieldmappingDAO.getConfigValue("文法学习可选词类配置", servicetype);
-			if (optionWordRs != null && optionWordRs.getRowCount() > 0) {
-				for (int i = 0; i < optionWordRs.getRowCount(); i++) {
-					String optionWord = Objects.toString(optionWordRs.getRows()[i].get("name"), "");
-					set.add(optionWord);
-				}
-			}
-			optionWordMap.put(servicetype, set);
-		}
-		// 可选词配置
-		List<String> replaceList = replaceWordMap.get(servicetype);
-		if (CollectionUtils.isEmpty(replaceList)) {
-			replaceList = new ArrayList<>();
-			Result option = CommonLibMetafieldmappingDAO.getConfigValue("文法学习词类替换配置", servicetype);
-			if (option != null && option.getRowCount() > 0) {
-				for (int i = 0; i < option.getRowCount(); i++) {
-					String s = Objects.toString(option.getRows()[i].get("name"), "");
-					replaceList.add(s);
-				}
-			}
-			replaceWordMap.put(servicetype, replaceList);
-		}
-
-		// 获取摘要
-		List<String> kbIdList = new ArrayList<String>();
-		for (int i = 0; i < combitionArray.length; i++) {
-			String queryArray[] = combitionArray[i].split("@#@");
-			kbIdList.add(queryArray[2]);
-		}
-		// 生成客户问和对应的自学习词模 <客户问，词模>，一个客户问会包含两个词模，普通词模，精准词模，中间##分隔
-		Map<String, String> wordpatMap = getAutoWordpatMap(kbIdList, wordpattype);
-		List<String> oovWordList = new ArrayList<String>();
-		List<String> wordpatResultList = new ArrayList<String>();
-		//包含OOV词的扩展问
-		List<String> oovWordQueryList = new ArrayList<String>();
-		//包含OOV词的原分词
-		List<String> segmentWordList = new ArrayList<String>();
-		for (int i = 0; i < combitionArray.length; i++) {
-			String queryArray[] = combitionArray[i].split("@#@");
-			String queryCityCode = queryArray[0];
-			String query = queryArray[1];
-			String kbdataid = queryArray[2];
-			String queryid = queryArray[3];
-			// 排除问题的严格排除状态
-			String isstrictexclusion = "";
-			if (queryArray.length > 4) {
-				isstrictexclusion = queryArray[4];
-			}
-
-			List<String> wordpatList = new ArrayList<String>();
-			String wordpat = null;
-			// 调用高析接口生成词模
-			if ("0".equals(wordpattype) || "2".equals(wordpattype)) {
-				JSONObject jsonObject = getWordpat2(servicetype, query, queryCityCode);
-				if (jsonObject.getBooleanValue("success")) {
-					// 将简单词模转化为普通词模，并返回转换结果
-					wordpat = SimpleString.SimpleWordPatToWordPat(jsonObject.getString("wordpat"));
-					wordpatList.add(wordpat);
-					wordpat = SimpleString.SimpleWordPatToWordPat(jsonObject.getString("lockWordpat"));
-					wordpatList.add(wordpat);
-					JSONArray oovWord = jsonObject.getJSONArray("OOVWord");
-					JSONArray segmentWord = jsonObject.getJSONArray("segmentWord");
-					if (!CollectionUtils.isEmpty(oovWord)) {
-						oovWordList.add(StringUtils.join(oovWord, "$_$"));// 放入OOV分词
-						oovWordQueryList.add(combitionArray[i]);
-						segmentWordList.add(StringUtils.join(segmentWord,"##"));
-					}
-
-				}
-			} else {
-				// 调用自学习生成词模的接口生成词模,可能是多个，以@_@分隔
-				wordpat = callKAnalyze(servicetype, query, queryCityCode);
-				wordpatList.add(wordpat);
-			}
-
-			for (int j = 0; j < wordpatList.size(); j++) {
-				wordpat = wordpatList.get(j);
-				// 替换词模
-				for (String rep : replaceList) {
-					if (rep.contains("=>")) {
-						String[] split = rep.split("=>");
-						wordpat.replaceAll(split[0], split[1]);
-					}
-				}
-				List<String> rows = new ArrayList<String>();// 生成词模失败报告
-				// logger.info("问题库自学习词模：" + wordpat);
-				if (wordpat != null && !"".equals(wordpat)) {
-					// 判断词模是否含有@_@
-					if (wordpat.contains("@_@")) {
-						// 有的话，按照@_@进行拆分,并只取第一个
-						wordpat = wordpat.split("@_@")[0];
-					}
-					// 获取词模中@前面的词模题，在加上@2#编者="问题库"&来源="(当前问题)"
-					// wordpat = wordpat.split("@")[0] + "@2#编者=\"问题库\"&来源=\""
-					// + query.replace("&", "\\and") + "\"";
-
-					// 保留自学习词模返回值，并替换 编者=\"自学习\""=>编者="问题库"&来源="(当前问题)" --->
-					// modify 2017-05-24
-					wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"");
-
-					// 校验自动生成的词模是否符合规范
-					if (Check.CheckWordpat(wordpat, request)) {
-						// 获取客户问对应的旧词模
-						String oldWordpat = wordpatMap.get(query);
-						// 存在旧词模
-						if (oldWordpat != null && !"".equals(oldWordpat)) {
-							String newWordpat = wordpat.split("@2#")[0];
-
-							logger.info("新旧词模比较 ----新词模：\"" + newWordpat + "\"，旧词模：\"" + oldWordpat + "\"，针对问题：\""
-									+ query + "\"");
-							// 新旧词模不相同，执行插入
-							if (!oldWordpat.equals(newWordpat)) {
-								List<String> tempList = new ArrayList<String>();
-								tempList.add(wordpat);
-								tempList.add(queryCityCode);
-								tempList.add(query);
-								tempList.add(kbdataid);
-								tempList.add(queryid);
-								list.add(tempList);
-								wordpatResultList.add(wordpat);
-							} else {// 新旧词模相同，不进行插入操作
-								filterCount++;// 记录过滤的词模数量
-							}
-						} else {// 不存在旧词模
-							List<String> tempList = new ArrayList<String>();
-							tempList.add(wordpat);
-							tempList.add(queryCityCode);
-							tempList.add(query);
-							tempList.add(kbdataid);
-							tempList.add(queryid);
-							list.add(tempList);
-							wordpatResultList.add(wordpat);
-						}
-					} else {
-						rows.add(query);
-						rows.add("生成词模【" + wordpat + "】格式不符合！");
-						text.add(rows);
-					}
-				} else {
-					rows.add(query);
-					rows.add("生成失败！");
-					text.add(rows);
-				}
-			}
-		}
-
-		logger.info("批量训练----客户问个数：" + combitionArray.length + "，插入词模个数：" + list.size() + "，过滤词模的个数：" + filterCount);
-
-		// 插入问题库自动学习词模
-		int count = -1;
-		if (list.size() > 0) {
-			count = CommonLibQueryManageDAO.insertWordpat(list, servicetype, userid, wordpattype);
-			if (count > 0) {
-				jsonObj.put("success", true);
-				jsonObj.put("msg", "生成成功!");
-				jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
-				jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
-				jsonObj.put("segmentWord", StringUtils.join(segmentWordList,"@@"));
-				jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList, "@@"));
-			} else {
-				jsonObj.put("success", false);
-				jsonObj.put("msg", "生成失败!");
-			}
-		} else if (combitionArray.length >= list.size() + filterCount && list.size() + filterCount > 0) {// 有成功处理的词模就算生成成功
-			jsonObj.put("success", true);
-			jsonObj.put("msg", "生成成功!");
-			jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
-			jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
-			jsonObj.put("segmentWord", StringUtils.join(segmentWordList,"@@"));
-			jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList, "@@"));
-		} else {
-			jsonObj.put("success", false);
-			jsonObj.put("msg", "生成失败!!");
-		}
-		if (text.size() > 0 && "分词学习".equals(autoWordpatRule)) {
-			// 错误报告
-			String filename = "produceWordpat_";
-			filename += DateFormatUtils.format(new Date(), "yyyyMMddHHmmss");
-			List<String> colTitle = new ArrayList<String>();
-			colTitle.add("客户问");
-			colTitle.add("生成结果");
-			boolean isWritten = ReadExcel.writeExcel(QuerymanageDAO.FILE_PATH_EXPORT, filename, null, null, colTitle,
-					text);
-			if (isWritten) {
-				// file = new File(FILE_PATH_EXPORT + filename + ".xls");
-				jsonObj.put("fileName", filename + ".xls");
-			}
-
-		}
-		return jsonObj;
-
-	}
+//	public static Object produceWordpat(String combition, String wordpattype, HttpServletRequest request) {
+//		JSONObject jsonObj = new JSONObject();
+//
+//		Object sre = GetSession.getSessionByKey("accessUser");
+//		User user = (User) sre;
+//		String userid = user.getUserID();
+//		// 获取行业
+//		String servicetype = user.getIndustryOrganizationApplication();
+//		String combitionArray[] = combition.split("@@");
+//
+//		List<List<String>> list = new ArrayList<List<String>>();// 待插入的词模数据
+//		List<List<String>> text = new ArrayList<List<String>>();// 错误报告数据
+//
+//		int filterCount = 0;// 过滤的自学习词模数量
+//		if (StringUtils.isEmpty(wordpattype)) {
+//			wordpattype = "5";
+//		}
+//		// String wordpattype = "5";//词模类型
+//		String autoWordpatRule = "默认方式";// 客户问自学习规则
+//		// 读取自学习规则配置，商家默认配置
+//		Result configValue = CommonLibMetafieldmappingDAO.getConfigValue("客户问自学习规则", servicetype);
+//		if (configValue != null && configValue.getRowCount() > 0) {
+//			autoWordpatRule = Objects.toString(configValue.getRows()[0].get("name"), "");
+//			if ("分词学习".equals(autoWordpatRule)) {
+//				wordpattype = "0";
+//			}
+//		}
+//		// 可选词配置
+//		Set<String> set = optionWordMap.get(servicetype);
+//		if (CollectionUtils.isEmpty(set)) {
+//			set = new HashSet<>();
+//			Result optionWordRs = CommonLibMetafieldmappingDAO.getConfigValue("文法学习可选词类配置", servicetype);
+//			if (optionWordRs != null && optionWordRs.getRowCount() > 0) {
+//				for (int i = 0; i < optionWordRs.getRowCount(); i++) {
+//					String optionWord = Objects.toString(optionWordRs.getRows()[i].get("name"), "");
+//					set.add(optionWord);
+//				}
+//			}
+//			optionWordMap.put(servicetype, set);
+//		}
+//		// 可选词配置
+//		List<String> replaceList = replaceWordMap.get(servicetype);
+//		if (CollectionUtils.isEmpty(replaceList)) {
+//			replaceList = new ArrayList<>();
+//			Result option = CommonLibMetafieldmappingDAO.getConfigValue("文法学习词类替换配置", servicetype);
+//			if (option != null && option.getRowCount() > 0) {
+//				for (int i = 0; i < option.getRowCount(); i++) {
+//					String s = Objects.toString(option.getRows()[i].get("name"), "");
+//					replaceList.add(s);
+//				}
+//			}
+//			replaceWordMap.put(servicetype, replaceList);
+//		}
+//
+//		// 获取摘要
+//		List<String> kbIdList = new ArrayList<String>();
+//		for (int i = 0; i < combitionArray.length; i++) {
+//			String queryArray[] = combitionArray[i].split("@#@");
+//			kbIdList.add(queryArray[2]);
+//		}
+//		// 生成客户问和对应的自学习词模 <客户问，词模>，一个客户问会包含两个词模，普通词模，精准词模，中间##分隔
+//		Map<String, String> wordpatMap = getAutoWordpatMap(kbIdList, wordpattype);
+//		List<String> oovWordList = new ArrayList<String>();
+//		List<String> wordpatResultList = new ArrayList<String>();
+//		//包含OOV词的扩展问
+//		List<String> oovWordQueryList = new ArrayList<String>();
+//		//包含OOV词的原分词
+//		List<String> segmentWordList = new ArrayList<String>();
+//		for (int i = 0; i < combitionArray.length; i++) {
+//			String queryArray[] = combitionArray[i].split("@#@");
+//			String queryCityCode = queryArray[0];
+//			String query = queryArray[1];
+//			String kbdataid = queryArray[2];
+//			String queryid = queryArray[3];
+//			// 排除问题的严格排除状态
+//			String isstrictexclusion = "";
+//			if (queryArray.length > 4) {
+//				isstrictexclusion = queryArray[4];
+//			}
+//
+//			List<String> wordpatList = new ArrayList<String>();
+//			String wordpat = null;
+//			// 调用高析接口生成词模
+//			if ("0".equals(wordpattype) || "2".equals(wordpattype)) {
+//				JSONObject jsonObject = getWordpat2(servicetype, query, queryCityCode);
+//				if (jsonObject.getBooleanValue("success")) {
+//					// 将简单词模转化为普通词模，并返回转换结果
+//					wordpat = SimpleString.SimpleWordPatToWordPat(jsonObject.getString("wordpat"));
+//					wordpatList.add(wordpat);
+//					wordpat = SimpleString.SimpleWordPatToWordPat(jsonObject.getString("lockWordpat"));
+//					wordpatList.add(wordpat);
+//					JSONArray oovWord = jsonObject.getJSONArray("OOVWord");
+//					JSONArray segmentWord = jsonObject.getJSONArray("segmentWord");
+//					if (!CollectionUtils.isEmpty(oovWord)) {
+//						oovWordList.add(StringUtils.join(oovWord, "$_$"));// 放入OOV分词
+//						oovWordQueryList.add(combitionArray[i]);
+//						segmentWordList.add(StringUtils.join(segmentWord,"##"));
+//					}
+//
+//				}
+//			} else {
+//				// 调用自学习生成词模的接口生成词模,可能是多个，以@_@分隔
+//				wordpat = callKAnalyze(servicetype, query, queryCityCode);
+//				wordpatList.add(wordpat);
+//			}
+//
+//			for (int j = 0; j < wordpatList.size(); j++) {
+//				wordpat = wordpatList.get(j);
+//				// 替换词模
+//				for (String rep : replaceList) {
+//					if (rep.contains("=>")) {
+//						String[] split = rep.split("=>");
+//						wordpat.replaceAll(split[0], split[1]);
+//					}
+//				}
+//				List<String> rows = new ArrayList<String>();// 生成词模失败报告
+//				// logger.info("问题库自学习词模：" + wordpat);
+//				if (wordpat != null && !"".equals(wordpat)) {
+//					// 判断词模是否含有@_@
+//					if (wordpat.contains("@_@")) {
+//						// 有的话，按照@_@进行拆分,并只取第一个
+//						wordpat = wordpat.split("@_@")[0];
+//					}
+//					// 获取词模中@前面的词模题，在加上@2#编者="问题库"&来源="(当前问题)"
+//					// wordpat = wordpat.split("@")[0] + "@2#编者=\"问题库\"&来源=\""
+//					// + query.replace("&", "\\and") + "\"";
+//
+//					// 保留自学习词模返回值，并替换 编者=\"自学习\""=>编者="问题库"&来源="(当前问题)" --->
+//					// modify 2017-05-24
+//					wordpat = wordpat.replace("编者=\"自学习\"", "编者=\"问题库\"&来源=\"" + query.replace("&", "\\and") + "\"");
+//
+//					// 校验自动生成的词模是否符合规范
+//					if (Check.CheckWordpat(wordpat, request)) {
+//						// 获取客户问对应的旧词模
+//						String oldWordpat = wordpatMap.get(query);
+//						// 存在旧词模
+//						if (oldWordpat != null && !"".equals(oldWordpat)) {
+//							String newWordpat = wordpat.split("@2#")[0];
+//
+//							logger.info("新旧词模比较 ----新词模：\"" + newWordpat + "\"，旧词模：\"" + oldWordpat + "\"，针对问题：\""
+//									+ query + "\"");
+//							// 新旧词模不相同，执行插入
+//							if (!oldWordpat.equals(newWordpat)) {
+//								List<String> tempList = new ArrayList<String>();
+//								tempList.add(wordpat);
+//								tempList.add(queryCityCode);
+//								tempList.add(query);
+//								tempList.add(kbdataid);
+//								tempList.add(queryid);
+//								list.add(tempList);
+//								wordpatResultList.add(wordpat);
+//							} else {// 新旧词模相同，不进行插入操作
+//								filterCount++;// 记录过滤的词模数量
+//							}
+//						} else {// 不存在旧词模
+//							List<String> tempList = new ArrayList<String>();
+//							tempList.add(wordpat);
+//							tempList.add(queryCityCode);
+//							tempList.add(query);
+//							tempList.add(kbdataid);
+//							tempList.add(queryid);
+//							list.add(tempList);
+//							wordpatResultList.add(wordpat);
+//						}
+//					} else {
+//						rows.add(query);
+//						rows.add("生成词模【" + wordpat + "】格式不符合！");
+//						text.add(rows);
+//					}
+//				} else {
+//					rows.add(query);
+//					rows.add("生成失败！");
+//					text.add(rows);
+//				}
+//			}
+//		}
+//
+//		logger.info("批量训练----客户问个数：" + combitionArray.length + "，插入词模个数：" + list.size() + "，过滤词模的个数：" + filterCount);
+//
+//		// 插入问题库自动学习词模
+//		int count = -1;
+//		if (list.size() > 0) {
+//			count = CommonLibQueryManageDAO.insertWordpat(list, servicetype, userid, wordpattype);
+//			if (count > 0) {
+//				jsonObj.put("success", true);
+//				jsonObj.put("msg", "生成成功!");
+//				jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
+//				jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+//				jsonObj.put("segmentWord", StringUtils.join(segmentWordList,"@@"));
+//				jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList, "@@"));
+//			} else {
+//				jsonObj.put("success", false);
+//				jsonObj.put("msg", "生成失败!");
+//			}
+//		} else if (combitionArray.length >= list.size() + filterCount && list.size() + filterCount > 0) {// 有成功处理的词模就算生成成功
+//			jsonObj.put("success", true);
+//			jsonObj.put("msg", "生成成功!");
+//			jsonObj.put("wordpatList", StringUtils.join(wordpatResultList, "@_@"));
+//			jsonObj.put("OOVWord", StringUtils.join(oovWordList, "$_$"));
+//			jsonObj.put("segmentWord", StringUtils.join(segmentWordList,"@@"));
+//			jsonObj.put("OOVWordQuery", StringUtils.join(oovWordQueryList, "@@"));
+//		} else {
+//			jsonObj.put("success", false);
+//			jsonObj.put("msg", "生成失败!!");
+//		}
+//		if (text.size() > 0 && "分词学习".equals(autoWordpatRule)) {
+//			// 错误报告
+//			String filename = "produceWordpat_";
+//			filename += DateFormatUtils.format(new Date(), "yyyyMMddHHmmss");
+//			List<String> colTitle = new ArrayList<String>();
+//			colTitle.add("客户问");
+//			colTitle.add("生成结果");
+//			boolean isWritten = ReadExcel.writeExcel(QuerymanageDAO.FILE_PATH_EXPORT, filename, null, null, colTitle,
+//					text);
+//			if (isWritten) {
+//				// file = new File(FILE_PATH_EXPORT + filename + ".xls");
+//				jsonObj.put("fileName", filename + ".xls");
+//			}
+//
+//		}
+//		return jsonObj;
+//
+//	}
 
 	/**
 	 * @description 全量生成词模
@@ -312,9 +316,9 @@ public class AnalyzeDAO {
 	public static Object produceAllWordpat(String serviceid, String wordpattype, HttpServletRequest request) {
 		List<String> combitionArray = getAllQuery(serviceid, 0);
 		List<String> RemoveCombitionArray = getAllQuery(serviceid, 1);
-		Object obj = removeProduceWordpat(StringUtils.join(RemoveCombitionArray, "@@"), "2", request);
+		Object obj = produceWordpat_new(StringUtils.join(RemoveCombitionArray, "@@"), "2");
 		logger.info("标准问全量生成排除词模结果：" + JSONObject.toJSONString(obj));
-		return produceWordpat(StringUtils.join(combitionArray, "@@"), wordpattype, request);
+		return produceWordpat_new(StringUtils.join(combitionArray, "@@"), wordpattype);
 	}
 
 	/**
@@ -1249,6 +1253,82 @@ public class AnalyzeDAO {
 			jsonObj.put("msg", "生成失败!!");
 		}
 		if (text.size() > 0 && "分词学习".equals(autoWordpatRule)) {
+			// 错误报告
+			String filename = "produceWordpat_";
+			filename += DateFormatUtils.format(new Date(), "yyyyMMddHHmmss");
+			List<String> colTitle = new ArrayList<String>();
+			colTitle.add("客户问");
+			colTitle.add("生成结果");
+			boolean isWritten = ReadExcel.writeExcel(QuerymanageDAO.FILE_PATH_EXPORT, filename, null, null, colTitle,
+					text);
+			if (isWritten) {
+				// file = new File(FILE_PATH_EXPORT + filename + ".xls");
+				jsonObj.put("fileName", filename + ".xls");
+			}
+
+		}
+		return jsonObj;
+
+	}
+	/**
+	 * @description 生成词模
+	 * @param combition 地市编码@#@扩展问@#@标准问ID@#@扩展问id@#@是否严格排除状态  ，多个@@分隔
+	 * @param request
+	 * @return
+	 * @returnType Object
+	 */
+	public static Object produceWordpat_new(String combition, String wordpattype) {
+		Object sre = GetSession.getSessionByKey("accessUser");
+		User user = (User) sre;
+		String userid = user.getUserID();
+		
+		JSONObject jsonObj = new JSONObject();
+		// 获取行业
+		String servicetype = user.getIndustryOrganizationApplication();
+	    String autoWordpatRule = "默认方式";// 客户问自学习规则
+        // 读取自学习规则配置，商家默认配置
+        Result configValue = CommonLibMetafieldmappingDAO.getConfigValue("客户问自学习规则", servicetype);
+        if (configValue != null && configValue.getRowCount() > 0) {
+            autoWordpatRule = Objects.toString(configValue.getRows()[0].get("name"), "");
+            if ("分词学习".equals(autoWordpatRule)) {
+                wordpattype = "0";
+            }
+        }
+		String url = getConfigValue.onlineTrainer_url +OnlineTrainerPathValue.PRODUCE_WORDPAT_URL;
+		//获取生成词模url		
+		JSONObject obj = new JSONObject();
+		obj.put("combition", combition);
+		obj.put("wordpatType", wordpattype);
+		obj.put("serviceType", servicetype);
+		obj.put("workerId", userid);
+		logger.info("生成词模url："+url+",请求参数:"+obj);
+		JSONObject responseObj = (JSONObject)HttpClient.sendPost(url, obj.toString());
+		logger.info("生成词模-返回参数："+ responseObj);
+		
+		if(responseObj == null || !responseObj.getBooleanValue("code")){
+			jsonObj.put("success", false);
+			jsonObj.put("msg", "生成失败!!");
+		}
+		
+		jsonObj.put("success", true);
+		jsonObj.put("msg", "生成成功!!");
+		
+		//获取生成结果
+		JSONObject wordpatObj = responseObj.getJSONObject("obj");
+		
+		//错误报告
+		JSONArray text = null;
+		if(wordpatObj != null){
+			if(responseObj.getBooleanValue("code")){
+				jsonObj.put("OOVWord", wordpatObj.getString("OOVWord"));
+				jsonObj.put("segmentWord",wordpatObj.getString("segmentWord"));
+				jsonObj.put("OOVWordQuery", wordpatObj.getString("OOVWordQuery"));
+			}
+			text = JSONArray.parseArray(wordpatObj.getString("text"));// 错误报告数据
+		}
+
+		
+		if (!CollectionUtils.isNotEmpty(text) && "分词学习".equals(autoWordpatRule)) {
 			// 错误报告
 			String filename = "produceWordpat_";
 			filename += DateFormatUtils.format(new Date(), "yyyyMMddHHmmss");
