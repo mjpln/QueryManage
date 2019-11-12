@@ -84,6 +84,14 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	 * 扩展问原分词
 	 */
 	private String segmentWord;
+	/**
+	 * 场景添加标准问参数
+	 */
+	private String scenerule_request;
+	/**
+	 * 标识是否是长江
+	 */
+	private boolean flagScene;
 	
 	public String execute() {
 		 if(!"".equals(m_request)&&m_request!=null){// 解析参数 m_request
@@ -142,7 +150,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if("addquery".equals(type)){//新增问题
 			m_result = QuerymanageDAO.addQuery(serviceid,querytype.trim(), normalquery.trim(), multinormalquery, customerquery.trim(), citycode, request);
 		}else if("producewordpat".equals(type)){//生成词模
-			m_result = AnalyzeDAO.produceWordpat_new(combition,flag);
+			m_result = AnalyzeDAO.produceWordpat_new(combition,flag,false);
 		}else if("produceallwordpat".equals(type)){//全量生成词模
 			m_result = AnalyzeDAO.produceAllWordpat(serviceid,flag,request);
 		}else if("updatecustomerquery".equals(type)){//修改客户问题
@@ -230,7 +238,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		}else if ("importkb".equals(type)) {// 导入语义
 			m_result = ImportExportDAO.importKBData(filename, serviceid);
 		} else if ("addWord".equals(type)) {// 新增词条
-			m_result = QuerymanageDAO.addWord(combition, flag, normalquery, serviceid,businesswords,segmentWord, request);
+			m_result = QuerymanageDAO.addWord(combition, flag, normalquery, serviceid,businesswords,segmentWord,flagScene, request);
 		} else if ("selectremovequery".equals(type)) {// 查询排除问题
 			m_result = QuerymanageDAO.selectRemoveQuery(serviceid, kbdataid, normalquery, customerquery, citycode, istrain, removequerystatus, page, rows);
 		} else if ("findremovequery".equals(type)) {// 查找排除问
@@ -240,14 +248,18 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 		} else if("importremove".equals(type)){// 导入排除问题
 			m_result = ImportExportDAO.importFile(filename,serviceid,1);
 		} else if ("removeproducewordpat".equals(type)) {// 排除问题批量训练发现新词
-			m_result = QuerymanageDAO.removeProduceWordpat(combition, flag, request);
+			m_result = QuerymanageDAO.removeProduceWordpat(combition, flag,flagScene, request);
 		} else if ("addOtherWord".equals(type)) {// 新增别名并更新词模
-			m_result = QuerymanageDAO.addOtherWordAndWordpat(combition,customerquery,querytype,flag,segmentWord,request);
+			m_result = QuerymanageDAO.addOtherWordAndWordpat(combition,customerquery,querytype,flag,segmentWord,flagScene,request);
 		} else if("customerproducewordpat".equals(type)){//客户问批量训练发现新词
-			m_result = QuerymanageDAO.customerProduceWordpat(combition, flag, request);
+			m_result = QuerymanageDAO.customerProduceWordpat(combition, flag,flagScene, request);
+		} else if("addqueryrule".equals(type)){//新增场景标准问题
+			m_result = QuerymanageDAO.addQueryRule(scenerule_request,normalquery,citycode,serviceid, request);
+		} else if("getNormalQuery".equals(type)){//查询场景标准问ID,并新增词模
+			m_result = QuerymanageDAO.getNormalQuery(normalquery,citycode,serviceid,request);
 		}
 		return "success";
-	}
+	} 
 
 	public String getType() {
 		return type;
@@ -683,6 +695,23 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	public void setSegmentWord(String segmentWord) {
 		this.segmentWord = segmentWord;
 	}
+
+	public String getScenerule_request() {
+		return scenerule_request;
+	}
+
+	public void setScenerule_request(String scenerule_request) {
+		this.scenerule_request = scenerule_request;
+	}
+
+	public boolean isFlagScene() {
+		return flagScene;
+	}
+
+	public void setFlagScene(boolean flagScene) {
+		this.flagScene = flagScene;
+	}
+	
 	
 
 }

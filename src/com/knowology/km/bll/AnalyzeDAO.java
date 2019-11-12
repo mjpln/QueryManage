@@ -57,7 +57,7 @@ public class AnalyzeDAO {
 	 * @returnType Object
 	 */
 	public static Object produceWordpat(String combition, HttpServletRequest request) {
-		return produceWordpat_new(combition, "5");
+		return produceWordpat_new(combition, "5",false);
 	}
 
 	/**
@@ -316,9 +316,9 @@ public class AnalyzeDAO {
 	public static Object produceAllWordpat(String serviceid, String wordpattype, HttpServletRequest request) {
 		List<String> combitionArray = getAllQuery(serviceid, 0);
 		List<String> RemoveCombitionArray = getAllQuery(serviceid, 1);
-		Object obj = produceWordpat_new(StringUtils.join(RemoveCombitionArray, "@@"), "2");
+		Object obj = produceWordpat_new(StringUtils.join(RemoveCombitionArray, "@@"), "2",false);
 		logger.info("标准问全量生成排除词模结果：" + JSONObject.toJSONString(obj));
-		return produceWordpat_new(StringUtils.join(combitionArray, "@@"), wordpattype);
+		return produceWordpat_new(StringUtils.join(combitionArray, "@@"), wordpattype,false);
 	}
 
 	/**
@@ -1273,11 +1273,13 @@ public class AnalyzeDAO {
 	/**
 	 * @description 生成词模
 	 * @param combition 地市编码@#@扩展问@#@标准问ID@#@扩展问id@#@是否严格排除状态  ，多个@@分隔
+	 * @param wordpattype 词模类型
+	 * @param flagscene 是否是场景
 	 * @param request
 	 * @return
 	 * @returnType Object
 	 */
-	public static Object produceWordpat_new(String combition, String wordpattype) {
+	public static Object produceWordpat_new(String combition, String wordpattype,Boolean flagscene) {
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
 		String userid = user.getUserID();
@@ -1301,6 +1303,7 @@ public class AnalyzeDAO {
 		obj.put("wordpatType", wordpattype);
 		obj.put("serviceType", servicetype);
 		obj.put("workerId", userid);
+		obj.put("flagscene", flagscene);
 		logger.info("生成词模url："+url+",请求参数:"+obj);
 		JSONObject responseObj = (JSONObject)HttpClient.sendPost(url, obj.toString());
 		logger.info("生成词模-返回参数："+ responseObj);
@@ -1308,6 +1311,7 @@ public class AnalyzeDAO {
 		if(responseObj == null || !responseObj.getBooleanValue("code")){
 			jsonObj.put("success", false);
 			jsonObj.put("msg", "生成失败!!");
+			return jsonObj;
 		}
 		
 		jsonObj.put("success", true);

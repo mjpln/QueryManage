@@ -658,12 +658,18 @@ Ext.define('MyApp.view.MyViewport', {
 
         for (i = 0; i < length; i++) {
             wdtype.items.items[i].setValue(false);
-            if(wdtype.items.items[i].boxLabel==wordpattypename){
+            console.log(wdtype.items.items[i].boxLabel);
+            if(wdtype.items.items[i].boxLabel==wordpattypename && (wordpattypename !="等于词模" || wordpattypename!="自学习词模")){
+            	
                 wdtype.items.items[i].setValue(true);
             }
              if(wdtype.items.items[i].boxLabel=="普通词模"&& wordpattypename=="自学习词模"){
                 wdtype.items.items[i].setValue(true);
                simplewordpat = simplewordpat.replace('编者="auto"&',"");
+            }
+            if(wdtype.items.items[i].boxLabel=="普通词模"&& wordpattypename=="等于词模"){
+            	console.log("等于词模转化为普通词模");
+                wdtype.items.items[i].setValue(true);
             }
         }
         /**if(wordpattypename=="选择词模"){

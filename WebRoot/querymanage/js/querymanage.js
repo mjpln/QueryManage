@@ -1576,7 +1576,8 @@ function produceWordpat(wordpattype) {
 			operationtype: 'A',
 			resourceid: serviceid,
 			combition: combition.join("@@"),
-			flag:wordpattype
+			flag:wordpattype,
+			flgScene:true
 		},
 		async: false,
 		dataType: "json",
@@ -3773,5 +3774,22 @@ function doRemoveNewWord() {
 		},
 		error : function(jqXHR, textStatus, errorThrown) {
 		}
+	});
+}
+function openCustomerQuery(){
+	$('#customerquery_panel').panel('open');
+	$('#removequery_panel').panel('close');
+    $("#customerqueryselect").textbox("setValue", "");
+    $("#cityselect").combotree("clear");
+    $("#understandstatus").combobox("setValue", "");
+    $("#istrain").combobox("setValue", "");
+    $('#customerquerydatagrid').datagrid('load', {
+	   type: "selectcustomerquery",
+	   serviceid: serviceid,
+	   kbdataid: kbdataid,
+	   customerquery: "",
+	   citycode: "",
+	   istrain: "",
+	   understandstatus: ""
 	});
 }
