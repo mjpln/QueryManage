@@ -89,9 +89,13 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	 */
 	private String scenerule_request;
 	/**
-	 * 标识是否是长江
+	 * 标识是否是场景
 	 */
 	private boolean flagScene;
+	/**
+	 * 词模返回值
+	 */
+	private String returnValue;
 	
 	public String execute() {
 		 if(!"".equals(m_request)&&m_request!=null){// 解析参数 m_request
@@ -105,6 +109,7 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 			citycode = citycode.replace("\"", "").replace("[", "").replace("]", "");
 			type = json.getString("type");
 			removequerystatus = json.getString("removequerystatus");
+			returnValue = json.getString("returnValue");
 		 }
 		 if ("createuserinfo".equals(type)) {// 创建用户信息
 			JSONObject jsonObj = new JSONObject();
@@ -253,10 +258,16 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 			m_result = QuerymanageDAO.addOtherWordAndWordpat(combition,customerquery,querytype,flag,segmentWord,flagScene,request);
 		} else if("customerproducewordpat".equals(type)){//客户问批量训练发现新词
 			m_result = QuerymanageDAO.customerProduceWordpat(combition, flag,flagScene, request);
-		} else if("addqueryrule".equals(type)){//新增场景标准问题
-			m_result = QuerymanageDAO.addQueryRule(scenerule_request,normalquery,citycode,serviceid, request);
-		} else if("getNormalQuery".equals(type)){//查询场景标准问ID,并新增词模
-			m_result = QuerymanageDAO.getNormalQuery(normalquery,citycode,serviceid,request);
+		} else if("getNormalQuery".equals(type)){//查询场景标准问ID,并新增客户问,新增词模
+			m_result = QuerymanageDAO.getNormalQuery(normalquery,customerquery,citycode,serviceid,returnValue,request);
+		} else if("addcustomerquery".equals(type)){//场景新增扩展问
+			m_result = QuerymanageDAO.addCustomerquery(serviceid, normalquery, true, customerquery, citycode, returnValue,0,"", request);
+		} else if("addremovequeryscene".equals(type)){//场景新增扩展问
+			m_result = QuerymanageDAO.addCustomerquery(serviceid, normalquery, true, customerquery, citycode, returnValue,1,removequerystatus, request);
+		}else if("importByScene".equals(type)){ //需要过滤非本标准问的扩展问题
+			m_result = ImportExportDAO.importFileByScene(filename, serviceid, 0,normalquery, returnValue);
+		} else if("importRemoveByScene".equals(type)){ //需要过滤非本标准问的扩展问题
+			m_result = ImportExportDAO.importFileByScene(filename, serviceid, 1,normalquery, returnValue);
 		}
 		return "success";
 	} 
@@ -711,7 +722,14 @@ public class QuerymanageAction extends BaseAction implements ServletRequestAware
 	public void setFlagScene(boolean flagScene) {
 		this.flagScene = flagScene;
 	}
-	
+
+	public String getReturnValue() {
+		return returnValue;
+	}
+
+	public void setReturnValue(String returnValue) {
+		this.returnValue = returnValue;
+	}	
 	
 
 }

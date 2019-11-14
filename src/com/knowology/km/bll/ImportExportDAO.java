@@ -1980,6 +1980,194 @@ public class ImportExportDAO {
 		}
 		return flag;
 	}
+	/**
+	 * 导入客户问题到数据库中-场景配置需要增加返回值-非本标准问下的扩展问过滤掉
+	 * 
+	 * @param filename参数文件名称
+	 * @param serviceid
+	 *            业务ID
+	 * @return
+	 */
+	public static Object importFileByScene(String filename, String serviceid,int queryType,String normalquery,String returnvalue) {
+		// 定义返回的json串
+		JSONObject jsonObj = new JSONObject();
+		Object sre = GetSession.getSessionByKey("accessUser");
+		User user = (User) sre;
+		String serviceType = user.getIndustryOrganizationApplication();
+//		String brand = serviceType.split("->")[1] + "问题库";
+		List<String> userCityList = new ArrayList<String>();
+		//业务地市
+		List<String> serviceCityList = new ArrayList<String>();
+//		Result rs = CommonLibQueryManageDAO.getServiceCitys(serviceid,brand);
+		Result rs = CommonLibQueryManageDAO.getServiceCitys(serviceid);
+		if (rs != null && rs.getRowCount() > 0) {
+			String city = rs.getRows()[0].get("city").toString();
+			serviceCityList=Arrays.asList(city.split(","));
+		}
+		
+		HashMap<String, ArrayList<String>> resourseMap = CommonLibPermissionDAO
+				.resourseAccess(user.getUserID(), "querymanage", "S");
+		userCityList = resourseMap.get("地市");
+		String userCityCode = "";
+		if (userCityList.size() > 0) {
+			userCityCode = StringUtils.join(userCityList.toArray(), ",");
+		}else{
+			// 将false放入jsonObj的success对象中
+			jsonObj.put("success", false);
+			// 将内容为空放入jsonObj的msg对象中
+			jsonObj.put("msg", "导入失败!");
+			return jsonObj;
+		}
+        String workerid = user.getUserID();
+     // 获得商家标识符
+		String bussinessFlag = CommonLibMetafieldmappingDAO
+				.getBussinessFlag(serviceType);
+		
+		// 获取文件的路径
+		String pathName = regressTestPath + File.separator + filename;
+		// 获取上传文件的file
+		File file = new File(pathName);
+		// 获取导入文件的类型
+		String extension = filename.lastIndexOf(".") == -1 ? "" : filename
+				.substring(filename.lastIndexOf(".") + 1);
+		// 定义当前文件后得到的集合
+		List<List<Object>> info = new ArrayList<List<Object>>();
+		if ("xls".equalsIgnoreCase(extension)) {
+			// 读取2003版的Excel
+			info = MyUtil.read2003Excel(file, 5);
+		} else if ("xlsx".equalsIgnoreCase(extension)) {
+			// 读取2007版的Excel
+			info = MyUtil.read2007Excel(file, 5);
+		}
+		// 判断文件是否存在
+		if (file.exists()) {
+			// 删除文件
+			file.delete();
+		}
+		if (info.size() > 0) {
+		 String cloum1 =info.get(0).get(0)+"";
+		 if(info.size()==1){
+			if("标准问题".equals(cloum1)){
+				// 将false放入jsonObj的success对象中
+				jsonObj.put("success", false);
+				// 将内容为空放入jsonObj的msg对象中
+				jsonObj.put("msg", "文件内容为空!");
+				return jsonObj;
+			}
+		}else{
+			if("标准问题".equals(cloum1)){//忽略Excel列名
+			 info.remove(0);
+			}
+			
+			Map<ImportNormalqueryBean, Map<String, List<String>>> map = new LinkedHashMap<ImportNormalqueryBean, Map<String, List<String>>>();
+			try {
+				 String result = getImportQueryDicByScene(map ,info,serviceCityList,normalquery);
+				 if(!StringUtils.isEmpty(result)){
+					 jsonObj.put("errorMsg", result.replaceFirst(",", ""));	
+				 }
+			} catch (Exception e) {
+				// 将false放入jsonObj的success对象中
+				jsonObj.put("success", false);
+				// 将内容为空放入jsonObj的msg对象中
+				jsonObj.put("msg", e.getMessage());	
+				return jsonObj;
+			}
+			int count  = CommonLibQueryManageDAO.importQueryByScene(map,getQueryDic(serviceid,queryType),serviceCityList, serviceid,bussinessFlag,workerid,queryType,returnvalue);
+			if(count>0){ 
+				// 将false放入jsonObj的success对象中
+				jsonObj.put("success", true);
+				// 将内容为空放入jsonObj的msg对象中
+				jsonObj.put("msg", "导入成功!");	
+			}else{
+				// 将false放入jsonObj的success对象中
+				jsonObj.put("success", false);
+				// 将内容为空放入jsonObj的msg对象中
+				jsonObj.put("msg", "导入失败!");	
+			}
+		 }
+		} else {
+			// 将false放入jsonObj的success对象中
+			jsonObj.put("success", false);
+			// 将内容为空放入jsonObj的msg对象中
+			jsonObj.put("msg", "文件内容为空!");
+		}
+		return jsonObj;
+	}
+	/**
+	 *@description 获得导入客户问题字典-过滤标准问
+	 *@param info
+	 *@param serviceCityList
+	 *@return 
+	 * @throws Exception 
+	 *@returnType Map<String,Map<String,List<String>>> 
+	 */
+	public static String getImportQueryDicByScene(Map<ImportNormalqueryBean, Map<String, List<String>>> map, List<List<Object>> info,List<String> serviceCityList,String orgnormalquery) throws Exception{
+//		Map<ImportNormalqueryBean, Map<String, List<String>>> map = new LinkedHashMap<ImportNormalqueryBean, Map<String, List<String>>>();
+		String errorMsg = "";
+		
+		for (int i = 0; i < info.size(); i++) {
+			List<String> cityList = new ArrayList<String>();
+			String normalquery = info.get(i).get(0)!=null?  info.get(i).get(0).toString().replace(" ", ""):"";
+			String customerquery = info.get(i).get(1)!=null?  info.get(i).get(1).toString().replace(" ", ""):"";
+			String responsetype = info.get(i).get(2)!=null?  info.get(i).get(2).toString().replace(" ", ""):"";
+			String interacttype = info.get(i).get(3)!=null?  info.get(i).get(3).toString().replace(" ", ""):"";
+			ImportNormalqueryBean normalqueryBean = new ImportNormalqueryBean(normalquery, QuerymanageDAO.getResponseType(responsetype), QuerymanageDAO.getInteractType(interacttype));
+			if("".equals(normalquery) || !orgnormalquery.equals(normalquery)){//如果标准问题为空，不做处理  或者标准问与所传标准问不一致，也不做处理  update by sundj 20191113
+				continue;
+			}
+			
+			String line = ( i+1 ) + "";
+			if(normalquery.length() > 50){
+				errorMsg += ","+line;
+				continue;
+			}
+			
+			if(customerquery.length() > 50){
+				if(errorMsg.indexOf(line) < 0){
+					errorMsg += ","+line;
+				}
+				continue;
+			}
+			String city = info.get(i).get(4)!=null?  info.get(i).get(4).toString().replace(" ", "").replace("，", ","):"";
+			if (!"".equals(city) && city != null) {//如果客户问题来源地市不为空通过地市名称取地址编码
+				city = city.replace("省", "").replace("市", "");
+				String cityArray[] = city.split(",");
+				for (int m = 0; m < cityArray.length; m++) {
+					if (cityNameToCityCode.containsKey(cityArray[m])) {
+						String cityCode = getCityCodeFromServiceCityCodes(serviceCityList, cityArray[m]);
+						//扩展问地市来源不在业务地市范围内
+						if(StringUtils.isEmpty(cityCode)){
+							throw new Exception("客户问题“"+customerquery+"”地市来源“"+cityArray[m]+"”，不在业务地市范围内！");
+						}
+						cityList.add(cityCode);
+					}
+				}
+			}else{//如果客户问题来源地市为空，取当前用户关联地市
+				cityList.addAll(serviceCityList);
+			}
+			Collections.sort(cityList);
+			if(map.containsKey(normalqueryBean)){
+				Map<String,List<String>>  tempMap = map.get(normalqueryBean);
+				if(tempMap.containsKey(customerquery)){
+					List<String> oldCityList =tempMap.get(customerquery);
+					oldCityList.addAll(cityList);
+					Set set = new HashSet(oldCityList);
+					List<String> newCityCodelist = new ArrayList<String>(set);
+					Collections.sort(newCityCodelist);
+					tempMap.put(customerquery, newCityCodelist);
+				}else{
+					tempMap.put(customerquery, cityList);
+					map.put(normalqueryBean, tempMap);
+				}
+			}else{
+				Map<String, List<String>> queryMap = new HashMap<String,List<String>>();
+				queryMap.put(customerquery, cityList);
+				map.put(normalqueryBean, queryMap);
+			}
+		}
+		return errorMsg;
+	}
+	
 	public static void main(String[] args) {
 		Object kbData = importKBData("质检语义词模、客户问导入模板 - 副本.xlsx", "1831954");
 //		Object kbData = importKBData("质检语义词模、客户问导入模板.xlsx", "1834873.7");

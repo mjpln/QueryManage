@@ -5501,102 +5501,13 @@ public class QuerymanageDAO {
 //
 //	}
 	/**
-	 * 场景配置新增标准问
-	 * @param scenerule_request 词模返回值  json数组   [{"returnKey":"","returnValue":""}]
+	 * 场景配置新增扩展问
 	 * @param normalQuery 标准问
 	 * @param citycode 地市编码
 	 * @param request
 	 * @return
 	 */
-	public static Object addQueryRule(String scenerule_request,String normalQuery,String citycode,String serviceid,HttpServletRequest request){
-		JSONObject obj = new JSONObject();
-		//解析返回值
-		String returnValue = "";
-		JSONArray jsonArray = JSONArray.parseArray(scenerule_request);
-		for(int i=0;i<jsonArray.size();i++){
-			JSONObject returnObj = jsonArray.getJSONObject(i);
-			returnValue += returnObj.getString("returnKey")+"=\""+ returnObj.getString("returnValue") +"\"&";
-		}
-		returnValue = returnValue.substring(0, returnValue.length()-1);
-		
-		//新增标准问及客户问
-		Object sre = GetSession.getSessionByKey("accessUser");
-		User user = (User) sre;
-		String userid = user.getUserID();
-		String servicetype = user.getIndustryOrganizationApplication();
-		List<String> cityList = new ArrayList<String>();
-		HashMap<String, ArrayList<String>> resourseMap = CommonLibPermissionDAO.resourseAccess(user.getUserID(),
-				"querymanage", "S");
-		cityList = resourseMap.get("地市");
-		String userCityCode = "";
-		if (cityList.size() > 0) {
-			userCityCode = StringUtils.join(cityList.toArray(), ",");
-		}
-		if(StringUtils.isBlank(serviceid)){
-			String rootserviceid = null;
-			String brand = null;
-			// 根据serviceid获取根节点
-			Result result = CommonLibMetafieldmappingDAO.getConfigValue("问题库业务根对应关系配置",servicetype);;
-			
-
-			if (result != null && result.getRowCount() > 0) {
-				brand = result.getRows()[0].get("name").toString();
-				Result rootrs = CommonLibServiceDAO.getServiceID("'"+brand+"'", "'"+brand+"'");
-				if(rootrs != null && rootrs.getRowCount() > 0){
-					rootserviceid = rootrs.getRows()[0].get("serviceid").toString();
-				}
-			}
-			// 根据根节点查询下级的识别规则业务节点
-			if (StringUtils.isBlank(rootserviceid)) {
-				obj.put("success", false);
-				obj.put("msg", "业务根节点不存在");
-				return obj;
-			}
-			// 获取识别业务规则ID
-			 serviceid = getBusinessServiceId("识别规则业务", user.getUserID(),servicetype , rootserviceid);			
-		}else{
-			Result rs = CommonLibServiceDAO.getServiceInfoByserviceid(serviceid);
-			if(rs == null || rs.getRowCount() == 0){
-				obj.put("success", false);
-				obj.put("msg", "业务名不存在");
-				return obj;
-			}
-
-		}
-
-		// 业务地市
-		List<String> serviceCityList = new ArrayList<String>();
-		String serviceCityCode = "";
-		Result scityRs = CommonLibQueryManageDAO.getServiceCitys(serviceid);
-		if (scityRs != null && scityRs.getRowCount() > 0) {
-			String city = scityRs.getRows()[0].get("city").toString();
-			serviceCityList = Arrays.asList(city.split(","));
-		}
-		if (serviceCityList.size() > 0) {
-			serviceCityCode = StringUtils.join(serviceCityList.toArray(), ",");
-		}
-		int rs = CommonLibQueryManageDAO.addNormalQueryAndCustomerQueryByScene(serviceid, normalQuery,
-				citycode, user, userCityCode, serviceCityCode,returnValue);
-		if(rs > 0){//标准问新增成功
-
-			obj.put("success", true);
-			obj.put("msg","保存成功");
-			
-		}else {
-			obj.put("success", false);
-			if (rs == -2) {
-				obj.put("msg","标准问题【" + normalQuery + "】已存在<br>");
-			} else {
-				obj.put("msg","【" + normalQuery + "】保存失败<br>");
-			}
-		}
-		
-		return obj;
-		
-		
-		
-	}
-	public static Object getNormalQuery(String normalquery,String cityCode,String serviceid,HttpServletRequest request){
+	public static Object getNormalQuery(String normalquery,String customerquery,String cityCode,String serviceid,String returnValue,HttpServletRequest request){
 		JSONObject jsonObj = new JSONObject();
 		Object sre = GetSession.getSessionByKey("accessUser");
 		User user = (User) sre;
@@ -5665,18 +5576,102 @@ public class QuerymanageDAO {
 				obj.put("ioa", servicetype);
 			}
 		}
-		if(obj == null){
+		if(obj == null || obj.isEmpty()){
 			jsonObj.put("success", false);
 			jsonObj.put("msg", "标准问【"+normalquery+"】不存在");
 		}else{
+			//查询客户问是否为空，不为空做新增操作
+			if(!StringUtils.isBlank(customerquery)){
+				int count = CommonLibQueryManageDAO.addCustomerQueryByScene(obj.getString("kbdataid"), customerquery,returnValue, cityCode,0,"", user);
+				if(count > 0){
+					logger.info("场景新增扩展问成功");	
+				}else{
+					logger.info("场景新增扩展问失败");		
+					jsonObj.put("success", true);
+					jsonObj.put("kbdata", obj);
+					jsonObj.put("msg", "新增扩展问失败");
+					return jsonObj;
+				}
+				
+			}else{
+				customerquery = normalquery;
+			}
+			
 			//进行新增词模			
-			JSONObject oovWordObj = (JSONObject) getOOVWord(serviceid, normalquery,true, request);
+			JSONObject oovWordObj = (JSONObject) getOOVWordByScene(serviceid, customerquery,obj.getString("kbdataid"),cityCode, request);
 			
 			jsonObj.put("success", true);
 			jsonObj.put("msg", "查询成功");
 			jsonObj.put("kbdata", obj);
 			jsonObj.put("oovWord",oovWordObj.get("oovWord"));
 			jsonObj.put("segmentWord",oovWordObj.get("segmentWord"));
+		}
+		return jsonObj;
+	}
+
+	/**
+	 * 获取OOV分词
+	 * 
+	 * @param serviceid
+	 * @param normalQuery
+	 * @return
+	 */
+	public static Object getOOVWordByScene(String serviceid, String customerquery,String kbdataid,String citycode, HttpServletRequest request) {
+		JSONObject jsonObj = new JSONObject();
+		List<String> oovWordList = new ArrayList<String>();
+		//原分词
+		List<String> segmentWordList = new ArrayList<String>();
+//		List<String> wordpatList = new ArrayList<String>();
+//		List<String> combitionList = new ArrayList<String>();
+		// 查询当前kbdataid
+		String queryid = "";
+		Result queryRs = CommonLibQueryManageDAO.getQueryIdByQuery(customerquery, kbdataid);
+		queryid = queryRs.getRows()[0].get("id").toString();
+		String combition = citycode + "@#@" + customerquery + "@#@" + kbdataid + "@#@" + queryid + "@#@";
+		JSONObject obj = (JSONObject) AnalyzeDAO.produceWordpat_new(combition, "0",true);
+		if (obj.containsKey("OOVWord")) {
+			oovWordList.add(obj.getString("OOVWord"));
+			//有oov词时需要用到原分词，用于分词矫正
+			segmentWordList.add(obj.getString("segmentWord"));
+		}
+//		combitionList.add(combition);
+
+		jsonObj.put("oovWord", StringUtils.join(oovWordList, "$_$"));
+		//原分词,用@@分隔不同的问题
+		jsonObj.put("segmentWord", StringUtils.join(segmentWordList, "@@"));
+//		jsonObj.put("wordpatList", StringUtils.join(wordpatList, "@_@"));
+//		jsonObj.put("combition", StringUtils.join(combitionList, "&_&"));
+		return jsonObj;
+	}
+	/**
+	 * 场景新增扩展问
+	 * @param serviceid
+	 * @param normalQuery
+	 * @param flagscene
+	 * @param customerQuery
+	 * @param cityCode
+	 * @param returnvalue
+	 * @param request
+	 * @return
+	 */
+	public static Object addCustomerquery(String serviceid, String normalQuery, boolean flagscene,
+			String customerQuery, String cityCode,String returnvalue,int queryType,String removequerystatus,  HttpServletRequest request){
+		JSONObject jsonObj = new JSONObject();
+		Object sre = GetSession.getSessionByKey("accessUser");
+		User user = (User) sre;
+		int rs = -1;
+		rs = CommonLibQueryManageDAO.addCustomerQueryByScene(normalQuery, customerQuery, returnvalue,cityCode,queryType,removequerystatus, user);
+		if (rs > 0) {
+			jsonObj.put("success", true);
+			jsonObj.put("msg", "保存成功!");
+		} else {
+			if (rs == -2) {
+				jsonObj.put("success", false);
+				jsonObj.put("success", "标准问题已存在!");
+			} else {
+				jsonObj.put("success", false);
+				jsonObj.put("success", "保存失败!");
+			}
 		}
 		return jsonObj;
 	}
