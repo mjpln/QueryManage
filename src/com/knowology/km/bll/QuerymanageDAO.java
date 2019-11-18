@@ -5171,7 +5171,7 @@ public class QuerymanageDAO {
 				String wordId = obj.get(1);
 				String wordClassId = obj.get(2);
 				if (!CommonLibWordDAO.existOtherWord(otherword, wordId)) {
-					index = CommonLibWordDAO.insertOtherWord(otherword, wordId, wordClassId, user);
+					index = CommonLibWordDAO.insertOtherWord(otherword, wordId, wordClassId, user.getIndustryOrganizationApplication());
 				}
 			}
 		}
