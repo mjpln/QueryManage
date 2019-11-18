@@ -120,12 +120,12 @@ function getNormalQuery(customerquery){
 				kbdata = data.kbdata;
 				serviceid = kbdata.serviceid;
 				kbdataid = kbdata.kbdataid;
-				var oovWord = data.oovWord;
-				if (oovWord != null && oovWord != '') {
-					//标准问的原分词
-					var segmentWord = data.segmentWord;
-					getOOVWord(oovWord, normalquery,segmentWord);
-				}
+//				var oovWord = data.oovWord;
+//				if (oovWord != null && oovWord != '') {
+//					//标准问的原分词
+//					var segmentWord = data.segmentWord;
+//					getOOVWord(oovWord, normalquery,segmentWord);
+//				}
 			}else{
 				$.messager.alert('系统提示', data.msg, 'warning');
 			}

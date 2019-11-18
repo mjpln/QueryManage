@@ -4392,10 +4392,10 @@ public class QuerymanageDAO {
 			jsonObj.put("msg", responseObj.get("msg"));
 		}else{
 			// 调用更新知识库的方法
-//			if (StringUtils.isNotBlank(combition)) {
-//				 Object m_result = ExtendDao.updateKB();
-//				 logger.info(JSONObject.toJSONString(m_result));
-//			}
+			if (StringUtils.isNotBlank(combition)) {
+				 Object m_result = ExtendDao.updateKB();
+				 logger.info(JSONObject.toJSONString(m_result));
+			}
 			jsonObj.put("success", true);
 			jsonObj.put("msg", "保存成功!!");
 		}
@@ -5317,10 +5317,10 @@ public class QuerymanageDAO {
 			resultObj.put("msg", responseObj.getString("msg"));
 		}else{
 			// 调用更新知识库的方法
-//			if (StringUtils.isNotBlank(combition)) {
-//				 Object m_result = ExtendDao.updateKB();
-//				 logger.info(JSONObject.toJSONString(m_result));
-//			}
+			if (StringUtils.isNotBlank(combition)) {
+				 Object m_result = ExtendDao.updateKB();
+				 logger.info(JSONObject.toJSONString(m_result));
+			}
 			resultObj.put("success", true);
 			resultObj.put("msg", "生成成功!!");
 		}
@@ -5537,6 +5537,7 @@ public class QuerymanageDAO {
 				jsonObj.put("msg", "业务名不存在");
 				return jsonObj;
 			}
+			brand = rs.getRows()[0].get("brand").toString();
 		}
 
 
@@ -5592,19 +5593,18 @@ public class QuerymanageDAO {
 					jsonObj.put("msg", "新增扩展问失败");
 					return jsonObj;
 				}
-				
-			}else{
-				customerquery = normalquery;
+				//进行新增词模			
+//				JSONObject oovWordObj = (JSONObject) getOOVWordByScene(serviceid, customerquery,obj.getString("kbdataid"),cityCode, request);
+//				jsonObj.put("oovWord",oovWordObj.get("oovWord"));
+//				jsonObj.put("segmentWord",oovWordObj.get("segmentWord"));				
 			}
 			
-			//进行新增词模			
-			JSONObject oovWordObj = (JSONObject) getOOVWordByScene(serviceid, customerquery,obj.getString("kbdataid"),cityCode, request);
+
 			
 			jsonObj.put("success", true);
 			jsonObj.put("msg", "查询成功");
 			jsonObj.put("kbdata", obj);
-			jsonObj.put("oovWord",oovWordObj.get("oovWord"));
-			jsonObj.put("segmentWord",oovWordObj.get("segmentWord"));
+
 		}
 		return jsonObj;
 	}
