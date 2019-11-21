@@ -1522,7 +1522,7 @@ function preProduceWordpat(type){
 	if(customItem["训练模式"] != null && customItem["训练模式"] =="显示"){
 		var url = '../querymanage.action?type=createproduceWordpatcombobox&a=' + Math.random();
 		createCombobox('produceWordpatselect', url, false, true, function() {
-			$('#produceWordpatselect').combobox('setValue', '5');
+			$('#produceWordpatselect').combobox('setValue', '0');
 			$('#produceWordpatType').val(type);
 			
 			$('#produceWordpatwin').window('open');
@@ -1701,7 +1701,7 @@ function deleteCustomerQuery() {
 			if (queryid == null || queryid == "") {
 				continue;
 			}
-			combition.push(queryid + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid);
+			combition.push(queryid + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid+ "@#@0");
 		}
 	} else {
 		$.messager.alert('系统提示', "请至少选择一行!", "warning");
@@ -3167,7 +3167,7 @@ function deleteRemoveCustomerQuery(){
 			if (queryid == null || queryid == "") {
 				continue;
 			}
-			combition.push(queryid + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid);
+			combition.push(queryid + "@#@" + rows[i].customerquery + "@#@" + rows[i].kbdataid + "@#@1");
 		}
 	} else {
 		$.messager.alert('系统提示', "请至少选择一行!", "warning");

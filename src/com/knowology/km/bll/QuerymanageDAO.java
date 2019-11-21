@@ -1996,10 +1996,12 @@ public class QuerymanageDAO {
 			String queryid = queryArray[0];
 			String query = queryArray[1];
 			String kbdataid = queryArray[2];
+			String querytype = queryArray[3];
 			List<String> tempList = new ArrayList<String>();
 			tempList.add(queryid);
 			tempList.add(query);
 			tempList.add(kbdataid);
+			tempList.add(querytype);
 			list.add(tempList);
 		}
 		int rs = CommonLibQueryManageDAO._deleteCustomerQuery(list, user);
